@@ -1054,85 +1054,30 @@ const getQuestsAll = async (req, res) => {
   let resultArray;
   let nextPage;
 
-  if (participated === "Yes") {
-    console.log("Inside resultArray if participated");
-    let Records = [];
-    const startedQuestions = await StartQuests.find({
-      uuid,
-      // uuid: "0x81597438fdd366b90971a73f39d56eea4702c43a",
-    });
-
-    console.log("startedQuestions", startedQuestions);
-    console.log("allQuestions", allQuestions.length);
-
-    await allQuestions.map(async function (rcrd) {
-      let startedOrNot = false;
-      await startedQuestions.map(function (rec) {
-        if (rec.questForeignKey === rcrd._id.toString()) {
-          startedOrNot = true;
-        }
-      });
-      if (startedOrNot === true) {
-        Records.push(rcrd);
+  if (participated === "Yes" || participated === "Not") {
+    const startedQuestions = await StartQuests.find({ uuid });
+    const startedIds = startedQuestions.map(rec => rec.questForeignKey);
+  
+    const filteredQuestions = allQuestions.filter(rcrd =>
+      (participated === "Yes" && startedIds.includes(rcrd._id.toString())) ||
+      (participated === "Not" && !startedIds.includes(rcrd._id.toString()))
+    );
+  
+    const processedQuestions = filteredQuestions.map(rcrd => {
+      const startData = startedQuestions.find(rec => rec.questForeignKey === rcrd._id.toString());
+      if (startData) {
+        rcrd.startQuestData = startData;
+        rcrd.startStatus = (rcrd.usersChangeTheirAns?.trim() !== "" || rcrd.whichTypeQuestion === "ranked choise") ? "change answer" : "completed";
       }
+      return rcrd;
     });
-    console.log("Records", Records.length);
-    let Result = [];
-    await Records.map(async function (rcrd) {
-      await startedQuestions.map(function (rec) {
-        if (rec.questForeignKey === rcrd._id.toString()) {
-          rcrd.startQuestData = rec;
-          if (
-            rcrd.usersChangeTheirAns?.trim() !== "" ||
-            rcrd.whichTypeQuestion === "ranked choise"
-          ) {
-            rcrd.startStatus = "change answer";
-          } else {
-            rcrd.startStatus = "completed";
-          }
-        }
-      });
-
-      Result.push(rcrd);
-    });
-
-    // const start = req.body.start;
-    // const end = req.body.end;
-    console.log("Start" + start + "end" + end);
-
-    nextPage = end < Result.length;
-    resultArray = Result.slice(start, end).map(getPercentage);
-  } else if (participated === "Not") {
-    console.log("Inside resultArray participated Not");
-
-    let Result = [];
-    const startedQuestions = await StartQuests.find({
-      uuid,
-      // uuid: "0x81597438fdd366b90971a73f39d56eea4702c43a",
-    });
-
-    await allQuestions.map(async function (rcrd) {
-      let startedOrNot = false;
-      await startedQuestions.map(function (rec) {
-        if (rec.questForeignKey === rcrd._id.toString()) {
-          startedOrNot = true;
-        }
-      });
-      if (startedOrNot === false) {
-        Result.push(rcrd);
-      }
-    });
-    // const start = req.body.start;
-    // const end = req.body.end;
-    console.log("Start" + start + "end" + end);
-
-    resultArray = Result.slice(start, end).map(getPercentage);
-    nextPage = end < Result.length;
+  
+    nextPage = end < processedQuestions.length;
+    resultArray = processedQuestions.slice(start, end).map(getPercentage);
   } else {
-    console.log("Inside resultArray else");
     nextPage = skip + pageSize < totalQuestionsCount;
-    resultArray = allQuestions.map((item) => getPercentage(item));
-  }
+    resultArray = allQuestions.map(getPercentage);
+  }  
 
   const bookmarkDocs = await BookmarkQuests.find({ questForeignKey: { $in: resultArray.map(item => item._doc._id) }, uuid });
   resultArray.forEach(item => {
