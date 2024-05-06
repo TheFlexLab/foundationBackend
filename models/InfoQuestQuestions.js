@@ -81,7 +81,7 @@ const InfoQuestQuestionsSchema = mongoose.Schema(
     },
     suppressedReason: {
       type: String,
-      default: "",
+      default: Array,
     },
     url: {
       type: [String],

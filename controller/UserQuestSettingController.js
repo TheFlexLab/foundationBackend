@@ -13,7 +13,9 @@ const { updateUserBalance } = require("../utils/userServices");
 const { updateTreasury } = require("../utils/treasuryService");
 const { USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT } = require('../constants/index');
 const nodeHtmlToImage = require("node-html-to-image");
-const { sharedLinkDynamicImageHTML } = require("../templates/sharedLinkDynamicImageHTML");
+const {
+  sharedLinkDynamicImageHTML,
+} = require("../templates/sharedLinkDynamicImageHTML");
 
 const createOrUpdate = async (req, res) => {
   try {
@@ -255,6 +257,12 @@ const status = async (req, res) => {
     });
   }
 };
+const suppressConditions = [
+  { id: "Has Mistakes or Errors", minCount: 2 },
+  { id: "Needs More Options", minCount: 2 },
+  { id: "Unclear / Doesn’t make Sense", minCount: 2 },
+  { id: "Duplicate / Similar Post", minCount: 2 },
+];
 
 const create = async (req, res) => {
   try {
@@ -348,40 +356,29 @@ const create = async (req, res) => {
             count: { $sum: 1 },
           },
         },
-        {
-          $project: {
-            _id: 1,
-            count: 1,
-            exceedsLimit: { $gte: ["$count", 5] },
-          },
-        },
-        {
-          $match: {
-            exceedsLimit: true,
-          },
-        },
       ]);
+      let isSuppressed = false;
+      let suppressedReason = "";
 
-      // Checking if suppression array has any elements to avoid errors
-      const suppressionExists = suppression.length > 0;
+      if (suppression) {
+        suppressConditions.forEach((condition) => {
+          if (item._id === condition.id && item.count > condition.minCount) {
+            isSuppressed = true; // Set suppressed flag to true
+            suppressedReason.push(condition.id);
+          }
+        });
+      }
 
-      // Get the first suppression if it exists (assumes only one result)
-      const firstSuppression = suppressionExists ? suppression[0] : null;
-
-      // The suppressed status depends on whether we have a suppression and if it meets the limit
-      const suppressed = suppressionExists;
-      const suppressedReason = firstSuppression ? firstSuppression._id : "";
-
-      // Properly setting the fields to update with $set
+      // // Properly setting the fields to update with $set
       const resp = await InfoQuestQuestions.findOneAndUpdate(
         { _id: payload.questForeignKey },
         {
           $set: {
-            suppressed,
+            suppressed: isSuppressed,
             suppressedReason,
           },
         },
-        { new: true } // Optionally return the updated document
+        { new: true }
       );
 
       console.log("Suppression Response", resp);
@@ -472,40 +469,33 @@ const update = async (req, res) => {
           count: { $sum: 1 },
         },
       },
-      {
-        $project: {
-          _id: 1,
-          count: 1,
-          exceedsLimit: { $gte: ["$count", 5] },
-        },
-      },
-      {
-        $match: {
-          exceedsLimit: true,
-        },
-      },
     ]);
+    let isSuppressed = false;
+    let suppressedReason = "";
 
-    // Checking if suppression array has any elements to avoid errors
-    const suppressionExists = suppression.length > 0;
+    if (suppression) {
+      suppression.map((item) => {
+        if (suppression) {
+          suppressConditions.forEach((condition) => {
+            if (item._id === condition.id && item.count > condition.minCount) {
+              isSuppressed = true;
+              suppressedReason.push(condition.id);
+            }
+          });
+        }
+      });
+    }
 
-    // Get the first suppression if it exists (assumes only one result)
-    const firstSuppression = suppressionExists ? suppression[0] : null;
-
-    // The suppressed status depends on whether we have a suppression and if it meets the limit
-    const suppressed = suppressionExists;
-    const suppressedReason = firstSuppression ? firstSuppression._id : "";
-
-    // Properly setting the fields to update with $set
+    // // Properly setting the fields to update with $set
     const resp = await InfoQuestQuestions.findOneAndUpdate(
       { _id: payload.questForeignKey },
       {
         $set: {
-          suppressed,
+          suppressed: isSuppressed,
           suppressedReason,
         },
       },
-      { new: true } // Optionally return the updated document
+      { new: true }
     );
 
     console.log("Suppression Response", resp);

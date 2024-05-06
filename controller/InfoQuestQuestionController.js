@@ -114,11 +114,17 @@ const createInfoQuestQuest = async (req, res) => {
 
 const deleteInfoQuestQuest = async (req, res) => {
   try {
-    const infoQuest = await InfoQuestQuestions.findOne({ _id: req.params.questId, uuid: req.params.userUuid});
+    const infoQuest = await InfoQuestQuestions.findOne({
+      _id: req.params.questId,
+      uuid: req.params.userUuid,
+    });
 
-    if(!infoQuest) return res.status(404).send("Info Quest not found");
+    if (!infoQuest) return res.status(404).send("Info Quest not found");
 
-    if(infoQuest.interactingCounter >= 1) return res.status(403).json({ message: "Quest is involved in Discussion, Quest can't be deleted." }); // Not neccessry if we add the check at FE to remove the delete icon from those who have { usersAddTheirAns: true }
+    if (infoQuest.interactingCounter >= 1)
+      return res.status(403).json({
+        message: "Quest is involved in Discussion, Quest can't be deleted.",
+      }); // Not neccessry if we add the check at FE to remove the delete icon from those who have { usersAddTheirAns: true }
 
     // Delete and Save Info Quest
     infoQuest.isActive = false;
@@ -131,7 +137,6 @@ const deleteInfoQuestQuest = async (req, res) => {
     user.questsCreated -= 1;
     await user.save();
 
-
     // Create Ledger
     await createLedger({
       uuid: user.uuid,
@@ -143,7 +148,7 @@ const deleteInfoQuestQuest = async (req, res) => {
       txAmount: 0,
       txData: user.uuid,
       txDate: Date.now(),
-      txDescription : "User deleted a Post"
+      txDescription: "User deleted a Post",
     });
     // Create Ledger
     await createLedger({
@@ -155,7 +160,7 @@ const deleteInfoQuestQuest = async (req, res) => {
       txTo: user.uuid,
       txAmount: QUEST_CREATED_AMOUNT,
       txDate: Date.now(),
-      txDescription : "User deleted a Post"
+      txDescription: "User deleted a Post",
       // txData : createdQuestion._id,
       // txDescription : "Incentive for creating a quest"
     });
@@ -168,11 +173,13 @@ const deleteInfoQuestQuest = async (req, res) => {
       inc: true,
     });
 
-    res.status(200).json({ message: "Info quest question deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Info quest question deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: `An error occurred: ${error.message}` });
   }
-}
+};
 
 const constraintForUniqueQuestion = async (req, res) => {
   try {
@@ -828,7 +835,12 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
     hasNextPage: skip + pageSize < totalQuestionsCount,
   });
 };
-
+const suppressConditions = [
+  { id: "Has Mistakes or Errors", minCount: 2 },
+  { id: "Needs More Options", minCount: 2 },
+  { id: "Unclear / Doesn’t make Sense", minCount: 2 },
+  { id: "Duplicate / Similar Post", minCount: 2 },
+];
 const getQuestsAll = async (req, res) => {
   const {
     uuid,
@@ -857,6 +869,7 @@ const getQuestsAll = async (req, res) => {
   let allQuestions = [];
   let filterObj = {};
   let totalQuestionsCount;
+  filterObj.suppressed = true;
 
   if (filter === "true") {
     console.log("filter");
@@ -1009,7 +1022,7 @@ const getQuestsAll = async (req, res) => {
     let query = InfoQuestQuestions.find({
       _id: { $nin: hiddenUserSettingIds },
       ...filterObj,
-      isActive: true
+      isActive: true,
     });
 
     const sortOptions = {
@@ -1081,6 +1094,31 @@ const getQuestsAll = async (req, res) => {
 
   // getQuestionsWithUserSettings
   const result1 = await getQuestionsWithUserSettings(result, uuid);
+
+  // Check if it's not the "Hidden" or "SharedLink" page and if it's the first page
+  if (Page !== "Hidden" && Page !== "SharedLink" && page === 1) {
+    // Calculate the index to insert the notification
+    const notificationIndex = Math.min(result1.length, 4);
+
+    // Create a notification object
+    const notification = {
+      id: "system_notification",
+      author: {
+        id: "system_notification",
+        name: "System Notification",
+        profile_picture: "",
+      },
+      heading: "Lorem Ipsum",
+      content: "Did you know? Lorem Ipsum is simply dummy text of...",
+      details:
+        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+      url: "https://youtube.com/",
+      timestamp: new Date().toISOString(),
+    };
+
+    // Insert the notification object at the calculated index
+    result1.splice(notificationIndex, 0, notification);
+  }
 
   res.status(200).json({
     data: result1,
@@ -1857,4 +1895,5 @@ module.exports = {
   getFlickerUrl,
   getQuestsAll,
   suppressPost,
+  deleteInfoQuestQuest,
 };
