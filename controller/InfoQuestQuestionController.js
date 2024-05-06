@@ -863,10 +863,7 @@ const getQuestsAll = async (req, res) => {
     filterObj[Page === "Bookmark" ? "createdBy" : "uuid"] = uuid;
   }
   
-
-  if (type !== "All") {
-    filterObj.whichTypeQuestion = type;
-  }
+  type !== "All" && (filterObj.whichTypeQuestion = type);
 
   if (media !== "All") {
     const mediaFilters = {
@@ -878,13 +875,11 @@ const getQuestsAll = async (req, res) => {
       Image: { url: { $regex: "live.staticflickr.com", $options: "i" } },
       Music: { url: { $regex: "soundcloud.com", $options: "i" } }
     };
-    
     filterObj.$or = mediaFilters[media];
   }  
 
   if (terms) {
     const regex = { $regex: terms, $options: "i" };
-
     filterObj.$or = [
       { Question: regex },
       { whichTypeQuestion: regex },
@@ -904,103 +899,91 @@ const getQuestsAll = async (req, res) => {
       hidden: true,
       uuid,
     });
-
-    // Extract userSettingIds from hiddenUserSettings
-    const hiddenUserSettingIds = hiddenUserSettings.map(
-      (userSetting) => userSetting.questForeignKey
-    );
-
-    // filterObj.uuid = uuid;
+    const hiddenUserSettingIds = hiddenUserSettings.map(userSetting => userSetting.questForeignKey);
+    
     const Questions = await BookmarkQuests.find({
       questForeignKey: { $nin: hiddenUserSettingIds },
-      uuid: uuid,
-      moderationRatingCount: {
-        $gte: moderationRatingInitial,
-        $lte: moderationRatingFinal,
-      },
+      uuid,
+      moderationRatingCount: { $gte: moderationRatingInitial, $lte: moderationRatingFinal },
     })
-      .sort({ createdAt: -1 })
-      // .sort(sort === "Newest First" ? { createdAt: -1 } : "createdAt")
-      .skip(skip)
-      .limit(pageSize);
-
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(pageSize);
+    
     console.log("Questions Length", Questions.length);
     console.log("Bookmark filterObj", filterObj);
-
-    const mapPromises = Questions.map(async function (record) {
+    
+    const mapPromises = Questions.map(async record => {
       return await InfoQuestQuestions.findOne({
         _id: record.questForeignKey,
         ...filterObj,
-        moderationRatingCount: {
-          $gte: moderationRatingInitial,
-          $lte: moderationRatingFinal,
-        },
+        moderationRatingCount: { $gte: moderationRatingInitial, $lte: moderationRatingFinal },
       }).populate("getUserBadge", "badges");
     });
+    
     console.log(mapPromises);
-
-    allQuestions = await Promise.all(mapPromises);
-    allQuestions = allQuestions.filter((question) => question !== null);
-    totalQuestionsCount = await BookmarkQuests.countDocuments({
+    
+    const allQuestions = (await Promise.all(mapPromises)).filter(question => question !== null);
+    const totalQuestionsCount = await BookmarkQuests.countDocuments({
       questForeignKey: { $nin: hiddenUserSettingIds },
-      uuid: uuid,
-      moderationRatingCount: {
-        $gte: moderationRatingInitial,
-        $lte: moderationRatingFinal,
-      },
-    });
+      uuid,
+      moderationRatingCount: { $gte: moderationRatingInitial, $lte: moderationRatingFinal },
+    });    
 
     console.log("allQuestionsBookmark", allQuestions.length);
   } else if (Page === "Hidden") {
     console.log("running");
-    filterObj.uuid = uuid;
-    filterObj.hidden = true;
-    const Questions = await UserQuestSetting.find(filterObj)
-      .sort({ createdAt: -1 })
-      // .sort(sort === "Newest First" ? { createdAt: -1 } : "createdAt")
-      .skip(skip)
-      .limit(pageSize);
-
-    const mapPromises = Questions.map(async function (record) {
-      return await InfoQuestQuestions.findOne({
-        _id: record.questForeignKey,
-      }).populate("getUserBadge", "badges");
-    });
-
-    allQuestions = await Promise.all(mapPromises);
-    totalQuestionsCount = await UserQuestSetting.countDocuments(filterObj);
+    const Questions = await UserQuestSetting.find({
+      uuid,
+      hidden: true,
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(pageSize);
+  
+  const allQuestions = await Promise.all(Questions.map(async (record) => {
+    return await InfoQuestQuestions.findOne({
+      _id: record.questForeignKey,
+    }).populate("getUserBadge", "badges");
+  }));
+  
+  const totalQuestionsCount = await UserQuestSetting.countDocuments({
+    uuid,
+    hidden: true,
+  });  
   } else if (Page === "SharedLink") {
     console.log("running");
-    filterObj.uuid = uuid;
-    filterObj.linkStatus = { $in: ["Enable", "Disable"] };
-    console.log("filterObj", filterObj);
-    const Questions = await UserQuestSetting.find(filterObj)
-      .sort({ createdAt: -1 })
-      // .sort(sort === "Newest First" ? { createdAt: -1 } : "createdAt")
-      .limit(pageSize)
-      .skip(skip);
-
-    const mapPromises = Questions.map(async function (record) {
-      return await InfoQuestQuestions.findOne({
-        _id: record.questForeignKey,
-      }).populate("getUserBadge", "badges");
-    });
-
-    allQuestions = await Promise.all(mapPromises);
-    totalQuestionsCount = await UserQuestSetting.countDocuments(filterObj);
-  } else if (Page === "Suppression") {
-    allQuestions = await InfoQuestQuestions.find({
-      uuid: uuid,
-      suppressed: true,
+    const Questions = await UserQuestSetting.find({
+      uuid,
+      linkStatus: { $in: ["Enable", "Disable"] },
     })
+    .sort({ createdAt: -1 })
+    .limit(pageSize)
+    .skip(skip);
+  
+  const allQuestions = await Promise.all(Questions.map(async (record) => {
+    return await InfoQuestQuestions.findOne({
+      _id: record.questForeignKey,
+    }).populate("getUserBadge", "badges");
+  }));
+  
+  const totalQuestionsCount = await UserQuestSetting.countDocuments({
+    uuid,
+    linkStatus: { $in: ["Enable", "Disable"] },
+  });  
+  } else if (Page === "Suppression") {
+    const suppressedQuery = {
+      uuid,
+      suppressed: true,
+    };
+    
+    allQuestions = await InfoQuestQuestions.find(suppressedQuery)
       .populate("getUserBadge", "badges")
       .sort({ createdAt: -1 })
       .limit(pageSize)
       .skip(skip);
-    totalQuestionsCount = await UserQuestSetting.countDocuments({
-      uuid: uuid,
-      suppressed: true,
-    });
+    
+    totalQuestionsCount = await UserQuestSetting.countDocuments(suppressedQuery);    
   } else {
     // moderation filter
     filterObj.moderationRatingCount = {
@@ -1029,15 +1012,14 @@ const getQuestsAll = async (req, res) => {
       isActive: true
     });
 
-    query = query.sort(
-      sort === "Newest First"
-        ? { createdAt: -1 }
-        : sort === "Last Updated"
-        ? { lastInteractedAt: -1 }
-        : sort === "Most Popular"
-        ? { interactingCounter: -1 }
-        : { createdAt: -1 } // Default sort
-    );
+    const sortOptions = {
+      "Newest First": { createdAt: -1 },
+      "Last Updated": { lastInteractedAt: -1 },
+      "Most Popular": { interactingCounter: -1 },
+    };
+    
+    query = query.sort(sortOptions[sort] || { createdAt: -1 });
+
     if (participated === "All") {
       query = query.skip(skip).limit(pageSize);
     }
@@ -1048,11 +1030,10 @@ const getQuestsAll = async (req, res) => {
       _id: { $nin: hiddenUserSettingIds },
       ...filterObj,
     });
-  }
+  }  
   console.log("allQuestionsData", allQuestions.length);
 
-  let resultArray;
-  let nextPage;
+  let resultArray, nextPage;
 
   if (participated === "Yes" || participated === "Not") {
     const startedQuestions = await StartQuests.find({ uuid });
@@ -1085,7 +1066,6 @@ const getQuestsAll = async (req, res) => {
     item._doc.bookmark = bookmarkDoc !== undefined;
   });
   
-
   const desiredArray = resultArray.map(item => ({
     ...item._doc,
     selectedPercentage: item.selectedPercentage?.[0]
