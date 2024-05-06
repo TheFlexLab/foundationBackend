@@ -861,39 +861,29 @@ const getQuestsAll = async (req, res) => {
 
   if (filter === "true") {
     console.log("filter");
-    if (Page === "Bookmark") {
-      filterObj.createdBy = uuid;
-    } else {
-      console.log("My Post Else");
-      filterObj.uuid = uuid;
-    }
+    filterObj[Page === "Bookmark" ? "createdBy" : "uuid"] = uuid;
   }
+  
 
   if (type !== "All") {
     filterObj.whichTypeQuestion = type;
   }
 
   if (media !== "All") {
-    if (media === "Video") {
-      filterObj.$or = [
+    const mediaFilters = {
+      Video: [
         { url: { $regex: "youtube.com", $options: "i" } },
         { url: { $regex: "youtu.be", $options: "i" } },
-        { url: { $regex: "youtube-nocookie.com", $options: "i" } },
-      ];
-    }
-
-    if (media === "Image") {
-      filterObj.url = { $regex: "live.staticflickr.com", $options: "i" };
-    }
-
-    if (media === "Music") {
-      filterObj.url = { $regex: "soundcloud.com", $options: "i" };
-    }
-  }
+        { url: { $regex: "youtube-nocookie.com", $options: "i" } }
+      ],
+      Image: { url: { $regex: "live.staticflickr.com", $options: "i" } },
+      Music: { url: { $regex: "soundcloud.com", $options: "i" } }
+    };
+    
+    filterObj.$or = mediaFilters[media];
+  }  
 
   if (terms) {
-    // const regexTerm = terms.map((term) => new RegExp(term, "i"));
-    // filterObj.QuestTopic = { $in: regexTerm };
     const regex = { $regex: terms, $options: "i" };
 
     filterObj.$or = [
@@ -903,50 +893,9 @@ const getQuestsAll = async (req, res) => {
       { QuestTopic: regex },
       { description: regex },
     ];
-
-    // $or: [
-    //   { Question: { $regex: terms, $options: "i" } },
-    //   { whichTypeQuestion: { $regex: terms, $options: "i" } },
-    //   { "QuestAnswers.question": { $regex: terms, $options: "i" } },
-    //   { QuestTopic: { $regex: terms, $options: "i" } },
-    //   { description: { $regex: terms, $options: "i" } },
-    // ]
-
-    // filterObj.Question = regex;
   } else if (blockedTerms && blockedTerms.length > 0) {
-    // const regexBlockterms = blockedTerms.map((term) => new RegExp(term, "i"));
     const blockedTermsArray = JSON.parse(blockedTerms);
     filterObj.QuestTopic = { $in: blockedTermsArray };
-    // filterObj.QuestTopic = { $in: blockedTerms };
-
-    // const hiddenQuestList = await InfoQuestQuestions.find({
-    //   QuestTopic: { $in: blockedTerms },
-    // });
-
-    // const mapPromises = hiddenQuestList.map(async (item) => {
-    //   const userQuestSettingExist = await UserQuestSetting.findOne({
-    //     uuid: uuid,
-    //     questForeignKey: item._id,
-    //   });
-
-    //   if (userQuestSettingExist) {
-    //     // If userQuestSetting exists, update it
-    //     await UserQuestSetting.findOneAndUpdate(
-    //       { uuid: uuid, questForeignKey: item._id },
-    //       { hidden: true }
-    //     );
-    //   } else {
-    //     // If userQuestSetting does not exist, create it
-    //     await UserQuestSetting.create({
-    //       uuid: uuid,
-    //       questForeignKey: item._id,
-    //       hidden: true,
-    //     });
-    //   }
-    // });
-
-    // // Use Promise.allSettled to handle errors without stopping execution
-    // await Promise.allSettled(mapPromises);
   }
 
   console.log("Outside Bookmark");
@@ -1186,43 +1135,23 @@ const getQuestsAll = async (req, res) => {
     resultArray = allQuestions.map((item) => getPercentage(item));
   }
 
-  for (let i = 0; i < resultArray.length; i++) {
-    const item = resultArray[i];
-    // console.log('item', item)
-    const bookmarkDoc = await BookmarkQuests.findOne({
-      questForeignKey: item._doc._id,
-      uuid,
-    });
+  const bookmarkDocs = await BookmarkQuests.find({ questForeignKey: { $in: resultArray.map(item => item._doc._id) }, uuid });
+  resultArray.forEach(item => {
+    const bookmarkDoc = bookmarkDocs.find(doc => doc.questForeignKey.toString() === item._doc._id.toString());
+    item._doc.bookmark = bookmarkDoc !== undefined;
+  });
+  
 
-    // console.log('bookmarkDoc', bookmarkDoc)
-    if (bookmarkDoc) {
-      resultArray[i]._doc.bookmark = true;
-    } else {
-      resultArray[i]._doc.bookmark = false;
-    }
-  }
-
-  const desiredArray = resultArray.map((item) => ({
+  const desiredArray = resultArray.map(item => ({
     ...item._doc,
-    selectedPercentage: item?.selectedPercentage?.[0]
-      ? [
-          Object.fromEntries(
-            Object.entries(item.selectedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+    selectedPercentage: item.selectedPercentage?.[0]
+      ? [Object.fromEntries(Object.entries(item.selectedPercentage[0]).sort((a, b) => parseInt(b[1]) - parseInt(a[1])))]
       : [],
-    contendedPercentage: item?.contendedPercentage?.[0]
-      ? [
-          Object.fromEntries(
-            Object.entries(item.contendedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+    contendedPercentage: item.contendedPercentage?.[0]
+      ? [Object.fromEntries(Object.entries(item.contendedPercentage[0]).sort((a, b) => parseInt(b[1]) - parseInt(a[1])))]
       : [],
   }));
+  
   // Query the database with skip and limit options to get questions for the requested page
   const result = await getQuestionsWithStatus(desiredArray, uuid);
 
