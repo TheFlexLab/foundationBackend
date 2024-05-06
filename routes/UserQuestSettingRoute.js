@@ -115,6 +115,31 @@ router.post(
 );
 
 router.post(
+  "/userQuestSetting/customLink",
+  /**
+   * @swagger
+   * /userQuestSetting/customLink:
+   *   post:
+   *     tags:
+   *       - User Quest Setting
+   *     summary: Custom Link user quest setting
+   *     description: Endpoint to link user quest setting
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UserQuestSettingLinkRequest'
+   *     responses:
+   *       '200':
+   *         description: User quest setting linked successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserQuestSettingController.customLink
+);
+
+router.post(
   "/userQuestImpression/:link",
   /**
    * @swagger

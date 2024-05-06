@@ -9,6 +9,7 @@ const UserQuestSetting = mongoose.Schema(
       // type: Schema.Types.ObjectId,
       // ref: "user",
       type: String,
+      default: ""
     },
     questForeignKey: {
       // type: Schema.Types.ObjectId,

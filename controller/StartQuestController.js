@@ -19,6 +19,7 @@ const {
 } = require("./InfoQuestQuestionController");
 const { getPercentage } = require("../utils/getPercentage");
 const UserQuestSetting = require("../models/UserQuestSetting");
+const BookmarkQuests = require("../models/BookmarkQuests");
 
 const updateViolationCounter = async (req, res) => {
   try {
@@ -441,6 +442,9 @@ const createStartQuest = async (req, res) => {
       amount: QUEST_OWNER_ACCOUNT,
       inc: true,
     });
+    const bookmarkExist = await BookmarkQuests.findOne({
+      questForeignKey: getInfoQuestQuestion._id,
+    });
 
     const infoQuest = await InfoQuestQuestions.find({
       _id: getInfoQuestQuestion._id,
@@ -455,6 +459,7 @@ const createStartQuest = async (req, res) => {
       ...item._doc,
       selectedPercentage: item.selectedPercentage,
       contendedPercentage: item.contendedPercentage,
+      bookmark: !!bookmarkExist,
     }));
 
     res.status(200).json({
@@ -946,6 +951,9 @@ const updateChangeAnsStartQuest = async (req, res) => {
     } else {
       responseMsg = "You can change your answer once every 1 hour";
     }
+    const bookmarkExist = await BookmarkQuests.findOne({
+      questForeignKey: getInfoQuestQuestion._id,
+    });
     const infoQuest = await InfoQuestQuestions.find({
       _id: req.body.questId,
     }).populate("getUserBadge", "badges");
@@ -959,6 +967,7 @@ const updateChangeAnsStartQuest = async (req, res) => {
       ...item._doc,
       selectedPercentage: item.selectedPercentage,
       contendedPercentage: item.contendedPercentage,
+      bookmark: !!bookmarkExist,
     }));
 
     res.status(200).json({

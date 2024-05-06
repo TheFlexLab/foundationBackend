@@ -8,7 +8,10 @@ const AWS = require("aws-sdk");
 const { uploadS3Bucket } = require("../utils/uploadS3Bucket");
 const path = require("path");
 const { s3ImageUpload } = require("../utils/uploadS3Bucket");
-const fs = require("fs");
+const fs = require('fs');
+const { updateUserBalance } = require("../utils/userServices");
+const { updateTreasury } = require("../utils/treasuryService");
+const { USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT } = require('../constants/index');
 const nodeHtmlToImage = require("node-html-to-image");
 const { sharedLinkDynamicImageHTML } = require("../templates/sharedLinkDynamicImageHTML");
 
@@ -120,6 +123,67 @@ const link = async (req, res) => {
   }
 };
 
+const customLink = async (req, res) => {
+  try {
+    const payload = req.body;
+
+    // Check if link already exist
+    const userQuestSettingAlreadyExist = await UserQuestSetting.findOne({ link: payload.link });
+    if (userQuestSettingAlreadyExist) return res.status(409).json({ message: `This link cannot be used, Try something unique like ${shortLink.generate(8)}` });
+
+    // As link is unique Create Ledger and Proceed Normally like before with custom link.
+    await ledgerDeductionPostLinkCustomized(payload.uuid)
+
+    const userQuestSettingExist = await UserQuestSetting.findOne({
+      uuid: payload.uuid,
+      questForeignKey: payload.questForeignKey,
+    });
+
+    let savedOrUpdatedUserQuestSetting;
+    // To check the record exist
+    if (userQuestSettingExist) {
+      savedOrUpdatedUserQuestSetting = await UserQuestSetting.findOneAndUpdate(
+        {
+          uuid: payload.uuid,
+          questForeignKey: payload.questForeignKey,
+        },
+        {
+          $set: {
+            link: payload.link
+          }
+        },
+        {
+          new: true, // Return the modified document rather than the original
+        }
+      );
+      await uploadS3Bucket({
+        fileName: savedOrUpdatedUserQuestSetting.link,
+        description: savedOrUpdatedUserQuestSetting.Question,
+      });
+    } else {
+      // Create a short link
+      const userQuestSetting = new UserQuestSetting({
+        ...payload,
+      });
+      savedOrUpdatedUserQuestSetting = await userQuestSetting.save();
+      await uploadS3Bucket({
+        fileName: savedOrUpdatedUserQuestSetting.link,
+        description: savedOrUpdatedUserQuestSetting.Question,
+      });
+    }
+
+    return res.status(201).json({
+      message: "UserQuestSetting link Created Successfully!",
+      data: savedOrUpdatedUserQuestSetting,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: ` An error occurred while create UserQuestSetting link: ${error.message}`,
+    });
+  }
+};
+
 const impression = async (req, res) => {
   try {
     const { link } = req.params;
@@ -176,13 +240,12 @@ const status = async (req, res) => {
       return res.status(404).json({ message: "Share link not found" });
     }
     return res.status(200).json({
-      message: `Share link ${
-        status === "Disable"
-          ? "Disabled"
-          : status === "Delete"
+      message: `Share link ${status === "Disable"
+        ? "Disabled"
+        : status === "Delete"
           ? "Deleted"
           : "Enabled"
-      } Successfully`,
+        } Successfully`,
       data: updatedUserQuestSetting,
     });
   } catch (error) {
@@ -538,6 +601,47 @@ const ledgerEntryPostLinkCreated = async (uuid) => {
   }
 };
 
+const ledgerDeductionPostLinkCustomized = async (uuid, userQuestSetting_id) => {
+  try {
+    // Create Ledger
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "linkCustomized",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: uuid,
+      txTo: "DAO Treasury",
+      txAmount: USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT,
+      txData: userQuestSetting_id,
+      txDate: Date.now(),
+      txDescription: "Quest Link Customized"
+    });
+    // Create Ledger
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "linkCustomized",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "DAO",
+      txFrom: uuid,
+      txTo: "DAO Treasury",
+      txAmount: 0,
+      txData: userQuestSetting_id,
+      txDate: Date.now(),
+      txDescription: "Quest Link Customized"
+    });
+    // Increment the Treasury
+    await updateTreasury({ amount: USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT, inc: true });
+    // Decrement the UserBalance
+    await updateUserBalance({
+      uuid: uuid,
+      amount: USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT,
+      dec: true,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 const ledgerEntryAdded = async (uuid, questOwnerUuid) => {
   try {
     // User
@@ -691,6 +795,8 @@ module.exports = {
   link,
   impression,
   status,
+  ledgerDeductionPostLinkCustomized,
   sharedLinkDynamicImage,
+  customLink
   // get,
 };
