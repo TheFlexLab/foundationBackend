@@ -936,8 +936,8 @@ const getQuestsAll = async (req, res) => {
     
     console.log(mapPromises);
     
-    const allQuestions = (await Promise.all(mapPromises)).filter(question => question !== null);
-    const totalQuestionsCount = await BookmarkQuests.countDocuments({
+    allQuestions = (await Promise.all(mapPromises)).filter(question => question !== null);
+    totalQuestionsCount = await BookmarkQuests.countDocuments({
       questForeignKey: { $nin: hiddenUserSettingIds },
       uuid,
       moderationRatingCount: { $gte: moderationRatingInitial, $lte: moderationRatingFinal },
@@ -954,13 +954,13 @@ const getQuestsAll = async (req, res) => {
     .skip(skip)
     .limit(pageSize);
   
-  const allQuestions = await Promise.all(Questions.map(async (record) => {
+  allQuestions = await Promise.all(Questions.map(async (record) => {
     return await InfoQuestQuestions.findOne({
       _id: record.questForeignKey,
     }).populate("getUserBadge", "badges");
   }));
   
-  const totalQuestionsCount = await UserQuestSetting.countDocuments({
+  totalQuestionsCount = await UserQuestSetting.countDocuments({
     uuid,
     hidden: true,
   });  
@@ -974,13 +974,13 @@ const getQuestsAll = async (req, res) => {
     .limit(pageSize)
     .skip(skip);
   
-  const allQuestions = await Promise.all(Questions.map(async (record) => {
+  allQuestions = await Promise.all(Questions.map(async (record) => {
     return await InfoQuestQuestions.findOne({
       _id: record.questForeignKey,
     }).populate("getUserBadge", "badges");
   }));
   
-  const totalQuestionsCount = await UserQuestSetting.countDocuments({
+  totalQuestionsCount = await UserQuestSetting.countDocuments({
     uuid,
     linkStatus: { $in: ["Enable", "Disable"] },
   });  
