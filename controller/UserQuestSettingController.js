@@ -596,7 +596,7 @@ const ledgerDeductionPostLinkCustomized = async (uuid, userQuestSetting_id) => {
     // Create Ledger
     await createLedger({
       uuid: uuid,
-      txUserAction: "linkCustomized",
+      txUserAction: "linkCreated",
       txID: crypto.randomBytes(11).toString("hex"),
       txAuth: "User",
       txFrom: uuid,
@@ -609,11 +609,11 @@ const ledgerDeductionPostLinkCustomized = async (uuid, userQuestSetting_id) => {
     // Create Ledger
     await createLedger({
       uuid: uuid,
-      txUserAction: "linkCustomized",
+      txUserAction: "linkCreated",
       txID: crypto.randomBytes(11).toString("hex"),
       txAuth: "DAO",
-      txFrom: uuid,
-      txTo: "DAO Treasury",
+      txFrom: "DAO Treasury",
+      txTo: uuid,
       txAmount: 0,
       txData: userQuestSetting_id,
       txDate: Date.now(),
