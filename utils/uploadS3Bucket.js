@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { AWS_S3_ACCESS_KEY, AWS_S3_SECRET_ACCESS_KEY, AWS_S3_REGION, AWS_BUCKET_NAME } = require('../config/env');
+const { AWS_S3_ACCESS_KEY, AWS_S3_SECRET_ACCESS_KEY, AWS_S3_REGION, AWS_S3_BUCKET_NAME } = require('../config/env');
 
 AWS.config.update({
   accessKeyId: AWS_S3_ACCESS_KEY,
@@ -9,7 +9,7 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-const bucketName = AWS_BUCKET_NAME;
+const bucketName = AWS_S3_BUCKET_NAME;
 const region = AWS_S3_REGION;
 const accessKeyId = AWS_S3_ACCESS_KEY;
 const secretAccessKey = AWS_S3_SECRET_ACCESS_KEY;
