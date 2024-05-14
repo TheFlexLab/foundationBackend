@@ -249,6 +249,121 @@ const signUpUserBySocialLogin = async (req, res) => {
   }
 };
 
+const signUpUserBySocialBadges = async (req, res) => {
+  try {
+    // Check Google Account
+    const payload = req.body;
+    // Check if email already exist
+    const alreadyUser = await User.findOne({ email: payload.email });
+    if (alreadyUser) throw new Error("Email Already Exists");
+
+    const usersWithBadge = await UserModel.find({
+      badges: {
+        $elemMatch: {
+          accountId: req.body.badgeAccountId,
+          accountName: req.body.provider,
+        },
+      },
+    });
+    if (usersWithBadge.length !== 0)
+      throw new Error("Oops! This account is already linked.");
+
+    const uuid = crypto.randomBytes(11).toString("hex");
+    const user = await new User({
+      email: payload.email,
+      uuid: uuid,
+      role: "user",
+    });
+
+    // Create a Badge at starting index
+    user.badges.unshift({
+      accountId: req.body.badgeAccountId,
+      accountName: req.body.provider,
+      details: req.body.data,
+      isVerified: true,
+      type: "social",
+      primary: true,
+    });
+
+    // Update user verification status to true
+    user.gmailVerified = payload.email_verified;
+
+    await user.save();
+    // Create Ledger
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "accountCreated",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: uuid,
+      // txDescription : "User creates a new account"
+    });
+    // Create Ledger
+    await createLedger({
+      uuid: user.uuid,
+      txUserAction: "accountLogin",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: user.uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: user.uuid,
+      // txDescription : "user logs in"
+    });
+    // Create Ledger
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "accountBadgeAdded",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: user.badges[0]._id,
+      // txDescription : "User adds a verification badge"
+    });
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "accountBadgeAdded",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "DAO",
+      txFrom: "DAO Treasury",
+      txTo: uuid,
+      txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
+      // txData : user.badges[0]._id,
+      // txDescription : "Incentive for adding badges"
+    });
+    // Decrement the Treasury
+    await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
+
+    // Increment the UserBalance
+    await updateUserBalance({
+      uuid: user.uuid,
+      amount: ACCOUNT_BADGE_ADDED_AMOUNT,
+      inc: true,
+    });
+
+    // Generate a JWT token
+    const token = createToken({ uuid: user.uuid });
+
+    if (user.badges[0].type !== "Education") {
+      user.requiredAction = true;
+      await user.save();
+    }
+    res.cookie("uuid", user.uuid, cookieConfiguration());
+    res.cookie("jwt", token, cookieConfiguration());
+    res.status(200).json({ ...user._doc, token });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      message: `An error occurred while signUpUser Auth: ${error.message}`,
+    });
+  }
+};
+
 const signInUser = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -516,6 +631,118 @@ const signUpSocialGuestMode = async (req, res) => {
   }
 };
 
+const signUpGuestBySocialBadges = async (req, res) => {
+  try {
+    const payload = req.body;
+
+    // Check if email already exist
+    const AlreadyUser = await User.findOne({ email: payload.email });
+    if (AlreadyUser) throw new Error("Email Already Exist");
+
+    //if user doesnot exist
+    const user = await User.findOne({ uuid: payload.uuid });
+    if (!user) throw new Error("User doesn't Exist");
+
+    const uuid = payload.uuid;
+    await User.updateOne(
+      { uuid: uuid },
+      {
+        $set: {
+          email: payload.email,
+          role: "user",
+          isGuestMode: false,
+        },
+      }
+    );
+
+    // Create a Badge at starting index
+    user.badges.unshift({
+      accountId: req.body.badgeAccountId,
+      accountName: req.body.provider,
+      details: req.body.data,
+      isVerified: true,
+      type: "social",
+      primary: true,
+    });
+
+    // Update user verification status to true
+    user.gmailVerified = payload.email_verified;
+    await user.save();
+    // Create Ledger
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "accountCreated",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: uuid,
+      // txDescription : "User creates a new account"
+    });
+    // Create Ledger
+    await createLedger({
+      uuid: user.uuid,
+      txUserAction: "accountLogin",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: user.uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: user.uuid,
+      // txDescription : "user logs in"
+    });
+    // Create Ledger
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "accountBadgeAdded",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: user.badges[0]._id,
+      // txDescription : "User adds a verification badge"
+    });
+    await createLedger({
+      uuid: uuid,
+      txUserAction: "accountBadgeAdded",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "DAO",
+      txFrom: "DAO Treasury",
+      txTo: uuid,
+      txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
+      // txData : user.badges[0]._id,
+      // txDescription : "Incentive for adding badges"
+    });
+    // Decrement the Treasury
+    await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
+
+    // Increment the UserBalance
+    await updateUserBalance({
+      uuid: user.uuid,
+      amount: ACCOUNT_BADGE_ADDED_AMOUNT,
+      inc: true,
+    });
+
+    // Generate a JWT token
+    const token = createToken({ uuid: user.uuid });
+
+    if (user.badges[0].type !== "Education") {
+      user.requiredAction = true;
+      await user.save();
+    }
+    res.cookie("uuid", user.uuid, cookieConfiguration());
+    res.cookie("jwt", token, cookieConfiguration());
+    res.status(200).json({ ...user._doc, token });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      message: `An error occurred while signUpSocialGuestMode Auth: ${error.message}`,
+    });
+  }
+};
+
 const signInUserBySocialLogin = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.data.email });
@@ -526,6 +753,47 @@ const signInUserBySocialLogin = async (req, res) => {
     // Check if email already exist
     const alreadyUser = await User.findOne({ email: payload.email });
     if (!alreadyUser) throw new Error("Please Signup!");
+
+    // Generate a JWT token
+    const token = createToken({ uuid: user.uuid });
+
+    // Create Ledger
+    await createLedger({
+      uuid: user.uuid,
+      txUserAction: "accountLogin",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "User",
+      txFrom: user.uuid,
+      txTo: "dao",
+      txAmount: "0",
+      txData: user.uuid,
+      // txDescription : "user logs in"
+    });
+
+    // res.status(200).json(user);
+    res.cookie("uuid", user.uuid, cookieConfiguration());
+    res.cookie("jwt", token, cookieConfiguration());
+    res.status(200).json({ ...user._doc, token });
+    // res.status(201).send("Signed in Successfully");
+    // if(req.query.GoogleAccount){
+    //   signUpUserBySocialLogin(req, res)
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      message: `An error occurred while signUpUser Auth: ${error.message}`,
+    });
+  }
+};
+
+const signInUserBySocialBadges = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      $or: [
+        { email: req.body.data.email },
+        { "badges.0.accountId": req.body.data.accountId },
+      ],
+    });
+    if (!user) throw new Error("User not Found");
 
     // Generate a JWT token
     const token = createToken({ uuid: user.uuid });
@@ -577,14 +845,12 @@ const updateUserSettings = async (req, res) => {
     await user.save();
 
     // Respond with updated user settings
-    res.status(200).json(
-      {
-        message: {
-          userSettings:  user.userSettings,
-          notificationSettings: user.notificationSettings
-        }
-      }
-    );
+    res.status(200).json({
+      message: {
+        userSettings: user.userSettings,
+        notificationSettings: user.notificationSettings,
+      },
+    });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -1292,4 +1558,7 @@ module.exports = {
   getInstaToken,
   getLinkedInUserInfo,
   updateUserSettings,
+  signUpUserBySocialBadges,
+  signUpGuestBySocialBadges,
+  signInUserBySocialBadges,
 };

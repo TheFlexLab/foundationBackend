@@ -94,6 +94,32 @@ router.post(
    */
   AuthController.signUpUserBySocialLogin
 );
+router.post(
+  "/signUpUser/socialBadges",
+  /**
+   * @swagger
+   * /user/signUpUser/social:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Sign up user via social login
+   *     description: Endpoint to sign up a new user using social login
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SocialSignUpRequest'
+   *     responses:
+   *       '200':
+   *         description: User signed up successfully via social login
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.signUpUserBySocialBadges
+);
 
 router.post(
   "/signInUser/social",
@@ -122,6 +148,32 @@ router.post(
   AuthController.signInUserBySocialLogin
 );
 
+router.post(
+  "/signInUser/socialBadges",
+  /**
+   * @swagger
+   * /user/signInUser/social:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Sign in user via social login
+   *     description: Endpoint to sign in a user using social login
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SocialSignInRequest'
+   *     responses:
+   *       '200':
+   *         description: User signed in successfully via social login
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.signInUserBySocialBadges
+);
 router.post(
   "/signInUser",
   /**
@@ -257,6 +309,32 @@ router.post(
    *         description: Internal server error
    */
   AuthController.signUpSocialGuestMode
+);
+router.post(
+  "/signUpGuest/SocialBadges",
+  /**
+   * @swagger
+   * /user/signUpSocial/guestMode:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Sign up user in guest mode via social login
+   *     description: Endpoint to sign up a new user in guest mode using social login
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SocialSignUpGuestModeRequest'
+   *     responses:
+   *       '200':
+   *         description: User signed up successfully in guest mode via social login
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.signUpGuestBySocialBadges
 );
 
 router.post("/updateUserSettings", AuthController.updateUserSettings);
