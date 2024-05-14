@@ -239,7 +239,7 @@ const signUpUserBySocialLogin = async (req, res) => {
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ decryptUser, token });
+    res.status(200).json({ ...decryptUser, token });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -771,7 +771,7 @@ const signInUserBySocialLogin = async (req, res) => {
 
     console.log(user);
     // Decrypt Saved Data
-    const decryptUser = user;
+    const decryptUser = user._doc;
     decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
     decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
@@ -779,7 +779,7 @@ const signInUserBySocialLogin = async (req, res) => {
     // res.status(200).json(user);
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ decryptUser, token });
+    res.status(200).json({ ...decryptUser, token });
     // res.status(201).send("Signed in Successfully");
     // if(req.query.GoogleAccount){
     //   signUpUserBySocialLogin(req, res)
