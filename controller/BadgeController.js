@@ -15,6 +15,9 @@ const JobTitle = require("../models/JobTitle");
 const DegreeAndFieldOfStudy = require("../models/DegreeAndFieldOfStudy");
 const mongoose = require('mongoose');
 
+// Encryption/Decryption Security Purposes.
+const { encryptData, decryptData } = require("../utils/security");
+
 
 const update = async (req, res) => {
   try {
@@ -391,7 +394,7 @@ const addPersonalBadge = async (req, res) => {
     const updatedUserBadges = [
       ...userBadges,
       {
-        personal: req.body.personal,
+        personal: encryptData(req.body.personal),
       },
     ];
     // Update the user badges

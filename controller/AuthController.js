@@ -870,7 +870,12 @@ const userInfo = async (req, res) => {
     const user = await User.findOne({
       uuid: req.params.userUuid,
     });
-    console.log(user);
+
+    // Decrypt the 'personal' field in each badge
+    user.badges.forEach((badge) => {
+      badge.personal = decryptData(badge.personal);
+    });
+    
     res.status(200).json(user);
   } catch (error) {
     console.error(error.message);
