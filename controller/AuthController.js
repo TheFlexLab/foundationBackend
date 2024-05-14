@@ -231,12 +231,11 @@ const signUpUserBySocialLogin = async (req, res) => {
       await user.save();
     }
 
+    // Decrypt Saved Data
     const decryptUser = user._doc;
     decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
     decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
-
-    console.log("decryptUser.badges[0] =====================> ", decryptUser.badges[0]);
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
