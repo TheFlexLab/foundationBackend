@@ -24,6 +24,9 @@ const { getRandomDigits } = require("../utils/getRandomDigits");
 const { sendEmailMessage } = require("../utils/sendEmailMessage");
 const { FRONTEND_URL, JWT_SECRET } = require("../config/env");
 
+// Encryption/Decryption Security Purposes.
+const { encryptData, decryptData } = require("../utils/security");
+
 const changePassword = async (req, res) => {
   try {
     const user = await User.findOne({ uuid: req.body.uuid });
@@ -153,10 +156,10 @@ const signUpUserBySocialLogin = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: payload.sub,
-      accountName: payload.provider,
+      accountId: encryptData(payload.sub),
+      accountName: encryptData(payload.provider),
       isVerified: true,
-      details: req.body,
+      details: encryptData(req.body),
       type: type,
     });
 
@@ -227,9 +230,17 @@ const signUpUserBySocialLogin = async (req, res) => {
       user.requiredAction = true;
       await user.save();
     }
+
+    const decryptUser = user._doc;
+    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
+    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+
+    console.log("decryptUser.badges[0] =====================> ", decryptUser.badges[0]);
+
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token });
+    res.status(200).json({ decryptUser, token });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({

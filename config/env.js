@@ -31,4 +31,5 @@ module.exports = {
     AWS_SNS_SECRET_KEY: process.env.AWS_SNS_ACCESS_KEY,
     AWS_SNS_REGION: process.env.AWS_SNS_REGION,
     rpID: process.env.rpID,
+    ALGORITHM: process.env.ALGORITHM,
   };
