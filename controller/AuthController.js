@@ -266,7 +266,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
-          accountId: req.body.badgeAccountId,
+          accountId: id,
           accountName: payload.type,
         },
       },
@@ -890,20 +890,27 @@ const userInfo = async (req, res) => {
         console.log(" I am in Cell Phone");
         badge.details = decryptData(badge.details)
       } else if(badge.type && (badge.type === "work" || badge.type === "education" || badge.type === "personal")) {
-        console.log(" I am at Google, Work OR Education");
+        console.log(" I am at Work OR Education");
         badge.accountId = decryptData(badge.accountId);
         badge.accountName = decryptData(badge.accountName)
         badge.details = decryptData(badge.details)        
-      } else if (badge.personal.work) {
+      } else if(badge.accountName && (decryptData(badge.accountName) === "facebook" || decryptData(badge.accountName) === "linkedin" || decryptData(badge.accountName) === "twitter" || decryptData(badge.accountName) === "instagram" || decryptData(badge.accountName) === "github")) {
+        console.log(" I am at Social OR Education");
+        badge.accountId = decryptData(badge.accountId);
+        badge.accountName = decryptData(badge.accountName)
+        badge.details = decryptData(badge.details)        
+      } else if (badge.personal && badge.personal.work) {
         console.log(" I am in Work");
         // If badge.personal is an object and contains a work array, decrypt each element in the work array
         badge.personal.work = badge.personal.work.map((encryptedData) => {
           return decryptData(encryptedData)
         });
-      } else {
+      } else if(badge.personal) {
         console.log(" I am in Personal");
         // Otherwise, directly decrypt badge.personal
         badge.personal = decryptData(badge.personal);
+      } else {
+        throw new Error("userInfo Issue while getting the Badge.")
       }
     });
 

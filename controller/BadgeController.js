@@ -277,8 +277,8 @@ const addBadge = async (req, res) => {
     const usersWithBadge = await UserModel.find({
       badges: {
         $elemMatch: {
-          accountId: req.body.badgeAccountId,
-          accountName: req.body.provider,
+          accountId: encryptData(req.body.badgeAccountId),
+          accountName: encryptData(req.body.provider),
         },
       },
     });
@@ -289,9 +289,9 @@ const addBadge = async (req, res) => {
     const updatedUserBadges = [
       ...userBadges,
       {
-        accountId: req.body.badgeAccountId,
-        accountName: req.body.provider,
-        details: req.body.data,
+        accountId: encryptData(req.body.badgeAccountId),
+        accountName: encryptData(req.body.provider),
+        details: encryptData(req.body.data),
         isVerified: true,
         type: "default",
       },
@@ -843,13 +843,13 @@ const removeBadge = async (req, res) => {
     if (!User) throw new Error("No such User!");
     // Find the Badge
     const usersWithBadge = await UserModel.find({
-      badges: { $elemMatch: { accountId: req.body.badgeAccountId } },
+      badges: { $elemMatch: { accountId: encryptData(req.body.badgeAccountId) } },
     });
     if (usersWithBadge.length === 0) throw new Error("Badge not exist!");
 
     const userBadges = User.badges;
     const updatedUserBadges = userBadges.filter((item) => {
-      if (item.accountId !== req.body.badgeAccountId) {
+      if (item.accountId !== encryptData(req.body.badgeAccountId)) {
         return item;
       }
     });
