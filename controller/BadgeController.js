@@ -627,10 +627,10 @@ const addWorkEducationBadge = async (req, res) => {
       (badge) => badge.personal && badge.personal[req.body.type]
     );
     if (personalBadgeIndex !== -1) {
-      User.badges[personalBadgeIndex].personal[req.body.type].push(newData);
+      User.badges[personalBadgeIndex].personal[req.body.type].push(encryptData(newData));
       User.markModified("badges");
     } else {
-      User.badges.push({ personal: { [req.body.type]: [newData] } });
+      User.badges.push({ personal: { [req.body.type]: [encryptData(newData)] } });
     }
     const data = await User.save();
     // Update the action

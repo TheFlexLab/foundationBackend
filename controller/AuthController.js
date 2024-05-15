@@ -871,16 +871,33 @@ const userInfo = async (req, res) => {
       uuid: req.params.userUuid,
     });
 
-    // Decrypt the 'personal' field in each badge
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
-      badge.personal = decryptData(badge.personal);
+      if(badge.accountName && decryptData(badge.accountName) === "google") {
+        badge.accountId = decryptData(badge.accountId);
+        badge.accountName = decryptData(badge.accountName)
+        badge.details = decryptData(badge.details)
+      } else if (badge.personal.work) {
+        // If badge.personal is an object and contains a work array, decrypt each element in the work array
+        badge.personal.work = badge.personal.work.map((encryptedData) => {
+          return decryptData(encryptedData)
+        });
+      } else {
+        // Otherwise, directly decrypt badge.personal
+        badge.personal = decryptData(badge.personal);
+      }
     });
-    
+
     res.status(200).json(user);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
-      message: `An error occurred while userInfo Auth: ${error.message}`,
+      message: `An error occurred while processing userInfo: ${error.message}`,
     });
   }
 };
