@@ -274,7 +274,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
-          accountId: id,
+          accountId: encryptData(id),
           accountName: payload.type,
         },
       },
@@ -291,9 +291,9 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: id,
-      accountName: payload.type,
-      details: payload.data,
+      accountId: encryptData(id),
+      accountName: encryptData(payload.type),
+      details: encryptData(payload.data),
       isVerified: true,
       type: "social",
       primary: true,
@@ -365,9 +365,16 @@ const signUpUserBySocialBadges = async (req, res) => {
       user.requiredAction = true;
       await user.save();
     }
+
+    // Decrypt Saved Data
+    const decryptUser = user._doc;
+    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
+    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token });
+    res.status(200).json({ ...decryptUser, token });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -824,7 +831,7 @@ const signInUserBySocialBadges = async (req, res) => {
     }
 
     const user = await User.findOne({
-      $or: [{ email: email }, { "badges.0.accountId": id }],
+      $or: [{ email: email }, { "badges.0.accountId": encryptData(id) }],
     });
     if (!user) throw new Error("User not Found");
 
@@ -844,10 +851,16 @@ const signInUserBySocialBadges = async (req, res) => {
       // txDescription : "user logs in"
     });
 
+    // Decrypt Saved Data
+    const decryptUser = user._doc;
+    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
+    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)    
+
     // res.status(200).json(user);
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token });
+    res.status(200).json({ ...decryptUser, token });
     // res.status(201).send("Signed in Successfully");
     // if(req.query.GoogleAccount){
     //   signUpUserBySocialLogin(req, res)
