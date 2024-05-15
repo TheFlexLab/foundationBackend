@@ -262,6 +262,14 @@ const signUpUserBySocialBadges = async (req, res) => {
     if (payload.type === "facebook") {
       id = payload.data.userID;
     }
+    
+    if (payload.type === "twitter") {
+      id = payload.data.user.uid;
+    }
+
+    if (payload.type === "github") {
+      id = payload.data.user.uid;
+    }
 
     const usersWithBadge = await User.find({
       badges: {
@@ -804,6 +812,17 @@ const signInUserBySocialBadges = async (req, res) => {
       id = payload.data.userID;
       email = payload.data.email;
     }
+
+    if (payload.provider === "twitter"){
+      id = payload.data.user.uid;
+      email = payload.data.email;
+    }
+
+    if (payload.provider === "github"){
+      id = payload.data.user.uid;
+      email = payload.data.email;
+    }
+
     const user = await User.findOne({
       $or: [{ email: email }, { "badges.0.accountId": id }],
     });

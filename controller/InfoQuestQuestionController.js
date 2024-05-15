@@ -1377,7 +1377,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Get verified, start growing your FDX balance",
               text: "Have your data be more desirable for brands or research firms to purchase with more verified info- and earn more FDX while you're at it!",
-              buttonText: "Add verification badge!",
+              buttonText: "Add verification badges!",
               buttonUrl: "/dashboard/profile",
               category: "Home",
               position: "Feed",
