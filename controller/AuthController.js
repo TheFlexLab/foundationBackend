@@ -253,14 +253,21 @@ const signUpUserBySocialBadges = async (req, res) => {
     // Check Google Account
     const payload = req.body;
     // Check if email already exist
-    const alreadyUser = await User.findOne({ email: payload.email });
-    if (alreadyUser) throw new Error("Email Already Exists");
+    if (payload.data.email) {
+      const alreadyUser = await User.findOne({ email: payload.data.email });
+      if (alreadyUser) throw new Error("Email Already Exists");
+    }
 
-    const usersWithBadge = await UserModel.find({
+    let id;
+    if (payload.type === "facebook") {
+      id = payload.data.userID;
+    }
+
+    const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
           accountId: req.body.badgeAccountId,
-          accountName: req.body.provider,
+          accountName: payload.type,
         },
       },
     });
@@ -269,24 +276,22 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     const uuid = crypto.randomBytes(11).toString("hex");
     const user = await new User({
-      email: payload.email,
+      email: payload.data.email ? payload.data.email : "",
       uuid: uuid,
       role: "user",
     });
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: req.body.badgeAccountId,
-      accountName: req.body.provider,
-      details: req.body.data,
+      accountId: id,
+      accountName: payload.type,
+      details: payload.data,
       isVerified: true,
       type: "social",
       primary: true,
     });
 
     // Update user verification status to true
-    user.gmailVerified = payload.email_verified;
-
     await user.save();
     // Create Ledger
     await createLedger({
@@ -348,7 +353,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     // Generate a JWT token
     const token = createToken({ uuid: user.uuid });
 
-    if (user.badges[0].type !== "Education") {
+    if (payload.data.email && user.badges[0].type !== "Education") {
       user.requiredAction = true;
       await user.save();
     }
@@ -413,7 +418,7 @@ const signInUser = async (req, res) => {
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.json({ message: "Successful" });
+    res.status(200).json(user);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -793,11 +798,15 @@ const signInUserBySocialLogin = async (req, res) => {
 
 const signInUserBySocialBadges = async (req, res) => {
   try {
+    let id;
+    let email;
+    const payload = req.body;
+    if (payload.provider === "facebook") {
+      id = payload.data.userID;
+      email = payload.data.email;
+    }
     const user = await User.findOne({
-      $or: [
-        { email: req.body.data.email },
-        { "badges.0.accountId": req.body.data.accountId },
-      ],
+      $or: [{ email: email }, { "badges.0.accountId": id }],
     });
     if (!user) throw new Error("User not Found");
 
@@ -1051,7 +1060,7 @@ const sendVerifyEmail = async (req, res) => {
 
     // Step 3 - Email the user a unique verification link
     const url = `${FRONTEND_URL}/VerifyCode/?${verificationTokenFull}`;
-    // return res.status(200).json({url})
+    // return res.status(200).json({ url });
     // console.log("url", url);
 
     // NODEMAILER
@@ -1256,6 +1265,7 @@ const verify = async (req, res) => {
     // Create a Badge
     user.badges.unshift({ accountName: "Email", isVerified: true });
     // Step 3 - Update user verification status to true
+    user.requiredAction = true;
     user.gmailVerified = true;
     user.verification = true;
     await user.save();
