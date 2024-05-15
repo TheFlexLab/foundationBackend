@@ -41,7 +41,13 @@ const update = async (req, res) => {
     // Generate a JWT token
     const token = createToken({ uuid: User.uuid });
 
-    res.status(200).json({ ...User._doc, token });
+    // Decrypt Saved Data
+    const decryptUser = User._doc;
+    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
+    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+
+    res.status(200).json({ ...decryptUser, token });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -185,7 +191,7 @@ const addContactBadge = async (req, res) => {
         ...userBadges,
         {
           type: req.body.type,
-          details: req.body,
+          details: encryptData(req.body),
         },
       ];
       // Update the user badges
@@ -209,11 +215,11 @@ const addContactBadge = async (req, res) => {
     const updatedUserBadges = [
       ...userBadges,
       {
-        accountId: req.body.sub,
-        accountName: req.body.provider,
+        accountId: encryptData(req.body.sub),
+        accountName: encryptData(req.body.provider),
         isVerified: true,
         type: req.body.type,
-        details: req.body,
+        details: encryptData(req.body),
       },
     ];
     // Update the user badges
