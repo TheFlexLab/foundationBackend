@@ -690,7 +690,7 @@ const addWeb3Badge = async (req, res) => {
     const updatedUserBadges = [
       ...userBadges,
       {
-        web3: req.body.web3,
+        web3: encryptData(req.body.web3),
       },
     ];
     // Update the user badges

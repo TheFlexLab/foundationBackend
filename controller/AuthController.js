@@ -941,6 +941,8 @@ const userInfo = async (req, res) => {
         console.log(" I am in Personal");
         // Otherwise, directly decrypt badge.personal
         badge.personal = decryptData(badge.personal);
+      } else if(badge.web3) {
+        badge.web3 = decryptData(badge.web3)
       } else {
         throw new Error("userInfo Issue while getting the Badge.")
       }
