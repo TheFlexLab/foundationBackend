@@ -943,6 +943,11 @@ const userInfo = async (req, res) => {
         badge.personal = decryptData(badge.personal);
       } else if(badge.web3) {
         badge.web3 = decryptData(badge.web3)
+      } else if(badge.type && (badge.type === "desktop" || badge.type === "mobile")) {
+        console.log(" I am at Desktop");
+        badge.accountId = decryptData(badge.accountId);
+        badge.accountName = decryptData(badge.accountName)
+        badge.data = decryptData(badge.data)  
       } else {
         throw new Error("userInfo Issue while getting the Badge.")
       }

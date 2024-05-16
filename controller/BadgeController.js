@@ -1153,8 +1153,8 @@ const addPasskeyBadge = async (req, res) => {
     const usersWithBadge = await UserModel.find({
       badges: {
         $elemMatch: {
-          accountId: req.body.accountId,
-          accountName: req.body.accountName,
+          accountId: encryptData(req.body.accountId),
+          accountName: encryptData(req.body.accountName),
         },
       },
     });
@@ -1165,11 +1165,11 @@ const addPasskeyBadge = async (req, res) => {
     const updatedUserBadges = [
       ...userBadges,
       {
-        accountId: req.body.accountId,
-        accountName: req.body.accountName,
+        accountId: encryptData(req.body.accountId),
+        accountName: encryptData(req.body.accountName),
         isVerified: req.body.isVerified,
         type: req.body.type,
-        data: req.body.data,
+        data: encryptData(req.body.data),
       },
     ];
     // Update the user badges
