@@ -365,6 +365,44 @@ router.get(
   AuthController.userInfo
 );
 
+// router.patch(
+//   "/excep",
+//   /**
+//   * @swagger
+//   * /user/excep:
+//   *   patch:
+//   *     tags:
+//   *       - Authentication
+//   *     summary: Set badge data for all users
+//   *     description: Endpoint to set badge data for all users in the database
+//   *     responses:
+//   *       '200':
+//   *         description: Badge data encrypted successfully for all users
+//   *       '500':
+//   *         description: Internal server error
+//   */
+//   AuthController.excep
+// )
+
+// router.patch(
+//   "/encryptBadgeData",
+//   /**
+//   * @swagger
+//   * /user/encryptBadgeData:
+//   *   patch:
+//   *     tags:
+//   *       - Authentication
+//   *     summary: Encrypt badge data for all users
+//   *     description: Endpoint to encrypt badge data for all users in the database
+//   *     responses:
+//   *       '200':
+//   *         description: Badge data encrypted successfully for all users
+//   *       '500':
+//   *         description: Internal server error
+//   */
+//   AuthController.encryptBadgeData
+// )
+
 router.post(
   "/userInfoById",
   /**

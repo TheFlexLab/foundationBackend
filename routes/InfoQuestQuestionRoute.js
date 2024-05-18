@@ -256,10 +256,10 @@ router.get(
 );
 
 router.get(
-  "/getQuest/:uniqueShareLink",
+  "/getQuest/:uniqueShareLink/:uuid?",
   /**
    * @swagger
-   * /infoquestions/getQuest/{uniqueShareLink}:
+   * /infoquestions/getQuest/{uniqueShareLink}/{uuid}:
    *   get:
    *     tags:
    *       - Info Quest Question

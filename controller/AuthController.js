@@ -262,13 +262,17 @@ const signUpUserBySocialBadges = async (req, res) => {
     if (payload.type === "facebook") {
       id = payload.data.userID;
     }
-    
+
     if (payload.type === "twitter") {
       id = payload.data.user.uid;
     }
 
     if (payload.type === "github") {
       id = payload.data.user.uid;
+    }
+
+    if (payload.type === "instagram") {
+      id = payload.data.user_id;
     }
 
     const usersWithBadge = await User.find({
@@ -655,8 +659,37 @@ const signUpGuestBySocialBadges = async (req, res) => {
     const payload = req.body;
 
     // Check if email already exist
-    const AlreadyUser = await User.findOne({ email: payload.email });
-    if (AlreadyUser) throw new Error("Email Already Exist");
+    if (payload.email) {
+      const alreadyUser = await User.findOne({ email: payload.email });
+      if (alreadyUser) throw new Error("Email Already Exists");
+    }
+    let id;
+    if (payload.type === "facebook") {
+      id = payload.userID;
+    }
+
+    if (payload.type === "twitter") {
+      id = payload.user.uid;
+    }
+
+    if (payload.type === "github") {
+      id = payload.user.uid;
+    }
+
+    if (payload.type === "instagram") {
+      id = payload.user_id;
+    }
+
+    const usersWithBadge = await User.find({
+      badges: {
+        $elemMatch: {
+          accountId: id,
+          accountName: payload.type,
+        },
+      },
+    });
+    if (usersWithBadge.length !== 0)
+      throw new Error("Oops! This account is already linked.");
 
     //if user doesnot exist
     const user = await User.findOne({ uuid: payload.uuid });
@@ -667,7 +700,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
       { uuid: uuid },
       {
         $set: {
-          email: payload.email,
+          email: payload.email ? payload.email : "",
           role: "user",
           isGuestMode: false,
         },
@@ -676,16 +709,15 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: req.body.badgeAccountId,
-      accountName: req.body.provider,
-      details: req.body.data,
+      accountId: id,
+      accountName: payload.type,
+      details: payload.data,
       isVerified: true,
       type: "social",
       primary: true,
     });
 
     // Update user verification status to true
-    user.gmailVerified = payload.email_verified;
     await user.save();
     // Create Ledger
     await createLedger({
@@ -747,10 +779,6 @@ const signUpGuestBySocialBadges = async (req, res) => {
     // Generate a JWT token
     const token = createToken({ uuid: user.uuid });
 
-    if (user.badges[0].type !== "Education") {
-      user.requiredAction = true;
-      await user.save();
-    }
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
     res.status(200).json({ ...user._doc, token });
@@ -820,14 +848,19 @@ const signInUserBySocialBadges = async (req, res) => {
       email = payload.data.email;
     }
 
-    if (payload.provider === "twitter"){
+    if (payload.provider === "twitter") {
       id = payload.data.user.uid;
       email = payload.data.email;
     }
 
-    if (payload.provider === "github"){
+    if (payload.provider === "github") {
       id = payload.data.user.uid;
       email = payload.data.email;
+    }
+
+    if (payload.provider === "instagram") {
+      id = req.body.data.user_id;
+      email = "";
     }
 
     const user = await User.findOne({
@@ -961,6 +994,169 @@ const userInfo = async (req, res) => {
     });
   }
 };
+
+// const userInfo = async (req, res) => {
+//   try {
+//     const user = await User.findOne({
+//       uuid: req.params.userUuid,
+//     });
+
+//     // Check if user exists
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     // Decrypt the 'personal' field or the 'work' array in each badge
+//     user.badges.forEach((badge) => {
+//       if(badge.type && badge.type === "cell-phone") {
+//         console.log(" I am in Cell Phone");
+//         badge.details = decryptData(badge.details)
+//       } else if(badge.type && (badge.type === "work" || badge.type === "education" || badge.type === "personal")) {
+//         console.log(" I am at Work OR Education");
+//         badge.accountId = decryptData(badge.accountId);
+//         badge.accountName = decryptData(badge.accountName)
+//         badge.details = decryptData(badge.details)
+//       } else if(badge.accountName && (decryptData(badge.accountName) === "facebook" || decryptData(badge.accountName) === "linkedin" || decryptData(badge.accountName) === "twitter" || decryptData(badge.accountName) === "instagram" || decryptData(badge.accountName) === "github")) {
+//         console.log(" I am at Social OR Education");
+//         badge.accountId = decryptData(badge.accountId);
+//         badge.accountName = decryptData(badge.accountName)
+//         badge.details = decryptData(badge.details)
+//       } else if (badge.personal && badge.personal.work) {
+//         console.log(" I am in Work");
+//         // If badge.personal is an object and contains a work array, decrypt each element in the work array
+//         badge.personal.work = badge.personal.work.map((encryptedData) => {
+//           return decryptData(encryptedData)
+//         });
+//       } else if(badge.personal) {
+//         console.log(" I am in Personal");
+//         // Otherwise, directly decrypt badge.personal
+//         badge.personal = decryptData(badge.personal);
+//       } else if(badge.web3) {
+//         badge.web3 = decryptData(badge.web3)
+//       } else if(badge.type && (badge.type === "desktop" || badge.type === "mobile")) {
+//         console.log(" I am at Desktop");
+//         badge.accountId = decryptData(badge.accountId);
+//         badge.accountName = decryptData(badge.accountName)
+//         badge.data = decryptData(badge.data)
+//       } else {
+//         throw new Error("userInfo Issue while getting the Badge.")
+//       }
+//     });
+
+//     res.status(200).json(user);
+//   } catch (error) {
+//     console.error(error.message);
+//     res.status(500).json({
+//       message: `An error occurred while processing userInfo: ${error.message}`,
+//     });
+//   }
+// };
+
+// const excep = async (req, res) => {
+//   try {
+//     const users = await User.find({});
+//     const bulkOps = [];
+
+//     users.forEach(user => {
+//       let updated = false;
+
+//       // Iterate over each badge in the user's badges array
+//       user.badges.forEach(badge => {
+//         // Check if the badge type is within the specified types and details field doesn't exist
+//         if (badge.type && badge.isVerified && !["desktop", "mobile", "farcaster"].includes(badge.type)) {
+//           // Check and add missing fields with default values
+//           if (!badge.accountId || badge.accountId === undefined || badge.accountId === null) {
+//             badge.accountId = "";
+//             updated = true;
+//           }
+//           if (!badge.accountName || badge.accountName === undefined || badge.accountName === null) {
+//             badge.accountName = "";
+//             updated = true;
+//           }
+//           if (!badge.details || badge.details === undefined || badge.details === null) {
+//             badge.details = { value: null};
+//             updated = true;
+//           }
+//         }
+//       });
+
+//       // If any badge was updated, add the update operation to bulkOps
+//       if (updated) {
+//         bulkOps.push({
+//           updateOne: {
+//             filter: { _id: user._id },
+//             update: { $set: { badges: user.badges } }
+//           }
+//         });
+//       }
+//     });
+
+//     if (bulkOps.length > 0) {
+//       const bulkWriteResult = await User.bulkWrite(bulkOps);
+//       res.status(200).send({
+//         message: `${bulkWriteResult.matchedCount} documents matched the filter, ${bulkWriteResult.modifiedCount} documents were updated.`
+//       });
+//     } else {
+//       res.status(200).send({ message: 'No users to update.' });
+//     }
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// };
+
+// const encryptBadgeData = async (req, res) => {
+//   try {
+//     const users = await User.find({});
+
+//     const bulkOps = users
+//       .map(user => {
+//         if(user.badges.length !== 0) {
+//           console.log("user================>", user);
+//           user.badges.forEach(badge => {
+//             if (badge.type && badge.type === "cell-phone") {
+//               badge.details = encryptData(badge.details);
+//             } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+//               badge.accountId = encryptData(badge.accountId);
+//               badge.accountName = encryptData(badge.accountName);
+//               badge.details = encryptData(badge.details);
+//             } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+//               badge.accountId = encryptData(badge.accountId);
+//               badge.accountName = encryptData(badge.accountName);
+//               badge.details = encryptData(badge.details);
+//             } else if (badge.personal && badge.personal.work) {
+//               badge.personal.work = badge.personal.work.map(encryptData);
+//             } else if (badge.personal) {
+//               badge.personal = encryptData(badge.personal);
+//             } else if (badge.web3) {
+//               badge.web3 = encryptData(badge.web3);
+//             } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+//               badge.accountId = encryptData(badge.accountId);
+//               badge.accountName = encryptData(badge.accountName);
+//               badge.data = encryptData(badge.data);
+//             }
+//           });
+
+//           return {
+//             updateOne: {
+//               filter: { _id: user._id },
+//               update: { $set: { badges: user.badges } }
+//             }
+//           };
+//         }
+//         return null;
+//       })
+//       .filter(op => op !== null);  // Filter out any null values
+
+//     if (bulkOps.length > 0) {
+//       const bulkWriteResult = await User.bulkWrite(bulkOps);
+//       res.status(200).send({ message: `${bulkWriteResult.matchedCount} documents matched the filter, ${bulkWriteResult.modifiedCount} documents were updated.`});
+//     } else {
+//       res.status(200).send({ message: "No documents to update." });
+//     }
+//   } catch (error) {
+//     res.status(500).send({message: error.message});
+//   }
+// };
 
 const userInfoById = async (req, res) => {
   try {

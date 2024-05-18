@@ -1608,7 +1608,7 @@ const getQuestByUniqueShareLink = async (req, res) => {
     // req.cookie
     console.log("🚀 ~ getQuestById ~ req.cookie:", req.cookies);
     // return
-    const uuid = req.cookies.uuid;
+    const uuid = req.query.uuid;
     const { uniqueShareLink } = req.params; // Use req.params instead of req.body
 
     const userQuestSetting = await UserQuestSetting.findOne({
