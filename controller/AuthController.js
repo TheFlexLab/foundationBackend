@@ -282,7 +282,7 @@ const signUpUserBySocialBadges = async (req, res) => {
       badges: {
         $elemMatch: {
           accountId: encryptData(id),
-          accountName: payload.type,
+          accountName: encryptData(payload.type),
         },
       },
     });
@@ -574,10 +574,19 @@ const signUpSocialGuestMode = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountName: payload.provider,
+      accountName: encryptData(payload.provider),
       isVerified: true,
       type: type,
     });
+
+    // user.badges.unshift({
+    //   accountId: encryptData(id),
+    //   accountName: encryptData(payload.provider),
+    //   details: encryptData(payload.data),
+    //   isVerified: true,
+    //   type: type,
+    //   primary: true,
+    // });
 
     // Update user verification status to true
     user.gmailVerified = payload.email_verified;
@@ -646,9 +655,16 @@ const signUpSocialGuestMode = async (req, res) => {
       user.requiredAction = true;
       await user.save();
     }
+
+    // Decrypt Saved Data
+    const decryptUser = user._doc;
+    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
+    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token });
+    res.status(200).json({ ...decryptUser, token });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -699,8 +715,8 @@ const signUpGuestBySocialBadges = async (req, res) => {
     const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
-          accountId: id,
-          accountName: type,
+          accountId: encryptData(id),
+          accountName: encryptData(type),
         },
       },
     });
@@ -725,9 +741,9 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: id,
-      accountName: payload.type,
-      details: payload.data,
+      accountId: encryptData(id),
+      accountName: encryptData(payload.type),
+      details: encryptData(payload.data),
       isVerified: true,
       type: "social",
       primary: true,
@@ -795,9 +811,15 @@ const signUpGuestBySocialBadges = async (req, res) => {
     // Generate a JWT token
     const token = createToken({ uuid: user.uuid });
 
+    // Decrypt Saved Data
+    const decryptUser = user._doc;
+    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
+    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token });
+    res.status(200).json({ ...decryptUser, token });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
