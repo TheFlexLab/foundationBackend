@@ -274,6 +274,9 @@ const signUpUserBySocialBadges = async (req, res) => {
     if (payload.type === "instagram") {
       id = payload.data.user_id;
     }
+    if (payload.type === "linkedin") {
+      id = payload.data.sub;
+    }
 
     const usersWithBadge = await User.find({
       badges: {
@@ -664,27 +667,40 @@ const signUpGuestBySocialBadges = async (req, res) => {
       if (alreadyUser) throw new Error("Email Already Exists");
     }
     let id;
+    let type;
     if (payload.type === "facebook") {
       id = payload.userID;
+      type = payload.type;
     }
 
     if (payload.type === "twitter") {
       id = payload.user.uid;
+      type = payload.type;
     }
 
     if (payload.type === "github") {
       id = payload.user.uid;
+      type = payload.type;
     }
 
     if (payload.type === "instagram") {
       id = payload.user_id;
+      type = payload.type;
+    }
+
+    if (payload.provider === "linkedin") {
+      id = payload.data.sub;
+      type = payload.provider
+    }
+    if (payload.provider === "linkedin") {
+      id = payload.sub;
     }
 
     const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
           accountId: id,
-          accountName: payload.type,
+          accountName: type,
         },
       },
     });
@@ -860,6 +876,15 @@ const signInUserBySocialBadges = async (req, res) => {
 
     if (payload.provider === "instagram") {
       id = req.body.data.user_id;
+      email = "";
+    }
+    if (payload.provider === "linkedin") {
+      id = req.body.data.sub;
+      email = payload.data.email;
+    }
+
+    if (payload.provider === "linkedin") {
+      id = payload.data.sub;
       email = "";
     }
 
