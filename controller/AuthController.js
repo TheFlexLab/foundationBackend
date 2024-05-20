@@ -1101,7 +1101,8 @@ const addPasswordBadgesUpdate = async (req, res) => {
           badge.data = userCustomizedDecryptData(badge.data, password);
         }
       });
-      
+
+      user.isPasswordEncryption = false;
       await user.save();
       res.status(200).json({
         message: `User's customized password decryption is successful.`,
@@ -1132,6 +1133,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
         }
       });
       
+      user.isPasswordEncryption = true;
       await user.save();
       res.status(200).json({
         message: `User's customized password decryption is successful.`,
