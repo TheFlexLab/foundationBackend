@@ -314,7 +314,7 @@ router.post(
   "/signUpGuest/SocialBadges",
   /**
    * @swagger
-   * /user/signUpSocial/guestMode:
+   * /user/signUpGuest/SocialBadges:
    *   post:
    *     tags:
    *       - Authentication
@@ -363,6 +363,33 @@ router.get(
    *         description: Internal server error
    */
   AuthController.userInfo
+);
+
+router.post(
+  "/addPasswordBadgesUpdate",
+  /**
+   * @swagger
+   * /addPasswordBadgesUpdate:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Sign up user in guest mode via social login
+   *     description: Endpoint to sign up a new user in guest mode using social login
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SocialSignUpGuestModeRequest'
+   *     responses:
+   *       '200':
+   *         description: User signed up successfully in guest mode via social login
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.addPasswordBadgesUpdate
 );
 
 // router.patch(
