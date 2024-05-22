@@ -379,7 +379,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
     decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
-    
+
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
     res.status(200).json({ ...decryptUser, token });
@@ -947,7 +947,7 @@ const signInUserBySocialBadges = async (req, res) => {
     const decryptUser = user._doc;
     decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
     decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
-    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)    
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     // res.status(200).json(user);
     res.cookie("uuid", user.uuid, cookieConfiguration());
@@ -1008,66 +1008,68 @@ const userInfo = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if(user.isPasswordEncryption){
+    if (user.isPasswordEncryption) {
       user.badges.forEach(badge => {
-        if (badge.type && badge.type === "cell-phone") {
-          badge.details = userCustomizedDecryptData(badge.details, password);
-        } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
-          badge.details = userCustomizedDecryptData(badge.details, password);
-        } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
-          badge.details = userCustomizedDecryptData(badge.details, password);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map(item => userCustomizedDecryptData(item, password));
-        } else if (badge.personal) {
-          badge.personal = userCustomizedDecryptData(badge.personal, password);
-        } else if (badge.web3) {
-          badge.web3 = userCustomizedDecryptData(badge.web3, password);
-        } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
-          badge.data = userCustomizedDecryptData(badge.data, password);
+        if (!badge.primary || badge.primary === false) {
+          if (badge.type && badge.type === "cell-phone") {
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          }
+          else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          }
+          else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(decryptData(userCustomizedDecryptData(badge.accountName, password)))) {
+            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          }
+          else if (badge.personal && badge.personal.work) {
+            badge.personal.work = badge.personal.work.map((item) => { return userCustomizedDecryptData(item, password) });
+          }
+          else if (badge.personal) {
+            badge.personal = userCustomizedDecryptData(badge.personal, password);
+          }
+          else if (badge.web3) {
+            badge.web3 = userCustomizedDecryptData(badge.web3, password);
+          }
+          else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+            badge.data = userCustomizedDecryptData(badge.data, password);
+          }
         }
       });
     }
 
     // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
-      if(badge.type && badge.type === "cell-phone") {
-        console.log(" I am in Cell Phone");
+      if (badge.type && badge.type === "cell-phone") {
         badge.details = decryptData(badge.details)
-      } else if(badge.type && (badge.type === "work" || badge.type === "education" || badge.type === "personal" || badge.type === "social" || badge.type === "default")) {
-        console.log(" I am at Work OR Education");
+      }
+      else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
         badge.accountId = decryptData(badge.accountId);
         badge.accountName = decryptData(badge.accountName)
-        badge.details = decryptData(badge.details)        
-      } else if(badge.accountName && (decryptData(badge.accountName) === "facebook" || decryptData(badge.accountName) === "linkedin" || decryptData(badge.accountName) === "twitter" || decryptData(badge.accountName) === "instagram" || decryptData(badge.accountName) === "github" || decryptData(badge.accountName) === "Email" || decryptData(badge.accountName) === "google")) {
-        console.log(" I am at Social OR Education");
+        badge.details = decryptData(badge.details)
+      }
+      else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(decryptData(badge.accountName))) {
         badge.accountId = decryptData(badge.accountId);
         badge.accountName = decryptData(badge.accountName)
-        badge.details = decryptData(badge.details)        
-      } else if (badge.personal && badge.personal.work) {
-        console.log(" I am in Work");
-        // If badge.personal is an object and contains a work array, decrypt each element in the work array
-        badge.personal.work = badge.personal.work.map((encryptedData) => {
-          return decryptData(encryptedData)
-        });
-      } else if(badge.personal) {
-        console.log(" I am in Personal");
-        // Otherwise, directly decrypt badge.personal
+        badge.details = decryptData(badge.details)
+      }
+      else if (badge.personal && badge.personal.work) {
+        badge.personal.work = badge.personal.work.map((encryptedData) => { return decryptData(encryptedData) });
+      }
+      else if (badge.personal) {
         badge.personal = decryptData(badge.personal);
-      } else if(badge.web3) {
+      }
+      else if (badge.web3) {
         badge.web3 = decryptData(badge.web3)
-      } else if(badge.type && (badge.type === "desktop" || badge.type === "mobile")) {
-        console.log(" I am at Desktop");
+      }
+      else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
         badge.accountId = decryptData(badge.accountId);
         badge.accountName = decryptData(badge.accountName)
-        badge.data = decryptData(badge.data)  
-      } else {
-        throw new Error("userInfo Issue while getting the Badge.")
+        badge.data = decryptData(badge.data)
       }
     });
 
@@ -1079,61 +1081,6 @@ const userInfo = async (req, res) => {
     });
   }
 };
-//   try {
-//     const user = await User.findOne({
-//       uuid: req.params.userUuid,
-//     });
-
-//     // Check if user exists
-//     if (!user) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     // Decrypt the 'personal' field or the 'work' array in each badge
-//     user.badges.forEach((badge) => {
-//       if(badge.type && badge.type === "cell-phone") {
-//         console.log(" I am in Cell Phone");
-//         badge.details = decryptData(badge.details)
-//       } else if(badge.type && (badge.type === "work" || badge.type === "education" || badge.type === "personal")) {
-//         console.log(" I am at Work OR Education");
-//         badge.accountId = decryptData(badge.accountId);
-//         badge.accountName = decryptData(badge.accountName)
-//         badge.details = decryptData(badge.details)
-//       } else if(badge.accountName && (decryptData(badge.accountName) === "facebook" || decryptData(badge.accountName) === "linkedin" || decryptData(badge.accountName) === "twitter" || decryptData(badge.accountName) === "instagram" || decryptData(badge.accountName) === "github")) {
-//         console.log(" I am at Social OR Education");
-//         badge.accountId = decryptData(badge.accountId);
-//         badge.accountName = decryptData(badge.accountName)
-//         badge.details = decryptData(badge.details)
-//       } else if (badge.personal && badge.personal.work) {
-//         console.log(" I am in Work");
-//         // If badge.personal is an object and contains a work array, decrypt each element in the work array
-//         badge.personal.work = badge.personal.work.map((encryptedData) => {
-//           return decryptData(encryptedData)
-//         });
-//       } else if(badge.personal) {
-//         console.log(" I am in Personal");
-//         // Otherwise, directly decrypt badge.personal
-//         badge.personal = decryptData(badge.personal);
-//       } else if(badge.web3) {
-//         badge.web3 = decryptData(badge.web3)
-//       } else if(badge.type && (badge.type === "desktop" || badge.type === "mobile")) {
-//         console.log(" I am at Desktop");
-//         badge.accountId = decryptData(badge.accountId);
-//         badge.accountName = decryptData(badge.accountName)
-//         badge.data = decryptData(badge.data)
-//       } else {
-//         throw new Error("userInfo Issue while getting the Badge.")
-//       }
-//     });
-
-//     res.status(200).json(user);
-//   } catch (error) {
-//     console.error(error.message);
-//     res.status(500).json({
-//       message: `An error occurred while processing userInfo: ${error.message}`,
-//     });
-//   }
-// };
 
 const userInfoById = async (req, res) => {
   try {
@@ -1955,7 +1902,7 @@ const deleteCategoryFromList = async (req, res) => {
       });
     if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
 
-    userList.list.pull({_id: categoryId});
+    userList.list.pull({ _id: categoryId });
     userList.updatedAt = new Date().toISOString();
     // Save the updated userList document
     await userList.save();

@@ -14,6 +14,7 @@ const Company = require("../models/Company");
 const JobTitle = require("../models/JobTitle");
 const DegreeAndFieldOfStudy = require("../models/DegreeAndFieldOfStudy");
 const mongoose = require('mongoose');
+const User = require("../models/UserModel");
 
 // Encryption/Decryption Security Purposes.
 const { encryptData, decryptData } = require("../utils/security");
@@ -1393,64 +1394,68 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
     if(user.isPasswordEncryption){
       user.badges.forEach(badge => {
-        if (badge.type && badge.type === "cell-phone") {
-          badge.details = userCustomizedDecryptData(badge.details, password);
-        } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
-          badge.details = userCustomizedDecryptData(badge.details, password);
-        } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
-          badge.details = userCustomizedDecryptData(badge.details, password);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map(item => userCustomizedDecryptData(item, password));
-        } else if (badge.personal) {
-          badge.personal = userCustomizedDecryptData(badge.personal, password);
-        } else if (badge.web3) {
-          badge.web3 = userCustomizedDecryptData(badge.web3, password);
-        } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
-          badge.data = userCustomizedDecryptData(badge.data, password);
+        if(!badge.primary || badge.primary === false){
+          if (badge.type && badge.type === "cell-phone") {
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          } else if (badge.personal && badge.personal.work) {
+            badge.personal.work = badge.personal.work.map(item => userCustomizedDecryptData(item, password));
+          } else if (badge.personal) {
+            badge.personal = userCustomizedDecryptData(badge.personal, password);
+          } else if (badge.web3) {
+            badge.web3 = userCustomizedDecryptData(badge.web3, password);
+          } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+            badge.data = userCustomizedDecryptData(badge.data, password);
+          }
         }
       });
 
       user.isPasswordEncryption = false;
       await user.save();
       res.status(200).json({
-        message: `User's customized password decryption is successful.`,
+        message: `User's customized password decryption is removed successful.`,
         data: user,
       });
     } else {
       user.badges.forEach(badge => {
-        if (badge.type && badge.type === "cell-phone") {
-          badge.details = userCustomizedEncryptData(badge.details, password);
-        } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-          badge.accountId = userCustomizedEncryptData(badge.accountId, password);
-          badge.accountName = userCustomizedEncryptData(badge.accountName, password);
-          badge.details = userCustomizedEncryptData(badge.details, password);
-        } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-          badge.accountId = userCustomizedEncryptData(badge.accountId, password);
-          badge.accountName = userCustomizedEncryptData(badge.accountName, password);
-          badge.details = userCustomizedEncryptData(badge.details, password);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map(item => userCustomizedEncryptData(item, password));
-        } else if (badge.personal) {
-          badge.personal = userCustomizedEncryptData(badge.personal, password);
-        } else if (badge.web3) {
-          badge.web3 = userCustomizedEncryptData(badge.web3, password);
-        } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-          badge.accountId = userCustomizedEncryptData(badge.accountId, password);
-          badge.accountName = userCustomizedEncryptData(badge.accountName, password);
-          badge.data = userCustomizedEncryptData(badge.data, password);
+        if(!badge.primary || badge.primary === false) {
+          if (badge.type && badge.type === "cell-phone") {
+            badge.details = userCustomizedEncryptData(badge.details, password);
+          } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+            badge.accountId = userCustomizedEncryptData(badge.accountId, password);
+            badge.accountName = userCustomizedEncryptData(badge.accountName, password);
+            badge.details = userCustomizedEncryptData(badge.details, password);
+          } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+            badge.accountId = userCustomizedEncryptData(badge.accountId, password);
+            badge.accountName = userCustomizedEncryptData(badge.accountName, password);
+            badge.details = userCustomizedEncryptData(badge.details, password);
+          } else if (badge.personal && badge.personal.work) {
+            badge.personal.work = badge.personal.work.map(item => userCustomizedEncryptData(item, password));
+          } else if (badge.personal) {
+            badge.personal = userCustomizedEncryptData(badge.personal, password);
+          } else if (badge.web3) {
+            badge.web3 = userCustomizedEncryptData(badge.web3, password);
+          } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+            badge.accountId = userCustomizedEncryptData(badge.accountId, password);
+            badge.accountName = userCustomizedEncryptData(badge.accountName, password);
+            badge.data = userCustomizedEncryptData(badge.data, password);
+          }
         }
       });
       
       user.isPasswordEncryption = true;
       await user.save();
       res.status(200).json({
-        message: `User's customized password decryption is successful.`,
+        message: `User's customized password encryption is added successful.`,
         data: user,
       });
     }
