@@ -1382,6 +1382,194 @@ const removeFarCasterBadge = async (req, res) => {
   }
 };
 
+const addPasswordBadgesUpdate = async (req, res) => {
+  try {
+
+    const { uuid, password } = req.body;
+
+    const user = await User.findOne({
+      uuid: uuid,
+    });
+
+    if(user.isPasswordEncryption){
+      user.badges.forEach(badge => {
+        if (badge.type && badge.type === "cell-phone") {
+          badge.details = userCustomizedDecryptData(badge.details, password);
+        } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+          badge.details = userCustomizedDecryptData(badge.details, password);
+        } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+          badge.details = userCustomizedDecryptData(badge.details, password);
+        } else if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map(item => userCustomizedDecryptData(item, password));
+        } else if (badge.personal) {
+          badge.personal = userCustomizedDecryptData(badge.personal, password);
+        } else if (badge.web3) {
+          badge.web3 = userCustomizedDecryptData(badge.web3, password);
+        } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+          badge.accountId = userCustomizedDecryptData(badge.accountId, password);
+          badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+          badge.data = userCustomizedDecryptData(badge.data, password);
+        }
+      });
+
+      user.isPasswordEncryption = false;
+      await user.save();
+      res.status(200).json({
+        message: `User's customized password decryption is successful.`,
+        data: user,
+      });
+    } else {
+      user.badges.forEach(badge => {
+        if (badge.type && badge.type === "cell-phone") {
+          badge.details = userCustomizedEncryptData(badge.details, password);
+        } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+          badge.accountId = userCustomizedEncryptData(badge.accountId, password);
+          badge.accountName = userCustomizedEncryptData(badge.accountName, password);
+          badge.details = userCustomizedEncryptData(badge.details, password);
+        } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+          badge.accountId = userCustomizedEncryptData(badge.accountId, password);
+          badge.accountName = userCustomizedEncryptData(badge.accountName, password);
+          badge.details = userCustomizedEncryptData(badge.details, password);
+        } else if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map(item => userCustomizedEncryptData(item, password));
+        } else if (badge.personal) {
+          badge.personal = userCustomizedEncryptData(badge.personal, password);
+        } else if (badge.web3) {
+          badge.web3 = userCustomizedEncryptData(badge.web3, password);
+        } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+          badge.accountId = userCustomizedEncryptData(badge.accountId, password);
+          badge.accountName = userCustomizedEncryptData(badge.accountName, password);
+          badge.data = userCustomizedEncryptData(badge.data, password);
+        }
+      });
+      
+      user.isPasswordEncryption = true;
+      await user.save();
+      res.status(200).json({
+        message: `User's customized password decryption is successful.`,
+        data: user,
+      });
+    }
+    
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      message: `An error occurred while processing your security badge: ${error.message}`,
+    });
+  }
+}
+
+// const excep = async (req, res) => {
+//   try {
+//     const users = await User.find({});
+//     const bulkOps = [];
+
+//     users.forEach(user => {
+//       let updated = false;
+
+//       // Iterate over each badge in the user's badges array
+//       user.badges.forEach(badge => {
+//         // Check if the badge type is within the specified types and details field doesn't exist
+//         if (badge.type && badge.isVerified && !["desktop", "mobile", "farcaster"].includes(badge.type)) {
+//           // Check and add missing fields with default values
+//           if (!badge.accountId || badge.accountId === undefined || badge.accountId === null) {
+//             badge.accountId = "";
+//             updated = true;
+//           }
+//           if (!badge.accountName || badge.accountName === undefined || badge.accountName === null) {
+//             badge.accountName = "";
+//             updated = true;
+//           }
+//           if (!badge.details || badge.details === undefined || badge.details === null) {
+//             badge.details = { value: null};
+//             updated = true;
+//           }
+//         }
+//       });
+
+//       // If any badge was updated, add the update operation to bulkOps
+//       if (updated) {
+//         bulkOps.push({
+//           updateOne: {
+//             filter: { _id: user._id },
+//             update: { $set: { badges: user.badges } }
+//           }
+//         });
+//       }
+//     });
+
+//     if (bulkOps.length > 0) {
+//       const bulkWriteResult = await User.bulkWrite(bulkOps);
+//       res.status(200).send({
+//         message: `${bulkWriteResult.matchedCount} documents matched the filter, ${bulkWriteResult.modifiedCount} documents were updated.`
+//       });
+//     } else {
+//       res.status(200).send({ message: 'No users to update.' });
+//     }
+//   } catch (error) {
+//     res.status(500).send({ message: error.message });
+//   }
+// };
+
+// const encryptBadgeData = async (req, res) => {
+//   try {
+//     const users = await User.find({});
+
+//     const bulkOps = users
+//       .map(user => {
+//         if(user.badges.length !== 0) {
+//           console.log("user================>", user);
+//           user.badges.forEach(badge => {
+//             if (badge.type && badge.type === "cell-phone") {
+//               badge.details = encryptData(badge.details);
+//             } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+//               badge.accountId = encryptData(badge.accountId);
+//               badge.accountName = encryptData(badge.accountName);
+//               badge.details = encryptData(badge.details);
+//             } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+//               badge.accountId = encryptData(badge.accountId);
+//               badge.accountName = encryptData(badge.accountName);
+//               badge.details = encryptData(badge.details);
+//             } else if (badge.personal && badge.personal.work) {
+//               badge.personal.work = badge.personal.work.map(encryptData);
+//             } else if (badge.personal) {
+//               badge.personal = encryptData(badge.personal);
+//             } else if (badge.web3) {
+//               badge.web3 = encryptData(badge.web3);
+//             } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+//               badge.accountId = encryptData(badge.accountId);
+//               badge.accountName = encryptData(badge.accountName);
+//               badge.data = encryptData(badge.data);
+//             }
+//           });
+
+//           return {
+//             updateOne: {
+//               filter: { _id: user._id },
+//               update: { $set: { badges: user.badges } }
+//             }
+//           };
+//         }
+//         return null;
+//       })
+//       .filter(op => op !== null);  // Filter out any null values
+
+//     if (bulkOps.length > 0) {
+//       const bulkWriteResult = await User.bulkWrite(bulkOps);
+//       res.status(200).send({ message: `${bulkWriteResult.matchedCount} documents matched the filter, ${bulkWriteResult.modifiedCount} documents were updated.`});
+//     } else {
+//       res.status(200).send({ message: "No documents to update." });
+//     }
+//   } catch (error) {
+//     res.status(500).send({message: error.message});
+//   }
+// };
+
+
 module.exports = {
   update,
   getBadges,
@@ -1409,4 +1597,5 @@ module.exports = {
   getPersonalBadge,
   addFarCasterBadge,
   removeFarCasterBadge,
+  addPasswordBadgesUpdate,
 };

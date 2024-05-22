@@ -683,4 +683,69 @@ router.post("/removeFarCasterBadge",
   BadgeController.removeFarCasterBadge
 );
 
+router.post(
+  "/addPasswordBadgesUpdate",
+  /**
+   * @swagger
+   * /addPasswordBadgesUpdate:
+   *   post:
+   *     tags:
+   *       - Badge
+   *     summary: Sign up user in guest mode via social login
+   *     description: Endpoint to sign up a new user in guest mode using social login
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SocialSignUpGuestModeRequest'
+   *     responses:
+   *       '200':
+   *         description: User signed up successfully in guest mode via social login
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  BadgeController.addPasswordBadgesUpdate
+);
+
+// router.patch(
+//   "/excep",
+//   /**
+//   * @swagger
+//   * /user/excep:
+//   *   patch:
+//   *     tags:
+//   *       - Badge
+//   *     summary: Set badge data for all users
+//   *     description: Endpoint to set badge data for all users in the database
+//   *     responses:
+//   *       '200':
+//   *         description: Badge data encrypted successfully for all users
+//   *       '500':
+//   *         description: Internal server error
+//   */
+//   AuthController.excep
+// )
+
+// router.patch(
+//   "/encryptBadgeData",
+//   /**
+//   * @swagger
+//   * /user/encryptBadgeData:
+//   *   patch:
+//   *     tags:
+//   *       - Badge
+//   *     summary: Encrypt badge data for all users
+//   *     description: Endpoint to encrypt badge data for all users in the database
+//   *     responses:
+//   *       '200':
+//   *         description: Badge data encrypted successfully for all users
+//   *       '500':
+//   *         description: Internal server error
+//   */
+//   AuthController.encryptBadgeData
+// )
+
 module.exports = router;
