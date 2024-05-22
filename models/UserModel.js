@@ -8,6 +8,11 @@ const columnsSchema = {
 
 const userSchema = mongoose.Schema(
   {
+    email: {
+      type: String,
+      max: 50,
+      // required: true,
+    },
     // username: {
     //   type: String,
     //   unique: true,
@@ -15,12 +20,6 @@ const userSchema = mongoose.Schema(
     //   max: 20,
     //   required: true,
     // },
-    email: {
-      type: String,
-      unique: true,
-      max: 50,
-      // required: true,
-    },
     password: {
       type: String,
       min: 6,
@@ -262,5 +261,8 @@ const userSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Create a partial index to enforce uniqueness only on non-null emails
+userSchema.index({ email: 1 }, { unique: true, partialFilterExpression: { email: { $type: "string" } } });
 
 module.exports = mongoose.model("user", userSchema);

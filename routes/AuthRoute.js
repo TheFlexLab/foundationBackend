@@ -98,7 +98,7 @@ router.post(
   "/signUpUser/socialBadges",
   /**
    * @swagger
-   * /user/signUpUser/social:
+   * /user/signUpUser/socialBadges:
    *   post:
    *     tags:
    *       - Authentication
@@ -793,6 +793,212 @@ router.post(
    *         description: Internal server error
    */
   AuthController.getLinkedInUserInfo
+);
+
+// User's List APIs
+
+router.get(
+  "/userList/:userUuid",
+  /**
+   * @swagger
+   * /user/userList/{userUuid}:
+   *   get:
+   *     tags:
+   *       - Authentication
+   *     summary: Get user's list information
+   *     description: Endpoint to get information of a user
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         description: The userUuid of the user
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.userList
+);
+
+router.post(
+  "/userList/addCategoryInUserList",
+  /**
+   * @swagger
+   * /user/userList/addCategoryInUserList:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Set bookmark states
+   *     description: Endpoint to set bookmark states for a user
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: 
+   *             $ref: '#/components/schemas/BookmarkStatesSetRequest'
+   *     responses:
+   *       '200':
+   *         description: Bookmark states set successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.addCategoryInUserList
+);
+
+router.get(
+  "/userList/findCategoryById/:userUuid/:categoryId",
+  /**
+   * @swagger
+   * /user/userList/findCategoryById/{userUuid}/{categoryId}:
+   *   get:
+   *     tags:
+   *       - Authentication
+   *     summary: Get user's list information
+   *     description: Endpoint to get information of a user
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         description: The userUuid of the user
+   *       - in: path
+   *         name: categoryId
+   *         required: true
+   *         description: The categoryId of the user's List
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.findCategoryById
+);
+
+router.patch(
+  "/userList/updateCategoryInUserList/:userUuid/:categoryId/:postId?",
+  /**
+   * @swagger
+   * /user/userList/updateCategoryInUserList/{userUuid}/{categoryId}/{postId}:
+   *   patch:
+   *     tags:
+   *       - Authentication
+   *     summary: Update bookmark states
+   *     description: Endpoint to update bookmark states for a user
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         description: The userUuid of the user
+   *       - in: path
+   *         name: categoryId
+   *         required: true
+   *         description: The categoryId of the user's List
+   *       - name: postId
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: ID of the post (optional)
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/BookmarkStatesSetRequest'
+   *     responses:
+   *       '200':
+   *         description: Bookmark states updated successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.updateCategoryInUserList
+);
+
+router.delete(
+  "/userList/deleteCategoryFromList/:userUuid/:categoryId",
+  /**
+   * @swagger
+   * /user/userList/deleteCategoryFromList/{userUuid}/{categoryId}:
+   *   delete:
+   *     tags:
+   *       - Authentication
+   *     summary: Delete a post from a user's category
+   *     description: Endpoint to delete a specific post from a user's category list
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: UUID of the user
+   *       - in: path
+   *         name: categoryId
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: ID of the category
+   *     responses:
+   *       '200':
+   *         description: Post deleted successfully
+   *       '404':
+   *         description: User, category, or post not found
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.deleteCategoryFromList
+);
+
+router.post(
+  "/userList/addPostInCategoryInUserList",
+  /**
+   * @swagger
+   * /user/userList/addPostInCategoryInUserList:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Set bookmark states
+   *     description: Endpoint to set bookmark states for a user
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: 
+   *             $ref: '#/components/schemas/BookmarkStatesSetRequest'
+   *     responses:
+   *       '200':
+   *         description: Bookmark states set successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.addPostInCategoryInUserList
+);
+
+router.get(
+  "/createUserListForAllUsers",
+  /**
+   * @swagger
+   * /user/createUserListForAllUsers:
+   *   get:
+   *     tags:
+   *       - Authentication
+   *     summary: Get user's list information
+   *     description: Endpoint to get information of a user
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.createUserListForAllUsers
 );
 
 module.exports = router;
