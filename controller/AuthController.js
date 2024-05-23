@@ -1719,11 +1719,9 @@ const getLinkedInUserInfo = async (req, res) => {
       "🚀 ~ getLinkedInUserInfo ~ getAccessToken:",
       getAccessToken.data
     );
+    if (!getAccessToken.data.access_token) throw new Error("Token not found!");
     // if token found
-    if (!getAccessToken?.data?.access_token)
-      throw new Error("Token not found!");
-
-    // Second Axios request to get user info using the access token
+    // // Second Axios request to get user info using the access token
     const response = await axios.get("https://api.linkedin.com/v2/userinfo", {
       headers: {
         Authorization: `Bearer ${getAccessToken.data.access_token}`,
@@ -1731,13 +1729,12 @@ const getLinkedInUserInfo = async (req, res) => {
       },
       timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
     });
+    if(!response.data) throw new Error("No Data Found");
     console.log("LinkedIn API Response:", response.data);
-    res.json(response.data);
+    res.status(200).send(response.data)
   } catch (error) {
     // console.error('Error:', error);
-    res
-      .status(error.response ? error.response.status : 500)
-      .json({ error: error });
+    return error.message
   }
 };
 
