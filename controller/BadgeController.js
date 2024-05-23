@@ -17,7 +17,7 @@ const mongoose = require('mongoose');
 const User = require("../models/UserModel");
 
 // Encryption/Decryption Security Purposes.
-const { encryptData, decryptData } = require("../utils/security");
+const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData,} = require("../utils/security");
 
 
 const update = async (req, res) => {
@@ -188,13 +188,25 @@ const addContactBadge = async (req, res) => {
         throw new Error("Oops! This account is already linked.");
       }
       const userBadges = User.badges;
-      const updatedUserBadges = [
-        ...userBadges,
-        {
-          type: req.body.type,
-          details: encryptData(req.body),
-        },
-      ];
+      let updatedUserBadges;
+      if(User.isPasswordEncryption){
+        updatedUserBadges = [
+          ...userBadges,
+          {
+            type: req.body.type,
+            details: userCustomizedEncryptData(encryptData(req.body), password),
+          },
+        ];
+      } else {
+        updatedUserBadges = [
+          ...userBadges,
+          {
+            type: req.body.type,
+            details: encryptData(req.body),
+          },
+        ];
+      }
+      
       // Update the user badges
       User.badges = updatedUserBadges;
       // Update the action
@@ -213,16 +225,31 @@ const addContactBadge = async (req, res) => {
       throw new Error("Oops! This account is already linked.");
 
     const userBadges = User.badges;
-    const updatedUserBadges = [
-      ...userBadges,
-      {
-        accountId: encryptData(req.body.sub),
-        accountName: encryptData(req.body.provider),
-        isVerified: true,
-        type: req.body.type,
-        details: encryptData(req.body),
-      },
-    ];
+
+    let updatedUserBadges;
+    if(User.isPasswordEncryption){
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: userCustomizedEncryptData(encryptData(req.body.sub), password),
+          accountName: userCustomizedEncryptData(encryptData(req.body.provider), password),
+          isVerified: true,
+          type: req.body.type,
+          details: userCustomizedEncryptData(encryptData(req.body), password),
+        },
+      ];
+    } else {
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: encryptData(req.body.sub),
+          accountName: encryptData(req.body.provider),
+          isVerified: true,
+          type: req.body.type,
+          details: encryptData(req.body),
+        },
+      ];
+    }
     // Update the user badges
     User.badges = updatedUserBadges;
     // Update the action
@@ -287,16 +314,31 @@ const addBadge = async (req, res) => {
       throw new Error("Oops! This account is already linked.");
 
     const userBadges = User.badges;
-    const updatedUserBadges = [
-      ...userBadges,
-      {
-        accountId: encryptData(req.body.badgeAccountId),
-        accountName: encryptData(req.body.provider),
-        details: encryptData(req.body.data),
-        isVerified: true,
-        type: "default",
-      },
-    ];
+    let updatedUserBadges;
+    if(User.isPasswordEncryption){
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: userCustomizedEncryptData(encryptData(req.body.badgeAccountId), password),
+          accountName: userCustomizedEncryptData(encryptData(req.body.provider), password),
+          details: userCustomizedEncryptData(encryptData(req.body.data), password),
+          isVerified: true,
+          type: "default",
+        },
+      ];
+    }
+    else{
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: encryptData(req.body.badgeAccountId),
+          accountName: encryptData(req.body.provider),
+          details: encryptData(req.body.data),
+          isVerified: true,
+          type: "default",
+        },
+      ];
+    }
     // Update the user badges
     User.badges = updatedUserBadges;
     // Update the action
@@ -398,12 +440,23 @@ const addPersonalBadge = async (req, res) => {
     if (!User) throw new Error("No such User!");
 
     const userBadges = User.badges;
-    const updatedUserBadges = [
-      ...userBadges,
-      {
-        personal: encryptData(req.body.personal),
-      },
-    ];
+    let updatedUserBadges;
+    if(User.isPasswordEncryption){
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          personal: userCustomizedEncryptData(encryptData(req.body.personal), password),
+        },
+      ];
+    }
+    else {
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          personal: encryptData(req.body.personal),
+        },
+      ];
+    }
     // Update the user badges
     User.badges = updatedUserBadges;
     // Update the action
@@ -598,9 +651,14 @@ const updateWorkAndEducationBadge = async (req, res) => {
       ].findIndex((edu) => edu.id === req.body.id);
 
       if (educationIndex !== -1) {
-        // Overwrite the existing object with new data
-        userBadges[index].personal[req.body.type][educationIndex] =
-          req.body.newData;
+        
+        if(User.isPasswordEncryption){
+          // Overwrite the existing object with new data
+        userBadges[index].personal[req.body.type][educationIndex] = userCustomizedEncryptData(encryptData(req.body.newData), password);
+        }
+        else {
+          userBadges[index].personal[req.body.type][educationIndex] = encryptData(req.body.newData);
+        }
 
         // Update the modified user document
         User.badges = userBadges;
@@ -633,11 +691,21 @@ const addWorkEducationBadge = async (req, res) => {
     const personalBadgeIndex = userBadges.findIndex(
       (badge) => badge.personal && badge.personal[req.body.type]
     );
-    if (personalBadgeIndex !== -1) {
-      User.badges[personalBadgeIndex].personal[req.body.type].push(encryptData(newData));
-      User.markModified("badges");
-    } else {
-      User.badges.push({ personal: { [req.body.type]: [encryptData(newData)] } });
+    if(User.isPasswordEncryption){
+      if (personalBadgeIndex !== -1) {
+        User.badges[personalBadgeIndex].personal[req.body.type].push(userCustomizedEncryptData(encryptData(newData), password));
+        User.markModified("badges");
+      } else {
+        User.badges.push({ personal: { [req.body.type]: [userCustomizedEncryptData(encryptData(newData), password)] } });
+      }
+    }
+    else {
+      if (personalBadgeIndex !== -1) {
+        User.badges[personalBadgeIndex].personal[req.body.type].push(encryptData(newData));
+        User.markModified("badges");
+      } else {
+        User.badges.push({ personal: { [req.body.type]: [encryptData(newData)] } });
+      }
     }
     const data = await User.save();
     // Update the action
@@ -688,12 +756,23 @@ const addWeb3Badge = async (req, res) => {
     if (!User) throw new Error("No such User!");
 
     const userBadges = User.badges;
-    const updatedUserBadges = [
-      ...userBadges,
-      {
-        web3: encryptData(req.body.web3),
-      },
-    ];
+    let updatedUserBadges;
+    if(User.isPasswordEncryption){
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          web3: userCustomizedEncryptData(encryptData(req.body.web3), password),
+        },
+      ];
+    }
+    else {
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          web3: encryptData(req.body.web3),
+        },
+      ];
+    }
     // Update the user badges
     User.badges = updatedUserBadges;
     // Update the action
@@ -821,7 +900,12 @@ const updatePersonalBadge = async (req, res) => {
     });
 
     if (index !== -1) {
-      userBadges[index].personal[req.body.type] = req.body.newData;
+      if(User.isPasswordEncryption){
+        userBadges[index].personal[req.body.type] = userCustomizedEncryptData(encryptData(req.body.newData), password);
+      }
+      else {
+        userBadges[index].personal[req.body.type] = encryptData(req.body.newData);
+      }
     } else {
       throw new Error("Badge Not Found");
     }
@@ -1163,16 +1247,31 @@ const addPasskeyBadge = async (req, res) => {
       throw new Error("Oops! This account is already linked.");
 
     const userBadges = User.badges;
-    const updatedUserBadges = [
-      ...userBadges,
-      {
-        accountId: encryptData(req.body.accountId),
-        accountName: encryptData(req.body.accountName),
-        isVerified: req.body.isVerified,
-        type: req.body.type,
-        data: encryptData(req.body.data),
-      },
-    ];
+    let updatedUserBadges;
+    if(User.isPasswordEncryption){
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: userCustomizedEncryptData(encryptData(req.body.accountId), password),
+          accountName: userCustomizedEncryptData(encryptData(req.body.accountName), password),
+          isVerified: req.body.isVerified,
+          type: req.body.type,
+          data: userCustomizedEncryptData(encryptData(req.body.data), password),
+        },
+      ];
+    }
+    else {
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: encryptData(req.body.accountId),
+          accountName: encryptData(req.body.accountName),
+          isVerified: req.body.isVerified,
+          type: req.body.type,
+          data: encryptData(req.body.data),
+        },
+      ];
+    }
     // Update the user badges
     User.badges = updatedUserBadges;
     // Update the action
