@@ -589,15 +589,6 @@ const signUpSocialGuestMode = async (req, res) => {
       type: type,
     });
 
-    // user.badges.unshift({
-    //   accountId: encryptData(payload.sub),
-    //   accountName: encryptData(payload.provider),
-    //   details: encryptData(payload),
-    //   isVerified: true,
-    //   type: type,
-    //   primary: true,
-    // });
-
     // Update user verification status to true
     user.gmailVerified = payload.email_verified;
     await user.save();
