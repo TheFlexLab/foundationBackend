@@ -582,7 +582,9 @@ const signUpSocialGuestMode = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
+      accountId: payload.sub,
       accountName: payload.provider,
+      details: payload,
       isVerified: true,
       type: type,
     });
