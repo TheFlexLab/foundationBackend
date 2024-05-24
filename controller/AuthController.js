@@ -997,6 +997,7 @@ const userInfo = async (req, res) => {
     }
 
     if (user.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       user.badges.forEach(badge => {
         if (!badge.primary || badge.primary === false) {
           if (badge.type && badge.type === "cell-phone") {
