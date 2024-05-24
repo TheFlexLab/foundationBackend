@@ -584,7 +584,7 @@ const signUpSocialGuestMode = async (req, res) => {
     user.badges.unshift({
       accountId: payload.sub,
       accountName: payload.provider,
-      details: payload,
+      details: encryptData(payload),
       isVerified: true,
       type: type,
     });
