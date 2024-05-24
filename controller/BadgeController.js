@@ -17,7 +17,7 @@ const mongoose = require('mongoose');
 const User = require("../models/UserModel");
 
 // Encryption/Decryption Security Purposes.
-const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData,} = require("../utils/security");
+const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData, } = require("../utils/security");
 
 
 const update = async (req, res) => {
@@ -44,8 +44,6 @@ const update = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = User._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     res.status(200).json({ ...decryptUser, token });
@@ -179,17 +177,29 @@ const addContactBadge = async (req, res) => {
     }
     if (req.body.type === "cell-phone") {
       // Find the Badge
-      const usersWithBadge = await UserModel.find({
-        badges: {
-          $elemMatch: { details: req.body },
-        },
-      });
+      let usersWithBadge;
+      if (User.isPasswordEncryption) {
+        if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
+          usersWithBadge = await UserModel.find({
+            badges: {
+              $elemMatch: { details: userCustomizedEncryptData(encryptData(req.body), password) },
+            },
+          });
+      }
+      else {
+        usersWithBadge = await UserModel.find({
+          badges: {
+            $elemMatch: { details: encryptData(req.body) },
+          },
+        });
+      }
       if (usersWithBadge.length !== 0) {
         throw new Error("Oops! This account is already linked.");
       }
       const userBadges = User.badges;
       let updatedUserBadges;
-      if(User.isPasswordEncryption){
+      if (User.isPasswordEncryption) {
+        if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
         updatedUserBadges = [
           ...userBadges,
           {
@@ -206,7 +216,7 @@ const addContactBadge = async (req, res) => {
           },
         ];
       }
-      
+
       // Update the user badges
       User.badges = updatedUserBadges;
       // Update the action
@@ -227,12 +237,13 @@ const addContactBadge = async (req, res) => {
     const userBadges = User.badges;
 
     let updatedUserBadges;
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
-          accountId: userCustomizedEncryptData(encryptData(req.body.sub), password),
-          accountName: userCustomizedEncryptData(encryptData(req.body.provider), password),
+          accountId: req.body.sub,
+          accountName: req.body.provider,
           isVerified: true,
           type: req.body.type,
           details: userCustomizedEncryptData(encryptData(req.body), password),
@@ -242,8 +253,8 @@ const addContactBadge = async (req, res) => {
       updatedUserBadges = [
         ...userBadges,
         {
-          accountId: encryptData(req.body.sub),
-          accountName: encryptData(req.body.provider),
+          accountId: req.body.sub,
+          accountName: req.body.provider,
           isVerified: true,
           type: req.body.type,
           details: encryptData(req.body),
@@ -305,8 +316,8 @@ const addBadge = async (req, res) => {
     const usersWithBadge = await UserModel.find({
       badges: {
         $elemMatch: {
-          accountId: encryptData(req.body.badgeAccountId),
-          accountName: encryptData(req.body.provider),
+          accountId: req.body.badgeAccountId,
+          accountName: req.body.provider,
         },
       },
     });
@@ -315,24 +326,25 @@ const addBadge = async (req, res) => {
 
     const userBadges = User.badges;
     let updatedUserBadges;
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
-          accountId: userCustomizedEncryptData(encryptData(req.body.badgeAccountId), password),
-          accountName: userCustomizedEncryptData(encryptData(req.body.provider), password),
+          accountId: req.body.badgeAccountId,
+          accountName: req.body.provider,
           details: userCustomizedEncryptData(encryptData(req.body.data), password),
           isVerified: true,
           type: "default",
         },
       ];
     }
-    else{
+    else {
       updatedUserBadges = [
         ...userBadges,
         {
-          accountId: encryptData(req.body.badgeAccountId),
-          accountName: encryptData(req.body.provider),
+          accountId: req.body.badgeAccountId,
+          accountName: req.body.provider,
           details: encryptData(req.body.data),
           isVerified: true,
           type: "default",
@@ -441,7 +453,8 @@ const addPersonalBadge = async (req, res) => {
 
     const userBadges = User.badges;
     let updatedUserBadges;
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
@@ -651,10 +664,11 @@ const updateWorkAndEducationBadge = async (req, res) => {
       ].findIndex((edu) => edu.id === req.body.id);
 
       if (educationIndex !== -1) {
-        
-        if(User.isPasswordEncryption){
+
+        if (User.isPasswordEncryption) {
+          if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
           // Overwrite the existing object with new data
-        userBadges[index].personal[req.body.type][educationIndex] = userCustomizedEncryptData(encryptData(req.body.newData), password);
+          userBadges[index].personal[req.body.type][educationIndex] = userCustomizedEncryptData(encryptData(req.body.newData), password);
         }
         else {
           userBadges[index].personal[req.body.type][educationIndex] = encryptData(req.body.newData);
@@ -691,7 +705,8 @@ const addWorkEducationBadge = async (req, res) => {
     const personalBadgeIndex = userBadges.findIndex(
       (badge) => badge.personal && badge.personal[req.body.type]
     );
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       if (personalBadgeIndex !== -1) {
         User.badges[personalBadgeIndex].personal[req.body.type].push(userCustomizedEncryptData(encryptData(newData), password));
         User.markModified("badges");
@@ -757,7 +772,8 @@ const addWeb3Badge = async (req, res) => {
 
     const userBadges = User.badges;
     let updatedUserBadges;
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
@@ -900,7 +916,8 @@ const updatePersonalBadge = async (req, res) => {
     });
 
     if (index !== -1) {
-      if(User.isPasswordEncryption){
+      if (User.isPasswordEncryption) {
+        if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
         userBadges[index].personal[req.body.type] = userCustomizedEncryptData(encryptData(req.body.newData), password);
       }
       else {
@@ -928,13 +945,13 @@ const removeBadge = async (req, res) => {
     if (!User) throw new Error("No such User!");
     // Find the Badge
     const usersWithBadge = await UserModel.find({
-      badges: { $elemMatch: { accountId: encryptData(req.body.badgeAccountId) } },
+      badges: { $elemMatch: { accountId: req.body.badgeAccountId } },
     });
     if (usersWithBadge.length === 0) throw new Error("Badge not exist!");
 
     const userBadges = User.badges;
     const updatedUserBadges = userBadges.filter((item) => {
-      if (item.accountId !== encryptData(req.body.badgeAccountId)) {
+      if (item.accountId !== req.body.badgeAccountId) {
         return item;
       }
     });
@@ -1238,8 +1255,8 @@ const addPasskeyBadge = async (req, res) => {
     const usersWithBadge = await UserModel.find({
       badges: {
         $elemMatch: {
-          accountId: encryptData(req.body.accountId),
-          accountName: encryptData(req.body.accountName),
+          accountId: req.body.accountId,
+          accountName: req.body.accountName,
         },
       },
     });
@@ -1248,12 +1265,13 @@ const addPasskeyBadge = async (req, res) => {
 
     const userBadges = User.badges;
     let updatedUserBadges;
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
-          accountId: userCustomizedEncryptData(encryptData(req.body.accountId), password),
-          accountName: userCustomizedEncryptData(encryptData(req.body.accountName), password),
+          accountId: req.body.accountId,
+          accountName: req.body.accountName,
           isVerified: req.body.isVerified,
           type: req.body.type,
           data: userCustomizedEncryptData(encryptData(req.body.data), password),
@@ -1264,8 +1282,8 @@ const addPasskeyBadge = async (req, res) => {
       updatedUserBadges = [
         ...userBadges,
         {
-          accountId: encryptData(req.body.accountId),
-          accountName: encryptData(req.body.accountName),
+          accountId: req.body.accountId,
+          accountName: req.body.accountName,
           isVerified: req.body.isVerified,
           type: req.body.type,
           data: encryptData(req.body.data),
@@ -1344,16 +1362,33 @@ const addFarCasterBadge = async (req, res) => {
       throw new Error("Oops! This account is already linked.");
 
     const userBadges = User.badges;
-    const updatedUserBadges = [
-      ...userBadges,
-      {
-        accountId: req.body.accountId,
-        accountName: req.body.accountName,
-        isVerified: req.body.isVerified,
-        type: req.body.type,
-        data: req.body.data,
-      },
-    ];
+    let updatedUserBadges;
+    if (User.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: req.body.accountId,
+          accountName: req.body.accountName,
+          isVerified: req.body.isVerified,
+          type: req.body.type,
+          data: userCustomizedEncryptData(encryptData(req.body.data), password),
+        },
+      ];
+    }
+    else {
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          accountId: req.body.accountId,
+          accountName: req.body.accountName,
+          isVerified: req.body.isVerified,
+          type: req.body.type,
+          data: encryptData(req.body.data),
+        },
+      ];
+    }
+
     // Update the user badges
     User.badges = updatedUserBadges;
     // Update the action
@@ -1491,18 +1526,15 @@ const addPasswordBadgesUpdate = async (req, res) => {
       uuid: uuid,
     });
 
-    if(user.isPasswordEncryption){
+    if (user.isPasswordEncryption) {
+      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       user.badges.forEach(badge => {
-        if(!badge.primary || badge.primary === false){
+        if (!badge.primary || badge.primary === false) {
           if (badge.type && badge.type === "cell-phone") {
             badge.details = userCustomizedDecryptData(badge.details, password);
           } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
             badge.details = userCustomizedDecryptData(badge.details, password);
           } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
             badge.details = userCustomizedDecryptData(badge.details, password);
           } else if (badge.personal && badge.personal.work) {
             badge.personal.work = badge.personal.work.map(item => userCustomizedDecryptData(item, password));
@@ -1511,8 +1543,6 @@ const addPasswordBadgesUpdate = async (req, res) => {
           } else if (badge.web3) {
             badge.web3 = userCustomizedDecryptData(badge.web3, password);
           } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
             badge.data = userCustomizedDecryptData(badge.data, password);
           }
         }
@@ -1526,16 +1556,12 @@ const addPasswordBadgesUpdate = async (req, res) => {
       });
     } else {
       user.badges.forEach(badge => {
-        if(!badge.primary || badge.primary === false) {
+        if (!badge.primary || badge.primary === false) {
           if (badge.type && badge.type === "cell-phone") {
             badge.details = userCustomizedEncryptData(badge.details, password);
           } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-            badge.accountId = userCustomizedEncryptData(badge.accountId, password);
-            badge.accountName = userCustomizedEncryptData(badge.accountName, password);
             badge.details = userCustomizedEncryptData(badge.details, password);
           } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-            badge.accountId = userCustomizedEncryptData(badge.accountId, password);
-            badge.accountName = userCustomizedEncryptData(badge.accountName, password);
             badge.details = userCustomizedEncryptData(badge.details, password);
           } else if (badge.personal && badge.personal.work) {
             badge.personal.work = badge.personal.work.map(item => userCustomizedEncryptData(item, password));
@@ -1544,13 +1570,11 @@ const addPasswordBadgesUpdate = async (req, res) => {
           } else if (badge.web3) {
             badge.web3 = userCustomizedEncryptData(badge.web3, password);
           } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-            badge.accountId = userCustomizedEncryptData(badge.accountId, password);
-            badge.accountName = userCustomizedEncryptData(badge.accountName, password);
             badge.data = userCustomizedEncryptData(badge.data, password);
           }
         }
       });
-      
+
       user.isPasswordEncryption = true;
       await user.save();
       res.status(200).json({
@@ -1558,7 +1582,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
         data: user,
       });
     }
-    
+
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -1566,113 +1590,6 @@ const addPasswordBadgesUpdate = async (req, res) => {
     });
   }
 }
-
-// const excep = async (req, res) => {
-//   try {
-//     const users = await User.find({});
-//     const bulkOps = [];
-
-//     users.forEach(user => {
-//       let updated = false;
-
-//       // Iterate over each badge in the user's badges array
-//       user.badges.forEach(badge => {
-//         // Check if the badge type is within the specified types and details field doesn't exist
-//         if (badge.type && badge.isVerified && !["desktop", "mobile", "farcaster"].includes(badge.type)) {
-//           // Check and add missing fields with default values
-//           if (!badge.accountId || badge.accountId === undefined || badge.accountId === null) {
-//             badge.accountId = "";
-//             updated = true;
-//           }
-//           if (!badge.accountName || badge.accountName === undefined || badge.accountName === null) {
-//             badge.accountName = "";
-//             updated = true;
-//           }
-//           if (!badge.details || badge.details === undefined || badge.details === null) {
-//             badge.details = { value: null};
-//             updated = true;
-//           }
-//         }
-//       });
-
-//       // If any badge was updated, add the update operation to bulkOps
-//       if (updated) {
-//         bulkOps.push({
-//           updateOne: {
-//             filter: { _id: user._id },
-//             update: { $set: { badges: user.badges } }
-//           }
-//         });
-//       }
-//     });
-
-//     if (bulkOps.length > 0) {
-//       const bulkWriteResult = await User.bulkWrite(bulkOps);
-//       res.status(200).send({
-//         message: `${bulkWriteResult.matchedCount} documents matched the filter, ${bulkWriteResult.modifiedCount} documents were updated.`
-//       });
-//     } else {
-//       res.status(200).send({ message: 'No users to update.' });
-//     }
-//   } catch (error) {
-//     res.status(500).send({ message: error.message });
-//   }
-// };
-
-// const encryptBadgeData = async (req, res) => {
-//   try {
-//     const users = await User.find({});
-
-//     const bulkOps = users
-//       .map(user => {
-//         if(user.badges.length !== 0) {
-//           console.log("user================>", user);
-//           user.badges.forEach(badge => {
-//             if (badge.type && badge.type === "cell-phone") {
-//               badge.details = encryptData(badge.details);
-//             } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-//               badge.accountId = encryptData(badge.accountId);
-//               badge.accountName = encryptData(badge.accountName);
-//               badge.details = encryptData(badge.details);
-//             } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-//               badge.accountId = encryptData(badge.accountId);
-//               badge.accountName = encryptData(badge.accountName);
-//               badge.details = encryptData(badge.details);
-//             } else if (badge.personal && badge.personal.work) {
-//               badge.personal.work = badge.personal.work.map(encryptData);
-//             } else if (badge.personal) {
-//               badge.personal = encryptData(badge.personal);
-//             } else if (badge.web3) {
-//               badge.web3 = encryptData(badge.web3);
-//             } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-//               badge.accountId = encryptData(badge.accountId);
-//               badge.accountName = encryptData(badge.accountName);
-//               badge.data = encryptData(badge.data);
-//             }
-//           });
-
-//           return {
-//             updateOne: {
-//               filter: { _id: user._id },
-//               update: { $set: { badges: user.badges } }
-//             }
-//           };
-//         }
-//         return null;
-//       })
-//       .filter(op => op !== null);  // Filter out any null values
-
-//     if (bulkOps.length > 0) {
-//       const bulkWriteResult = await User.bulkWrite(bulkOps);
-//       res.status(200).send({ message: `${bulkWriteResult.matchedCount} documents matched the filter, ${bulkWriteResult.modifiedCount} documents were updated.`});
-//     } else {
-//       res.status(200).send({ message: "No documents to update." });
-//     }
-//   } catch (error) {
-//     res.status(500).send({message: error.message});
-//   }
-// };
-
 
 module.exports = {
   update,

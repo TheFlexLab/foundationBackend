@@ -157,8 +157,8 @@ const signUpUserBySocialLogin = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: encryptData(payload.sub),
-      accountName: encryptData(payload.provider),
+      accountId: payload.sub,
+      accountName: payload.provider,
       isVerified: true,
       details: encryptData(req.body),
       type: type,
@@ -234,8 +234,6 @@ const signUpUserBySocialLogin = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
@@ -282,8 +280,8 @@ const signUpUserBySocialBadges = async (req, res) => {
     const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
-          accountId: encryptData(id),
-          accountName: encryptData(payload.type),
+          accountId: id,
+          accountName: payload.type,
         },
       },
     });
@@ -299,8 +297,8 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: encryptData(id),
-      accountName: encryptData(payload.type),
+      accountId: id,
+      accountName: payload.type,
       details: encryptData(payload.data),
       isVerified: true,
       type: "social",
@@ -376,8 +374,6 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
@@ -586,7 +582,7 @@ const signUpSocialGuestMode = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountName: encryptData(payload.provider),
+      accountName: payload.provider,
       isVerified: true,
       type: type,
     });
@@ -670,9 +666,7 @@ const signUpSocialGuestMode = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
-    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    decryptUser.badges[0].accountName = decryptUser.badges[0].accountName
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
@@ -727,8 +721,8 @@ const signUpGuestBySocialBadges = async (req, res) => {
     const usersWithBadge = await User.find({
       badges: {
         $elemMatch: {
-          accountId: encryptData(id),
-          accountName: encryptData(type),
+          accountId: id,
+          accountName: type,
         },
       },
     });
@@ -753,8 +747,8 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Create a Badge at starting index
     user.badges.unshift({
-      accountId: encryptData(id),
-      accountName: encryptData(payload.type),
+      accountId: id,
+      accountName: payload.type,
       details: encryptData(payload.data),
       isVerified: true,
       type: "social",
@@ -825,8 +819,6 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
@@ -869,8 +861,6 @@ const signInUserBySocialLogin = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     // res.status(200).json(user);
@@ -923,7 +913,7 @@ const signInUserBySocialBadges = async (req, res) => {
     }
 
     const user = await User.findOne({
-      $or: [{ email: email }, { "badges.0.accountId": encryptData(id) }],
+      $or: [{ email: email }, { "badges.0.accountId": id }],
     });
     if (!user) throw new Error("User not Found");
 
@@ -945,8 +935,6 @@ const signInUserBySocialBadges = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountId = decryptData(decryptUser.badges[0].accountId)
-    decryptUser.badges[0].accountName = decryptData(decryptUser.badges[0].accountName)
     decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
 
     // res.status(200).json(user);
@@ -1015,13 +1003,9 @@ const userInfo = async (req, res) => {
             badge.details = userCustomizedDecryptData(badge.details, password);
           }
           else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
             badge.details = userCustomizedDecryptData(badge.details, password);
           }
-          else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(decryptData(userCustomizedDecryptData(badge.accountName, password)))) {
-            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
+          else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
             badge.details = userCustomizedDecryptData(badge.details, password);
           }
           else if (badge.personal && badge.personal.work) {
@@ -1034,8 +1018,6 @@ const userInfo = async (req, res) => {
             badge.web3 = userCustomizedDecryptData(badge.web3, password);
           }
           else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-            badge.accountId = userCustomizedDecryptData(badge.accountId, password);
-            badge.accountName = userCustomizedDecryptData(badge.accountName, password);
             badge.data = userCustomizedDecryptData(badge.data, password);
           }
         }
@@ -1048,13 +1030,9 @@ const userInfo = async (req, res) => {
         badge.details = decryptData(badge.details)
       }
       else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-        badge.accountId = decryptData(badge.accountId);
-        badge.accountName = decryptData(badge.accountName)
         badge.details = decryptData(badge.details)
       }
-      else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(decryptData(badge.accountName))) {
-        badge.accountId = decryptData(badge.accountId);
-        badge.accountName = decryptData(badge.accountName)
+      else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
         badge.details = decryptData(badge.details)
       }
       else if (badge.personal && badge.personal.work) {
@@ -1067,8 +1045,6 @@ const userInfo = async (req, res) => {
         badge.web3 = decryptData(badge.web3)
       }
       else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-        badge.accountId = decryptData(badge.accountId);
-        badge.accountName = decryptData(badge.accountName)
         badge.data = decryptData(badge.data)
       }
     });
