@@ -96,34 +96,34 @@ router.get(
 );
 
 router.get(
-    "/userList/findCategoryByName/:userUuid/:categoryName",
-    /**
-     * @swagger
-     * /userlists/userList/findCategoryByName/{userUuid}/{categoryName}:
-     *   get:
-     *     tags:
-     *       - UserSurveyList
-     *     summary: Get user's list information
-     *     description: Endpoint to get information of a user
-     *     parameters:
-     *       - in: path
-     *         name: userUuid
-     *         required: true
-     *         description: The userUuid of the user
-     *       - in: path
-     *         name: categoryName
-     *         required: true
-     *         description: The categoryName of the user's List
-     *         schema:
-     *           type: string
-     *     responses:
-     *       '200':
-     *         description: User information retrieved successfully
-     *       '500':
-     *         description: Internal server error
-     */
-    UserSurveyListController.findCategoryByName
-  );
+  "/userList/findCategoryByName/:userUuid/:categoryName",
+  /**
+   * @swagger
+   * /userlists/userList/findCategoryByName/{userUuid}/{categoryName}:
+   *   get:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Get user's list information
+   *     description: Endpoint to get information of a user
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         description: The userUuid of the user
+   *       - in: path
+   *         name: categoryName
+   *         required: true
+   *         description: The categoryName of the user's List
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.findCategoryByName
+);
 
 router.patch(
   "/userList/updateCategoryInUserList/:userUuid/:categoryId/:postId?",
@@ -198,6 +198,71 @@ router.delete(
    *         description: Internal server error
    */
   UserSurveyListController.deleteCategoryFromList
+);
+
+// Generate Link or Customized Link for List.
+router.get(
+  "/userList/generateCategoryShareLink/:userUuid/:categoryId/:customizedLink?",
+  /**
+   * @swagger
+   * /userlists/userList/generateCategoryShareLink/{userUuid}/{categoryId}:
+   *   get:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Get user's list shared link
+   *     description: Endpoint to get shared link of a user
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         description: The userUuid of the user
+   *         schema:
+   *           type: string
+   *       - in: path
+   *         name: categoryId
+   *         required: true
+   *         description: The categoryId of the user
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: customizedLink
+   *         required: false
+   *         description: A String to customized List Sharing link
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User shared link retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.generateCategoryShareLink
+);
+
+router.get(
+  "/userList/findCategoryByLink/:categoryLink",
+  /**
+   * @swagger
+   * /userlists/userList/findCategoryByLink/{categoryLink}:
+   *   get:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Get user's list information
+   *     description: Endpoint to get list of a user by link
+   *     parameters:
+   *       - in: path
+   *         name: categoryLink
+   *         required: true
+   *         description: The categoryLink of the user
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.findCategoryByLink
 );
 
 router.post(

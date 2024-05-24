@@ -1,5 +1,6 @@
 const User = require("../models/UserModel");
 const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
+const shortLink = require("shortlink");
 
 // User's List APIs
 
@@ -201,6 +202,87 @@ const deleteCategoryFromList = async (req, res) => {
     }
 };
 
+const generateCategoryShareLink = async (req, res) => {
+    try {
+
+        const { userUuid, categoryId } = req.params;
+        const customizedLink = req.query.customizedLink;
+
+        // Check if customizedLink contains any spaces or periods
+        if (customizedLink && /[\s.]/.test(customizedLink)) throw new Error('Customized link should not contain spaces or periods');
+        
+        const userList = await UserListSchema.findOne({ userUuid: userUuid })
+        // .populate({
+        //     path: 'list.post.questForeginKey',
+        //     model: 'InfoQuestQuestions'
+        // });
+        if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
+
+        // Find the category within the list array based on categoryId
+        const categoryDoc = userList.list.id(categoryId);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        if (customizedLink && categoryDoc.isLinkUserCustomized) throw new Error("Link can be customized only once.")
+
+        if (categoryDoc.link === null || !categoryDoc.isLinkUserCustomized) {
+            if (customizedLink) {
+                categoryDoc.link = customizedLink;
+                categoryDoc.isLinkUserCustomized = true;
+            }
+            else {
+                categoryDoc.link = shortLink.generate(8);
+            }
+
+            categoryDoc.updatedAt = new Date().toISOString();
+            userList.updatedAt = new Date().toISOString();
+            await userList.save();
+        }
+
+        res.status(200).json({
+            message: `Here is Share Link for ${categoryDoc.category}.`,
+            link: categoryDoc.link,
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
+const findCategoryByLink = async (req, res) => {
+    try {
+
+        const { categoryLink } = req.params;
+
+        // Find the user list that contains a category with the given link
+        const userList = await UserListSchema.findOne({
+            'list.link': categoryLink
+        }).populate({
+            path: 'list.post.questForeginKey',
+            model: 'InfoQuestQuestions'
+        });
+
+        if (!userList) throw new Error(`No list is found with the category link: ${categoryLink}`);
+
+        // Find the category within the list array based on the category link
+        const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        res.status(200).json({
+            message: `Category found successfully`,
+            category: categoryDoc,
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
 const addPostInCategoryInUserList = async (req, res) => {
     try {
         const { userUuid, categoryIdArray, questForeginKey } = req.body;
@@ -297,6 +379,8 @@ module.exports = {
     findCategoryByName,
     updateCategoryInUserList,
     deleteCategoryFromList,
+    generateCategoryShareLink,
+    findCategoryByLink,
     addPostInCategoryInUserList,
     createUserListForAllUsers,
 };
