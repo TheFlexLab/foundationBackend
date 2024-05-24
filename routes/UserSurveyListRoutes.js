@@ -265,6 +265,84 @@ router.get(
   UserSurveyListController.findCategoryByLink
 );
 
+router.get(
+  "/userList/categoryViewCount/:categoryLink",
+  /**
+   * @swagger
+   * /userlists/userList/findCategoryByLink/{categoryLink}:
+   *   get:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Get user's list information
+   *     description: Endpoint to get list of a user by link
+   *     parameters:
+   *       - in: path
+   *         name: categoryLink
+   *         required: true
+   *         description: The categoryLink of the user
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.categoryViewCount
+);
+
+router.get(
+  "/userList/categoryParticipentsCount/:categoryLink",
+  /**
+   * @swagger
+   * /userlists/userList/findCategoryByLink/{categoryLink}:
+   *   get:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Get user's list information
+   *     description: Endpoint to get list of a user by link
+   *     parameters:
+   *       - in: path
+   *         name: categoryLink
+   *         required: true
+   *         description: The categoryLink of the user
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.categoryParticipentsCount
+);
+
+router.get(
+  "/userList/categoryStatistics/:categoryId",
+  /**
+   * @swagger
+   * /userlists/userList/findCategoryByLink/{categoryId}:
+   *   get:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Get user's list information
+   *     description: Endpoint to get list of a user by link
+   *     parameters:
+   *       - in: path
+   *         name: categoryId
+   *         required: true
+   *         description: The categoryId of the user
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.categoryStatistics
+);
+
 router.post(
   "/userList/addPostInCategoryInUserList",
   /**

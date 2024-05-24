@@ -283,6 +283,126 @@ const findCategoryByLink = async (req, res) => {
     }
 }
 
+const categoryViewCount = async (req, res) => {
+    try {
+
+        const { categoryLink } = req.params;
+
+        // Find the user list that contains a category with the given link
+        const userList = await UserListSchema.findOne({
+            'list.link': categoryLink
+        }).populate({
+            path: 'list.post.questForeginKey',
+            model: 'InfoQuestQuestions'
+        });
+
+        if (!userList) throw new Error(`No list is found with the category link: ${categoryLink}`);
+
+        // Find the category within the list array based on the category link
+        const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        
+        if(categoryDoc.clicks === null) {
+            categoryDoc.clicks = 1;
+        }
+        else {
+            categoryDoc.clicks = categoryDoc.clicks + 1;
+        }
+
+        categoryDoc.updatedAt = new Date().toISOString();
+        userList.updatedAt = new Date().toISOString();
+        await userList.save();
+
+        res.status(200).json({
+            message: `Category View Count found successfully`,
+            categoryViewCount: categoryDoc.clicks,
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
+const categoryParticipentsCount = async (req, res) => {
+    try {
+
+        const { categoryLink } = req.params;
+
+        // Find the user list that contains a category with the given link
+        const userList = await UserListSchema.findOne({
+            'list.link': categoryLink
+        }).populate({
+            path: 'list.post.questForeginKey',
+            model: 'InfoQuestQuestions'
+        });
+
+        if (!userList) throw new Error(`No list is found with the category link: ${categoryLink}`);
+
+        // Find the category within the list array based on the category link
+        const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        
+        if(categoryDoc.participents === null) {
+            categoryDoc.participents = 1;
+        }
+        else {
+            categoryDoc.participents = categoryDoc.participents + 1;
+        }
+
+        categoryDoc.updatedAt = new Date().toISOString();
+        userList.updatedAt = new Date().toISOString();
+        await userList.save();
+
+        res.status(200).json({
+            message: `Category Participents Count found successfully`,
+            categoryParticipentsCount: categoryDoc.participents,
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
+const categoryStatistics = async (req, res) => {
+    try {
+
+        const { categoryLink } = req.params;
+
+        // Find the user list that contains a category with the given link
+        const userList = await UserListSchema.findOne({
+            'list.link': categoryLink
+        }).populate({
+            path: 'list.post.questForeginKey',
+            model: 'InfoQuestQuestions'
+        });
+
+        if (!userList) throw new Error(`No list is found with the category link: ${categoryLink}`);
+
+        // Find the category within the list array based on the category link
+        const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
+        if (!categoryDoc) throw new Error('Category not found');
+        res.status(200).json({
+            message: `Category Statistics found successfully`,
+            categoryViewCount: categoryDoc.clicks,
+            categoryParticipentsCount: categoryDoc.participents,
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
 const addPostInCategoryInUserList = async (req, res) => {
     try {
         const { userUuid, categoryIdArray, questForeginKey } = req.body;
@@ -381,6 +501,9 @@ module.exports = {
     deleteCategoryFromList,
     generateCategoryShareLink,
     findCategoryByLink,
+    categoryViewCount,
+    categoryParticipentsCount,
+    categoryStatistics,
     addPostInCategoryInUserList,
     createUserListForAllUsers,
 };
