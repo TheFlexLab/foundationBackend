@@ -724,10 +724,10 @@ const signUpGuestBySocialBadges = async (req, res) => {
       throw new Error("Oops! This account is already linked.");
 
     //if user doesnot exist
-    const user = await User.findOne({ uuid: payload.uuid });
+    const user = await User.findOne({ uuid: payload.data.uuid });
     if (!user) throw new Error("User doesn't Exist");
 
-    const uuid = payload.uuid;
+    const uuid = payload.data.uuid;
     await User.updateOne(
       { uuid: uuid },
       {
