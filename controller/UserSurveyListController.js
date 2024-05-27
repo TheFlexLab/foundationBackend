@@ -157,9 +157,9 @@ const findCategoryByName = async (req, res) => {
 const updateCategoryInUserList = async (req, res) => {
     try {
 
-        const { userUuid, categoryId } = req.params;
-        const { postId } = req.query;
-        const { category } = req.body;
+        const { userUuid, categoryId} = req.params;
+        const {postId} = req.query;
+        const category = req.body.category;
 
         if (!postId && !category || postId && category) throw new Error("Bad Request: Please Provide either category in your request, or postId in query");
 
