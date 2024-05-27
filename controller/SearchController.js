@@ -13,7 +13,7 @@ const JobTitle = require("../models/JobTitle");
 const DegreeAndFieldOfStudy = require("../models/DegreeAndFieldOfStudy");
 const easySearch = async (req, res) => {
   const searchTerm = req.query.term || "";
-  const uuid = req.cookies.uuid;
+  const uuid = req.body.uuid;
 
   const { moderationRatingFilter } = req.body;
 

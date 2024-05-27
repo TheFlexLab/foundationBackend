@@ -12,7 +12,7 @@ const protect = require("../middleware/protect");
  *   description: Endpoints for searching various entities
  */
 
-router.post("/easySearch",
+router.post("/easySearch/:term?",
   /**
    * @swagger
    * /search/easySearch:
@@ -21,6 +21,13 @@ router.post("/easySearch",
    *       - Search
    *     summary: Easy search
    *     description: Endpoint for easy search functionality
+   *     parameters:
+   *       - in: query
+   *         name: term
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: ID of the post (optional)
    *     requestBody:
    *       required: true
    *       content:

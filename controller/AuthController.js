@@ -1,5 +1,9 @@
 const User = require("../models/UserModel");
-const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
+const {
+  UserListSchema,
+  CategorySchema,
+  PostSchema,
+} = require("../models/UserList");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
@@ -459,14 +463,14 @@ const createGuestMode = async (req, res) => {
     if (!users) throw new Error("User not Created");
 
     const createUserList = new UserListSchema({
-      userUuid: users.uuid
-    })
+      userUuid: users.uuid,
+    });
     const newUserList = await createUserList.save();
     if (!newUserList) {
       await users.deleteOne({
-        uuid: uuid
-      })
-      throw new Error("User not created due to list")
+        uuid: uuid,
+      });
+      throw new Error("User not created due to list");
     }
 
     // Generate a JWT token
@@ -674,7 +678,7 @@ const signUpSocialGuestMode = async (req, res) => {
 
 const signUpGuestBySocialBadges = async (req, res) => {
   try {
-    const payload = req.body;
+    const payload = req.body.data;
 
     // Check if email already exist
     if (payload.email) {
@@ -685,30 +689,27 @@ const signUpGuestBySocialBadges = async (req, res) => {
     let type;
     if (payload.type === "facebook") {
       id = payload.userID;
-      type = payload.type;
+      type = req.body.type;
     }
 
     if (payload.type === "twitter") {
       id = payload.user.uid;
-      type = payload.type;
+      type = req.body.type;
     }
 
     if (payload.type === "github") {
       id = payload.user.uid;
-      type = payload.type;
+      type = req.body.type;
     }
 
     if (payload.type === "instagram") {
       id = payload.user_id;
-      type = payload.type;
+      type = req.body.type;
     }
 
     if (payload.provider === "linkedin") {
       id = payload.data.sub;
-      type = payload.provider
-    }
-    if (payload.provider === "linkedin") {
-      id = payload.sub;
+      type = req.body.type;
     }
 
     const usersWithBadge = await User.find({
@@ -1699,12 +1700,12 @@ const getLinkedInUserInfo = async (req, res) => {
       },
       timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
     });
-    if(!response.data) throw new Error("No Data Found");
+    if (!response.data) throw new Error("No Data Found");
     console.log("LinkedIn API Response:", response.data);
-    res.status(200).send(response.data)
+    res.status(200).send(response.data);
   } catch (error) {
     // console.error('Error:', error);
-    return error.message
+    return error.message;
   }
 };
 
