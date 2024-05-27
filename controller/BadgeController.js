@@ -631,7 +631,22 @@ const getPersonalBadge = async (req, res) => {
       throw new Error("Badges Not Found");
     }
 
-    res.status(200).json({ obj, message: "Successful" });
+    let password;
+    if (User.isPasswordEncryption) {
+      const legacyBadge = User.badges.find(badge => badge.legacy);
+      password = legacyBadge ? legacyBadge.legacy.eyk : null;
+    }
+    if (User.isPasswordEncryption && !password) throw new Error("Password not Found");
+
+    let decreptedObj = obj;
+
+    if(User.isPasswordEncryption){
+      decreptedObj = userCustomizedDecryptData(decreptedObj, password);
+    }
+
+    decreptedObj = decryptData(decreptedObj);
+
+    res.status(200).json({ decreptedObj, message: "Successful" });
   } catch (error) {
     res.status(500).json({
       message: `An error occurred while removeAWorkEducationBadge: ${error.message}`,
