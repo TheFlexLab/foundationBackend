@@ -678,38 +678,38 @@ const signUpSocialGuestMode = async (req, res) => {
 
 const signUpGuestBySocialBadges = async (req, res) => {
   try {
-    const payload = req.body.data;
+    const payload = req.body;
 
     // Check if email already exist
     if (payload.email) {
-      const alreadyUser = await User.findOne({ email: payload.email });
+      const alreadyUser = await User.findOne({ email: payload.data.email });
       if (alreadyUser) throw new Error("Email Already Exists");
     }
     let id;
     let type;
     if (payload.type === "facebook") {
-      id = payload.userID;
-      type = req.body.type;
+      id = payload.data.id;
+      type = payload.type;
     }
 
     if (payload.type === "twitter") {
-      id = payload.user.uid;
-      type = req.body.type;
+      id = payload.data.user.uid;
+      type = payload.type;
     }
 
     if (payload.type === "github") {
-      id = payload.user.uid;
-      type = req.body.type;
+      id = payload.data.user.uid;
+      type = payload.type;
     }
 
     if (payload.type === "instagram") {
-      id = payload.user_id;
-      type = req.body.type;
+      id = payload.data.user_id;
+      type = payload.type;
     }
 
     if (payload.provider === "linkedin") {
       id = payload.data.sub;
-      type = req.body.type;
+      type = payload.type;
     }
 
     const usersWithBadge = await User.find({
@@ -878,7 +878,7 @@ const signInUserBySocialBadges = async (req, res) => {
     let email;
     const payload = req.body;
     if (payload.provider === "facebook") {
-      id = payload.data.userID;
+      id = payload.data.id;
       email = payload.data.email;
     }
 
@@ -893,11 +893,11 @@ const signInUserBySocialBadges = async (req, res) => {
     }
 
     if (payload.provider === "instagram") {
-      id = req.body.data.user_id;
+      id = payload.data.user_id;
       email = "";
     }
     if (payload.provider === "linkedin") {
-      id = req.body.data.sub;
+      id = payload.data.sub;
       email = payload.data.email;
     }
 
