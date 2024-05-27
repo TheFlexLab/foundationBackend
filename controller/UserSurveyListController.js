@@ -26,19 +26,19 @@ const userList = async (req, res) => {
                 message: `Category found successfully`,
                 userList: categoryDoc,
             });
-        }
+        } else {
+            const userList = await UserListSchema.findOne({ userUuid: userUuid })
+                .populate({
+                    path: 'list.post.questForeginKey',
+                    model: 'InfoQuestQuestions'
+                });
+            if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
 
-        const userList = await UserListSchema.findOne({ userUuid: userUuid })
-            .populate({
-                path: 'list.post.questForeginKey',
-                model: 'InfoQuestQuestions'
+            res.status(200).json({
+                message: "List found successfully.",
+                userList: userList.list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
             });
-        if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
-
-        res.status(200).json({
-            message: "List found successfully.",
-            userList: userList.list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
-        });
+        }
 
     } catch (error) {
         console.error(error.message);
