@@ -985,36 +985,41 @@ const userInfo = async (req, res) => {
       uuid: req.params.userUuid,
     });
 
+    let password;
+
+    if (user.isPasswordEncryption) {
+      const legacyBadge = user.badges.find(badge => badge.legacy);
+      password = legacyBadge ? legacyBadge.legacy.eyk : null;
+    }
+    if (user.isPasswordEncryption && !password) throw new Error("Password not Found");
     // Check if user exists
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     if (user.isPasswordEncryption) {
-      if (!req.body.password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
+      if (!password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       user.badges.forEach(badge => {
-        if (!badge.primary || badge.primary === false) {
-          if (badge.type && badge.type === "cell-phone") {
-            badge.details = userCustomizedDecryptData(badge.details, password);
-          }
-          else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-            badge.details = userCustomizedDecryptData(badge.details, password);
-          }
-          else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-            badge.details = userCustomizedDecryptData(badge.details, password);
-          }
-          else if (badge.personal && badge.personal.work) {
-            badge.personal.work = badge.personal.work.map((item) => { return userCustomizedDecryptData(item, password) });
-          }
-          else if (badge.personal) {
-            badge.personal = userCustomizedDecryptData(badge.personal, password);
-          }
-          else if (badge.web3) {
-            badge.web3 = userCustomizedDecryptData(badge.web3, password);
-          }
-          else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-            badge.data = userCustomizedDecryptData(badge.data, password);
-          }
+        if (badge.type && badge.type === "cell-phone") {
+          badge.details = userCustomizedDecryptData(badge.details, password);
+        }
+        else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+          badge.details = userCustomizedDecryptData(badge.details, password);
+        }
+        else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+          badge.details = userCustomizedDecryptData(badge.details, password);
+        }
+        else if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map((item) => { return userCustomizedDecryptData(item, password) });
+        }
+        else if (badge.personal) {
+          badge.personal = userCustomizedDecryptData(badge.personal, password);
+        }
+        else if (badge.web3) {
+          badge.web3 = userCustomizedDecryptData(badge.web3, password);
+        }
+        else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+          badge.data = userCustomizedDecryptData(badge.data, password);
         }
       });
     }
@@ -1739,7 +1744,7 @@ const getFacebookUserInfo = async (req, res) => {
       // },
       timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
     });
-    if(!response.data) throw new Error("No Data Found");
+    if (!response.data) throw new Error("No Data Found");
     console.log("LinkedIn API Response:", response.data);
     res.status(200).send(response.data)
   } catch (error) {

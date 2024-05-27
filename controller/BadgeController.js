@@ -1527,7 +1527,9 @@ const addPasswordBadgesUpdate = async (req, res) => {
     });
 
     if (user.isPasswordEncryption) {
-      if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+      if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+
+      console.log("Remove Legacy Encryption!")
 
       // As Legacy Password is added so we need to Remove it.
       user.badges.forEach(badge => {
@@ -1561,14 +1563,14 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
       // Create Ledger
       await createLedger({
-        uuid: User.uuid,
+        uuid: user.uuid,
         txUserAction: "accountBadgeRemoved",
         txID: crypto.randomBytes(11).toString("hex"),
         txAuth: "User",
         txFrom: user.uuid,
         txTo: "dao",
         txAmount: "0",
-        txData: User.badges[0]._id,
+        txData: user.badges[0]._id,
         // txDescription : "User adds a verification badge"
       });
       res.status(200).json({
@@ -1577,9 +1579,10 @@ const addPasswordBadgesUpdate = async (req, res) => {
       });
     } else {
 
+      console.log("Apply Legacy Encryption!")
+
       // As Legacy Password is removed so we need to Add it.
       user.badges.forEach(badge => {
-        if (!badge.primary || badge.primary === false) {
           if (badge.type && badge.type === "cell-phone") {
             badge.details = userCustomizedEncryptData(badge.details, eyk);
           } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
@@ -1595,9 +1598,8 @@ const addPasswordBadgesUpdate = async (req, res) => {
           } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
             badge.data = userCustomizedEncryptData(badge.data, eyk);
           }
-        }
       });
-      if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+      if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
       const userBadges = user.badges;
       let updatedUserBadges;
       updatedUserBadges = [
