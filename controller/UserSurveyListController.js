@@ -8,7 +8,7 @@ const userList = async (req, res) => {
     try {
 
         const userUuid = req.params.userUuid;
-        const categoryName = req.query.categoryName;
+        const categoryName = req.params.categoryName;
 
         if (categoryName) {
             const userList = await UserListSchema.findOne({ userUuid: userUuid })
@@ -18,13 +18,17 @@ const userList = async (req, res) => {
                 });
             if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
 
-            // Find the category within the list array based on categoryName
-            const categoryDoc = userList.list.find(obj => obj.category === categoryName);
-            if (!categoryDoc) throw new Error('Category not found');
+            // Find all categories within the list array that contain categoryName substring
+            const categories = userList.list.filter(obj => {
+                const regex = new RegExp(categoryName, 'i'); // 'i' flag for case-insensitive match
+                return regex.test(obj.category);
+            });
+
+            if (categories.length === 0) throw new Error('No categories found');
 
             res.status(200).json({
-                message: `Category found successfully`,
-                userList: categoryDoc,
+                message: `Categories found successfully`,
+                categories: categories,
             });
         } else {
             const userList = await UserListSchema.findOne({ userUuid: userUuid })
@@ -38,8 +42,8 @@ const userList = async (req, res) => {
                 message: "List found successfully.",
                 userList: userList.list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
             });
-        }
-
+        } 
+        
     } catch (error) {
         console.error(error.message);
         res.status(500).json({
@@ -129,13 +133,17 @@ const findCategoryByName = async (req, res) => {
             });
         if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
 
-        // Find the category within the list array based on categoryName
-        const categoryDoc = userList.list.find(obj => obj.category === categoryName);
-        if (!categoryDoc) throw new Error('Category not found');
+        // Find all categories within the list array that contain categoryName substring
+        const categories = userList.list.filter(obj => {
+            const regex = new RegExp(categoryName, 'i'); // 'i' flag for case-insensitive match
+            return regex.test(obj.category);
+        });
+
+        if (categories.length === 0) throw new Error('No categories found');
 
         res.status(200).json({
-            message: `Category found successfully`,
-            userList: categoryDoc,
+            message: `Categories found successfully`,
+            categories: categories,
         });
 
     } catch (error) {
