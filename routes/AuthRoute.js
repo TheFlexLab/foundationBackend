@@ -730,4 +730,29 @@ router.post(
   AuthController.getLinkedInUserInfo
 );
 
+router.post(
+  "/getFacebookUserInfo",
+  /**
+   * @swagger
+   * /user/getFacebookUserInfo:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Get Facebook user information
+   *     description: Endpoint to get user information from Facebook
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/BookmarkStatesSetRequest'
+   *     responses:
+   *       '200':
+   *         description: Facebook user information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.getFacebookUserInfo
+);
+
 module.exports = router;

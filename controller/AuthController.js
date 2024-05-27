@@ -23,7 +23,7 @@ const { getUserBalance, updateUserBalance } = require("../utils/userServices");
 const { eduEmailCheck } = require("../utils/eduEmailCheck");
 const { getRandomDigits } = require("../utils/getRandomDigits");
 const { sendEmailMessage } = require("../utils/sendEmailMessage");
-const { FRONTEND_URL, JWT_SECRET } = require("../config/env");
+const { FRONTEND_URL, JWT_SECRET, FACEBOOK_APP_SECRET } = require("../config/env");
 
 // Encryption/Decryption Security Purposes.
 const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData } = require("../utils/security");
@@ -1708,6 +1708,45 @@ const getLinkedInUserInfo = async (req, res) => {
   }
 };
 
+const getFacebookUserInfo = async (req, res) => {
+  try {
+    const { code, redirect_uri, client_id } = req.body;
+    const params = new URLSearchParams();
+    params.append("code", code);
+    params.append("client_id", client_id);
+    params.append("redirect_uri", redirect_uri);
+    params.append("client_secret", "5a6af75fdb11fa22c911e57ae0d374df");
+    // console.log("🚀 ~ getFacebookUserInfo ~ params:", params);
+    // First Axios request to get the access token
+    const responseAccessToken = await axios.get(
+      `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${client_id}&redirect_uri=${redirect_uri}&client_secret=${FACEBOOK_APP_SECRET}&code=${code}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
+      }
+    );
+    // console.log("Response Token Via Facebook: ", responseAccessToken);
+    if (!responseAccessToken.data.access_token) throw new Error("Token not found!");
+    // if token found
+    // // Second Axios request to get user info using the access token
+    const response = await axios.get(`https://graph.facebook.com/v19.0/me?access_token=${responseAccessToken.data.access_token}&fields=${"id,first_name,last_name,middle_name,name,name_format,picture,short_name,email,gender,age_range,friends,link,birthday"}`, {
+      // headers: {
+      //   Authorization: `Bearer ${responseAccessToken.data.access_token}`,
+      //   "Content-Type": "application/json",
+      // },
+      timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
+    });
+    if(!response.data) throw new Error("No Data Found");
+    console.log("LinkedIn API Response:", response.data);
+    res.status(200).send(response.data)
+  } catch (error) {
+    console.error('Error:', error);
+    return error.message
+  }
+};
+
 module.exports = {
   changePassword,
   signUpUser,
@@ -1733,6 +1772,7 @@ module.exports = {
   AuthenticateJWT,
   getInstaToken,
   getLinkedInUserInfo,
+  getFacebookUserInfo,
   updateUserSettings,
   signUpUserBySocialBadges,
   signUpGuestBySocialBadges,
