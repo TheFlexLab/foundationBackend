@@ -28,7 +28,7 @@ const userList = async (req, res) => {
 
             res.status(200).json({
                 message: `Categories found successfully`,
-                categories: categories,
+                userList: categories,
             });
         } else {
             const userList = await UserListSchema.findOne({ userUuid: userUuid })
