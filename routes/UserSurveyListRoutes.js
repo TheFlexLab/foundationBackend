@@ -13,10 +13,10 @@ const UserSurveyListController = require("../controller/UserSurveyListController
 // User's List APIs
 
 router.get(
-  "/userList/:userUuid",
+  "/userList/:userUuid/:categoryName?",
   /**
    * @swagger
-   * /userlists/userList/{userUuid}:
+   * /userlists/userList/{userUuid}/{categoryName}:
    *   get:
    *     tags:
    *       - UserSurveyList
@@ -27,6 +27,12 @@ router.get(
    *         name: userUuid
    *         required: true
    *         description: The userUuid of the user
+   *         schema:
+   *           type: string
+   *       - in: path
+   *         name: categoryName
+   *         required: false
+   *         description: The categoryName of the user's List
    *         schema:
    *           type: string
    *     responses:

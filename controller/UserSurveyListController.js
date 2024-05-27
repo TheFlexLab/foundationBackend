@@ -8,6 +8,25 @@ const userList = async (req, res) => {
     try {
 
         const userUuid = req.params.userUuid;
+        const categoryName = req.query.categoryName;
+
+        if (categoryName) {
+            const userList = await UserListSchema.findOne({ userUuid: userUuid })
+                .populate({
+                    path: 'list.post.questForeginKey',
+                    model: 'InfoQuestQuestions'
+                });
+            if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
+
+            // Find the category within the list array based on categoryName
+            const categoryDoc = userList.list.find(obj => obj.category === categoryName);
+            if (!categoryDoc) throw new Error('Category not found');
+
+            res.status(200).json({
+                message: `Category found successfully`,
+                userList: categoryDoc,
+            });
+        }
 
         const userList = await UserListSchema.findOne({ userUuid: userUuid })
             .populate({
@@ -210,7 +229,7 @@ const generateCategoryShareLink = async (req, res) => {
 
         // Check if customizedLink contains any spaces or periods
         if (customizedLink && /[\s.]/.test(customizedLink)) throw new Error('Customized link should not contain spaces or periods');
-        
+
         const userList = await UserListSchema.findOne({ userUuid: userUuid })
         // .populate({
         //     path: 'list.post.questForeginKey',
@@ -302,8 +321,8 @@ const categoryViewCount = async (req, res) => {
         const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
         if (!categoryDoc) throw new Error('Category not found');
 
-        
-        if(categoryDoc.clicks === null) {
+
+        if (categoryDoc.clicks === null) {
             categoryDoc.clicks = 1;
         }
         else {
@@ -346,8 +365,8 @@ const categoryParticipentsCount = async (req, res) => {
         const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
         if (!categoryDoc) throw new Error('Category not found');
 
-        
-        if(categoryDoc.participents === null) {
+
+        if (categoryDoc.participents === null) {
             categoryDoc.participents = 1;
         }
         else {
