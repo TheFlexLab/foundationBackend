@@ -618,19 +618,6 @@ const getPersonalBadge = async (req, res) => {
 
     const userBadges = User.badges;
 
-    // Find the index of the object to remove
-    const index = userBadges.findIndex((badge) => {
-      return badge.personal && badge.personal[req.body.type];
-    });
-
-    let obj;
-    if (index !== -1) {
-      // Find the index of the education object within the found badge
-      obj = userBadges[index].personal[req.body.type];
-    } else {
-      throw new Error("Badges Not Found");
-    }
-
     let password;
     if (User.isPasswordEncryption) {
       const legacyBadge = User.badges.find(badge => badge.legacy);
@@ -638,9 +625,38 @@ const getPersonalBadge = async (req, res) => {
     }
     if (User.isPasswordEncryption && !password) throw new Error("Password not Found");
 
+    let obj;
+
+    if (User.isPasswordEncryption) {
+      // Find the index of the object to remove
+      const index = userBadges.findIndex((badge) => {
+        return badge.personal && badge.personal[userCustomizedEncryptData(encryptData(req.body.type), password)];
+      });
+
+      if (index !== -1) {
+        // Find the index of the education object within the found badge
+        obj = userBadges[index].personal[userCustomizedEncryptData(encryptData(req.body.type), password)];
+      } else {
+        throw new Error("Badges Not Found");
+      }
+    } else {
+      // Find the index of the object to remove
+      const index = userBadges.findIndex((badge) => {
+        return badge.personal && badge.personal[encryptData(req.body.type)];
+      });
+
+      let obj;
+      if (index !== -1) {
+        // Find the index of the education object within the found badge
+        obj = userBadges[index].personal[encryptData(req.body.type)];
+      } else {
+        throw new Error("Badges Not Found");
+      }
+    }
+
     let decreptedObj = obj;
 
-    if(User.isPasswordEncryption){
+    if (User.isPasswordEncryption) {
       decreptedObj = userCustomizedDecryptData(decreptedObj, password);
     }
 
@@ -1598,21 +1614,21 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
       // As Legacy Password is removed so we need to Add it.
       user.badges.forEach(badge => {
-          if (badge.type && badge.type === "cell-phone") {
-            badge.details = userCustomizedEncryptData(badge.details, eyk);
-          } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-            badge.details = userCustomizedEncryptData(badge.details, eyk);
-          } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-            badge.details = userCustomizedEncryptData(badge.details, eyk);
-          } else if (badge.personal && badge.personal.work) {
-            badge.personal.work = badge.personal.work.map(item => userCustomizedEncryptData(item, eyk));
-          } else if (badge.personal) {
-            badge.personal = userCustomizedEncryptData(badge.personal, eyk);
-          } else if (badge.web3) {
-            badge.web3 = userCustomizedEncryptData(badge.web3, eyk);
-          } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-            badge.data = userCustomizedEncryptData(badge.data, eyk);
-          }
+        if (badge.type && badge.type === "cell-phone") {
+          badge.details = userCustomizedEncryptData(badge.details, eyk);
+        } else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+          badge.details = userCustomizedEncryptData(badge.details, eyk);
+        } else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+          badge.details = userCustomizedEncryptData(badge.details, eyk);
+        } else if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map(item => userCustomizedEncryptData(item, eyk));
+        } else if (badge.personal) {
+          badge.personal = userCustomizedEncryptData(badge.personal, eyk);
+        } else if (badge.web3) {
+          badge.web3 = userCustomizedEncryptData(badge.web3, eyk);
+        } else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+          badge.data = userCustomizedEncryptData(badge.data, eyk);
+        }
       });
       if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
       const userBadges = user.badges;
