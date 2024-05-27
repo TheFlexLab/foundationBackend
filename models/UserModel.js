@@ -225,6 +225,7 @@ const userSchema = mongoose.Schema(
         primary: { type: Boolean },
         createdAt: { type: Date, default: new Date() },
         personal: { type: Object },
+        legacy: { type: Object },
         web3: { type: Object },
         data: { type: Object },
       },
