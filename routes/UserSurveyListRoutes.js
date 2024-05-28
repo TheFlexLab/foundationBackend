@@ -246,10 +246,10 @@ router.get(
 );
 
 router.get(
-  "/userList/findCategoryByLink/:categoryLink",
+  "/findCategoryByLink/:categoryLink",
   /**
    * @swagger
-   * /userlists/userList/findCategoryByLink/{categoryLink}:
+   * /userlists/findCategoryByLink/{categoryLink}:
    *   get:
    *     tags:
    *       - UserSurveyList
@@ -272,10 +272,10 @@ router.get(
 );
 
 router.get(
-  "/userList/categoryViewCount/:categoryLink",
+  "/categoryViewCount/:categoryLink",
   /**
    * @swagger
-   * /userlists/userList/findCategoryByLink/{categoryLink}:
+   * /userlists/categoryViewCount/{categoryLink}:
    *   get:
    *     tags:
    *       - UserSurveyList
@@ -298,10 +298,10 @@ router.get(
 );
 
 router.get(
-  "/userList/categoryParticipentsCount/:categoryLink",
+  "/categoryParticipentsCount/:categoryLink",
   /**
    * @swagger
-   * /userlists/userList/findCategoryByLink/{categoryLink}:
+   * /userlists/categoryParticipentsCount/{categoryLink}:
    *   get:
    *     tags:
    *       - UserSurveyList
@@ -324,10 +324,10 @@ router.get(
 );
 
 router.get(
-  "/userList/categoryStatistics/:categoryId",
+  "/categoryStatistics/:categoryId",
   /**
    * @swagger
-   * /userlists/userList/findCategoryByLink/{categoryId}:
+   * /userlists/categoryStatistics/{categoryId}:
    *   get:
    *     tags:
    *       - UserSurveyList
