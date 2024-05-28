@@ -25,14 +25,14 @@ const decryptData = (data) => {
 };
 
 const userCustomizedEncryptData = (data, eyk) => {
-    const cipher = crypto.createCipheriv(ALGORITHM, crypto.createHash('sha256').update(eyk).digest(), new Buffer('1234567812345678', 'binary'));
+    const cipher = crypto.createCipheriv(ALGORITHM, eyk, new Buffer('1234567812345678', 'binary'));
     let encrypted = cipher.update(data instanceof Buffer ? data : JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return encrypted;
 };
 
 const userCustomizedDecryptData = (data, eyk) => {
-    const decipher = crypto.createDecipheriv(ALGORITHM, crypto.createHash('sha256').update(eyk).digest(), new Buffer('1234567812345678', 'binary'));
+    const decipher = crypto.createDecipheriv(ALGORITHM, eyk, new Buffer('1234567812345678', 'binary'));
     let decrypted = decipher.update(data, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     try {
