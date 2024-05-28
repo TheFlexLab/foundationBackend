@@ -340,7 +340,7 @@ router.post(
 router.post("/updateUserSettings", AuthController.updateUserSettings);
 
 router.get(
-  "/userInfo/:userUuid",
+  "/userInfo/:userUuid/:infoc?",
   /**
    * @swagger
    * /user/userInfo/{userUuid}:
@@ -354,6 +354,12 @@ router.get(
    *         name: userUuid
    *         required: true
    *         description: The userUuid of the user
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: infoc
+   *         required: true
+   *         description: The infoc of the user
    *         schema:
    *           type: string
    *     responses:

@@ -1070,17 +1070,12 @@ const updateUserSettings = async (req, res) => {
 
 const userInfo = async (req, res) => {
   try {
+
+    const password = req.query.infoc;
+
     const user = await User.findOne({
       uuid: req.params.userUuid,
     });
-
-    let password;
-
-    if (user.isPasswordEncryption) {
-      const legacyBadge = user.badges.find(badge => badge.legacy);
-      password = legacyBadge ? legacyBadge.legacy.eyk : null;
-    }
-    if (user.isPasswordEncryption && !password) throw new Error("Password not Found");
     // Check if user exists
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
