@@ -1150,9 +1150,10 @@ const userInfo = async (req, res) => {
 const infoc = async (req, res) => {
   try {
     const infoc = req.body.infoc;
+    const hash = crypto.createHash('sha256').update(infoc).digest('hex');
     res.status(200).json({
       message: "Success",
-      data: crypto.createHash('sha256').update(infoc).digest(),
+      data: hash,
     });
   } catch (error) {
     res.status(500).json({
