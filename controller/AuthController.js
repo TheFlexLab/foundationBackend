@@ -263,7 +263,7 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     let id;
     if (payload.type === "facebook") {
-      id = payload.data.userID;
+      id = payload.data.id;
     }
 
     if (payload.type === "twitter") {
@@ -311,6 +311,18 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     // Update user verification status to true
     await user.save();
+
+    const createUserList = new UserListSchema({
+      userUuid: user.uuid,
+    });
+    const newUserList = await createUserList.save();
+    if (!newUserList) {
+      await user.deleteOne({
+        uuid: uuid,
+      });
+      throw new Error("User not created due to list");
+    }
+
     // Create Ledger
     await createLedger({
       uuid: uuid,
@@ -877,37 +889,32 @@ const signInUserBySocialBadges = async (req, res) => {
     let id;
     let email;
     const payload = req.body;
-    if (payload.provider === "facebook") {
+    if (payload.type === "facebook") {
       id = payload.data.id;
       email = payload.data.email;
     }
 
-    if (payload.provider === "twitter") {
+    if (payload.type === "twitter") {
       id = payload.data.user.uid;
       email = payload.data.email;
     }
 
-    if (payload.provider === "github") {
+    if (payload.type === "github") {
       id = payload.data.user.uid;
       email = payload.data.email;
     }
 
-    if (payload.provider === "instagram") {
+    if (payload.type === "instagram") {
       id = payload.data.user_id;
       email = "";
     }
-    if (payload.provider === "linkedin") {
+    if (payload.type === "linkedin") {
       id = payload.data.sub;
       email = payload.data.email;
     }
 
-    if (payload.provider === "linkedin") {
-      id = payload.data.sub;
-      email = "";
-    }
-
     const user = await User.findOne({
-      $or: [{ email: email }, { "badges.0.accountId": id }],
+      $and: [{ email: email }, { "badges.0.accountId": id }],
     });
     if (!user) throw new Error("User not Found");
 
