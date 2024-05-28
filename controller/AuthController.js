@@ -176,7 +176,7 @@ const signUpUserBySocialLogin = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -334,7 +334,7 @@ const signUpUserBySocialBadges = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -502,7 +502,7 @@ const createGuestMode = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -577,7 +577,7 @@ const signUpGuestMode = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -660,7 +660,7 @@ const signUpSocialGuestMode = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -833,7 +833,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -1143,6 +1143,20 @@ const userInfo = async (req, res) => {
     console.error(error.message);
     res.status(500).json({
       message: `An error occurred while processing userInfo: ${error.message}`,
+    });
+  }
+};
+
+const infoc = async (req, res) => {
+  try {
+    const infoc = req.body.infoc;
+    res.status(200).json({
+      message: "Success",
+      data: crypto.createHash('sha256').update(infoc).digest(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `An error occurred while infoc: ${error.message}`,
     });
   }
 };
@@ -1852,6 +1866,7 @@ module.exports = {
   signUpSocialGuestMode,
   signInUserBySocialLogin,
   userInfo,
+  infoc,
   setUserWallet,
   signedUuid,
   sendVerifyEmail,
