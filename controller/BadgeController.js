@@ -1648,7 +1648,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
       updatedUserBadges = [
         ...userBadges,
         {
-          legacy: { eyk: eyk },
+          legacy: true,
         },
       ];
       user.badges = updatedUserBadges;
