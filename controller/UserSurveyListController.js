@@ -8,8 +8,8 @@ const userList = async (req, res) => {
     try {
 
         const userUuid = req.params.userUuid;
-        const categoryName = req.params.categoryName;
-
+        const categoryName = req.query.categoryName;
+        
         if (categoryName) {
             const userList = await UserListSchema.findOne({ userUuid: userUuid })
                 .populate({
@@ -24,12 +24,19 @@ const userList = async (req, res) => {
                 return regex.test(obj.category);
             });
 
-            if (categories.length === 0) throw new Error('No categories found');
+            if (categories.length === 0) {
+                res.status(200).json({
+                    message: "No Category found.",
+                    userList: [],
+                });
+            }
+            else {
+                res.status(200).json({
+                    message: `Categories found successfully`,
+                    userList: categories,
+                });
+            }
 
-            res.status(200).json({
-                message: `Categories found successfully`,
-                userList: categories,
-            });
         } else {
             const userList = await UserListSchema.findOne({ userUuid: userUuid })
                 .populate({
@@ -158,7 +165,7 @@ const updateCategoryInUserList = async (req, res) => {
     try {
 
         const { userUuid, categoryId} = req.params;
-        const {postId} = req.query;
+        const postId = req.query.postId;
         const category = req.body.category;
 
         if (!postId && !category || postId && category) throw new Error("Bad Request: Please Provide either category in your request, or postId in query");

@@ -171,6 +171,24 @@ const signUpUserBySocialLogin = async (req, res) => {
     // Update user verification status to true
     user.gmailVerified = payload.email_verified;
     await user.save();
+
+    const userList = await UserListSchema.findOne({
+      userUuid: user.uuid
+    })
+
+    if(!userList){
+      const createUserList = new UserListSchema({
+        userUuid: user.uuid,
+      });
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
+    }
+
     // Create Ledger
     await createLedger({
       uuid: uuid,
@@ -312,15 +330,21 @@ const signUpUserBySocialBadges = async (req, res) => {
     // Update user verification status to true
     await user.save();
 
-    const createUserList = new UserListSchema({
-      userUuid: user.uuid,
-    });
-    const newUserList = await createUserList.save();
-    if (!newUserList) {
-      await user.deleteOne({
-        uuid: uuid,
+    const userList = await UserListSchema.findOne({
+      userUuid: user.uuid
+    })
+
+    if(!userList){
+      const createUserList = new UserListSchema({
+        userUuid: user.uuid,
       });
-      throw new Error("User not created due to list");
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
     }
 
     // Create Ledger
@@ -474,15 +498,21 @@ const createGuestMode = async (req, res) => {
     const users = await user.save();
     if (!users) throw new Error("User not Created");
 
-    const createUserList = new UserListSchema({
-      userUuid: users.uuid,
-    });
-    const newUserList = await createUserList.save();
-    if (!newUserList) {
-      await users.deleteOne({
-        uuid: uuid,
+    const userList = await UserListSchema.findOne({
+      userUuid: user.uuid
+    })
+
+    if(!userList){
+      const createUserList = new UserListSchema({
+        userUuid: user.uuid,
       });
-      throw new Error("User not created due to list");
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
     }
 
     // Generate a JWT token
@@ -531,7 +561,7 @@ const signUpGuestMode = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(req.body.password, salt);
-    await User.updateOne(
+    const user = await User.updateOne(
       { uuid: req.body.uuid },
       {
         $set: {
@@ -542,6 +572,23 @@ const signUpGuestMode = async (req, res) => {
         },
       }
     );
+
+    const userList = await UserListSchema.findOne({
+      userUuid: user.uuid
+    })
+
+    if(!userList){
+      const createUserList = new UserListSchema({
+        userUuid: user.uuid,
+      });
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
+    }
 
     // Generate a JWT token
     const token = createToken({ uuid: req.body.uuid });
@@ -608,6 +655,24 @@ const signUpSocialGuestMode = async (req, res) => {
     // Update user verification status to true
     user.gmailVerified = payload.email_verified;
     await user.save();
+
+    const userList = await UserListSchema.findOne({
+      userUuid: user.uuid
+    })
+
+    if(!userList){
+      const createUserList = new UserListSchema({
+        userUuid: user.uuid,
+      });
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
+    }
+
     // Create Ledger
     await createLedger({
       uuid: uuid,
@@ -763,6 +828,23 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Update user verification status to true
     await user.save();
+
+    const userList = await UserListSchema.findOne({
+      userUuid: user.uuid
+    })
+
+    if(!userList){
+      const createUserList = new UserListSchema({
+        userUuid: user.uuid,
+      });
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
+    }
     // Create Ledger
     await createLedger({
       uuid: uuid,
