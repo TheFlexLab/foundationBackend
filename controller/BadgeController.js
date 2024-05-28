@@ -15,6 +15,16 @@ const JobTitle = require("../models/JobTitle");
 const DegreeAndFieldOfStudy = require("../models/DegreeAndFieldOfStudy");
 const mongoose = require('mongoose');
 const User = require("../models/UserModel");
+const personalKeys = [
+  'firstName', 
+  'lastName', 
+  'geolocation', 
+  'security-question', 
+  'dateOfBirth', 
+  'currentCity', 
+  'homeTown', 
+  'relationshipStatus'
+];
 
 // Encryption/Decryption Security Purposes.
 const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData, } = require("../utils/security");
@@ -463,6 +473,8 @@ const addPersonalBadge = async (req, res) => {
       ];
     }
     else {
+      const foundKey = personalKeys.find(key => (req.body.personal).hasOwnProperty(key));
+      console.log(foundKey)
       updatedUserBadges = [
         ...userBadges,
         {
