@@ -153,6 +153,7 @@ const addContactBadge = async (req, res) => {
   try {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
+    const eyk = req.body.infoc;
     // Check education Email
     if (req.body.type === "education") {
       // Check Email Category
@@ -189,7 +190,7 @@ const addContactBadge = async (req, res) => {
       // Find the Badge
       let usersWithBadge;
       if (User.isPasswordEncryption) {
-        if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+        if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
         usersWithBadge = await UserModel.find({
           badges: {
             $elemMatch: { details: userCustomizedEncryptData(encryptData(req.body), eyk) },
@@ -322,6 +323,7 @@ const addBadge = async (req, res) => {
   try {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
+    const eyk = req.body.infoc;
     // Find the Badge
     const usersWithBadge = await UserModel.find({
       badges: {
@@ -337,7 +339,7 @@ const addBadge = async (req, res) => {
     const userBadges = User.badges;
     let updatedUserBadges;
     if (User.isPasswordEncryption) {
-      if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+      if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
@@ -751,12 +753,13 @@ const addWorkEducationBadge = async (req, res) => {
     if (!User) throw new Error("No such User!");
     const newData = req.body.data;
     const userBadges = User.badges;
+    const eyk = req.body.infoc;
 
     const personalBadgeIndex = userBadges.findIndex(
       (badge) => badge.personal && badge.personal[req.body.type]
     );
     if (User.isPasswordEncryption) {
-      if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+      if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
       if (personalBadgeIndex !== -1) {
         User.badges[personalBadgeIndex].personal[req.body.type].push(userCustomizedEncryptData(encryptData(newData), eyk));
         User.markModified("badges");
@@ -820,10 +823,12 @@ const addWeb3Badge = async (req, res) => {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
 
+    const eyk = req.body.infoc;
+
     const userBadges = User.badges;
     let updatedUserBadges;
     if (User.isPasswordEncryption) {
-      if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+      if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
       updatedUserBadges = [
         ...userBadges,
         {
