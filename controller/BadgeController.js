@@ -654,7 +654,7 @@ const getPersonalBadge = async (req, res) => {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
 
-    const eyk = req.query.infoc;
+    const eyk = req.body.infoc;
 
     const userBadges = User.badges;
 
