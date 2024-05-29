@@ -28,6 +28,16 @@ const { eduEmailCheck } = require("../utils/eduEmailCheck");
 const { getRandomDigits } = require("../utils/getRandomDigits");
 const { sendEmailMessage } = require("../utils/sendEmailMessage");
 const { FRONTEND_URL, JWT_SECRET, FACEBOOK_APP_SECRET } = require("../config/env");
+const personalKeys = [
+  'firstName',
+  'lastName',
+  'geolocation',
+  'security-question',
+  'dateOfBirth',
+  'currentCity',
+  'homeTown',
+  'relationshipStatus'
+];
 
 // Encryption/Decryption Security Purposes.
 const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData } = require("../utils/security");
@@ -1084,7 +1094,10 @@ const userInfo = async (req, res) => {
     if (user.isPasswordEncryption) {
       if (!password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
       user.badges.forEach(badge => {
-        if (badge.type && badge.type === "cell-phone") {
+        if (badge.legacy) {
+          return
+        }
+        else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, password);
         }
         else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
@@ -1097,7 +1110,13 @@ const userInfo = async (req, res) => {
           badge.personal.work = badge.personal.work.map((item) => { return userCustomizedDecryptData(item, password) });
         }
         else if (badge.personal) {
-          badge.personal = userCustomizedDecryptData(badge.personal, password);
+          const decryptedPersonal = {};
+          for (const key of personalKeys) {
+            if (badge.personal.hasOwnProperty(key)) {
+              decryptedPersonal[key] = userCustomizedDecryptData(badge.personal[key], password);
+            }
+          }
+          badge.personal = decryptedPersonal;
         }
         else if (badge.web3) {
           badge.web3 = userCustomizedDecryptData(badge.web3, password);
@@ -1110,25 +1129,43 @@ const userInfo = async (req, res) => {
 
     // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
-      if (badge.type && badge.type === "cell-phone") {
+      if (badge.legacy) {
+        return
+      }
+      else if (badge.type && badge.type === "cell-phone") {
+        console.log("I am AT Cell-Phone------------------------")
         badge.details = decryptData(badge.details)
       }
       else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+        console.log("I am AT TYPE------------------------")
         badge.details = decryptData(badge.details)
       }
       else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+        console.log("I am AT Acc-Name------------------------")
         badge.details = decryptData(badge.details)
       }
       else if (badge.personal && badge.personal.work) {
+        console.log("I am AT Personal Work------------------------")
         badge.personal.work = badge.personal.work.map((encryptedData) => { return decryptData(encryptedData) });
       }
       else if (badge.personal) {
-        badge.personal = decryptData(badge.personal);
+        console.log("I am AT Personal------------------------")
+        // Decrypt each key in the personal object if it matches one of the personalKeys
+        const decryptedPersonal = {};
+        for (const key of personalKeys) {
+          if (badge.personal.hasOwnProperty(key)) {
+            decryptedPersonal[key] = decryptData(badge.personal[key]);
+          }
+        }
+
+        badge.personal = decryptedPersonal;
       }
       else if (badge.web3) {
+        console.log("I am AT WEB3------------------------")
         badge.web3 = decryptData(badge.web3)
       }
       else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+        console.log("I am AT Passkey------------------------")
         badge.data = decryptData(badge.data)
       }
     });
