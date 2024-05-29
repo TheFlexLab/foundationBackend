@@ -461,6 +461,8 @@ const addPersonalBadge = async (req, res) => {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
 
+    const eyk = req.body.eyk;
+
     const userBadges = User.badges;
     let updatedUserBadges;
     if (User.isPasswordEncryption) {
