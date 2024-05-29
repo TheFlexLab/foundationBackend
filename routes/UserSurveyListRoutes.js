@@ -356,6 +356,33 @@ router.get(
 );
 
 router.post(
+  "/userList/updatePostOrder",
+  /**
+   * @swagger
+   * /userlists/userList/updatePostOrder:
+   *   post:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Set bookmark states
+   *     description: Endpoint to set bookmark states for a user
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: 
+   *             $ref: '#/components/schemas/BookmarkStatesSetRequest'
+   *     responses:
+   *       '200':
+   *         description: Bookmark states set successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.updatePostOrder
+);
+
+router.post(
   "/userList/addPostInCategoryInUserList",
   /**
    * @swagger

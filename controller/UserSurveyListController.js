@@ -553,6 +553,46 @@ const categoryStatistics = async (req, res) => {
     }
 }
 
+const updatePostOrder = async (req, res) => {
+    try {
+        const { order, userUuid, categoryId } = req.body;
+
+        const userList = await UserListSchema.findOne({ userUuid: userUuid })
+        if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
+
+        // Find the category within the list array based on categoryId
+        const categoryDoc = userList.list.id(categoryId);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        // Create a map of _id to order based on the order array in req.body
+        const orderMap = {};
+        order.forEach((postId, index) => {
+            orderMap[postId] = index;
+        });
+
+        categoryDoc.post.forEach(post => {
+            let postIdString = post._id.toString();
+            // Use the `hasOwnProperty` method to check for the key in orderMap
+            if (!orderMap.hasOwnProperty(postIdString)) throw new Error(`Wrong identifires are being sent in order: ${order}`);
+            post.order = orderMap[postIdString]; // Access the value using the key
+            
+        });
+
+        await userList.save();
+
+        res.status(200).json({
+            message: `List order implemented Successfully!`,
+            userList: userList,
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
 const addPostInCategoryInUserList = async (req, res) => {
     try {
         const { userUuid, categoryIdArray, questForeginKey } = req.body;
@@ -574,9 +614,12 @@ const addPostInCategoryInUserList = async (req, res) => {
             if (questForeginKeyExists) continue;
 
             const newPost = new PostSchema({
-                questForeginKey: questForeginKey
+                questForeginKey: questForeginKey,
+                order: categoryDoc.postCounter,
             });
             categoryDoc.post.push(newPost);
+            categoryDoc.postCounter = categoryDoc.postCounter + 1;
+            categoryDoc.updatedAt = new Date().toISOString();
         }
         userList.updatedAt = new Date().toISOString();
 
@@ -654,6 +697,7 @@ module.exports = {
     categoryViewCount,
     categoryParticipentsCount,
     categoryStatistics,
+    updatePostOrder,
     addPostInCategoryInUserList,
     createUserListForAllUsers,
 };

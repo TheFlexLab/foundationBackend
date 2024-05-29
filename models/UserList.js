@@ -8,6 +8,7 @@ const postSchema = mongoose.Schema({
         ref: InfoQuestQuestions,
         required: true
     },
+    order: { type: Number, required: true, },
     createdAt: { type: String, default: () => new Date().toISOString(), },
     updatedAt: { type: String, default: () => new Date().toISOString(), },
     deletedAt: { type: String, default: null, },
@@ -23,6 +24,7 @@ const categorySchema = mongoose.Schema({
     },
     link: { type: String, default: null, },
     isLinkUserCustomized: { type: Boolean, default: false, },
+    postCounter: { type: Number, default: 0, },
     clicks: { type: Number, default: null, },
     participents: { type: Number, default: null, },
     createdAt: { type: String, default: () => new Date().toISOString(), },
