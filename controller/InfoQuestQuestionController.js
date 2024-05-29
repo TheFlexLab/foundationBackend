@@ -1656,6 +1656,42 @@ const getQuestByUniqueShareLink = async (req, res) => {
   }
 };
 
+const getQuestByUniqueId = async (req, res) => {
+  try {
+    const {postId, uuid} = req.params;
+
+    const infoQuest = await InfoQuestQuestions.find({
+      _id: postId,
+    }).populate("getUserBadge", "badges");
+    if (!infoQuest) throw new Error("No Post Exist!");
+
+    // if (infoQuest.isActive === false) {
+    //   return res.status(404).json({ message: "This link is not active." });
+    // }
+
+    const result = await getQuestionsWithStatus(infoQuest, uuid);
+
+    // getQuestionsWithUserSettings
+    const result1 = await getQuestionsWithUserSettings(result, uuid);
+
+    const resultArray = result1.map(getPercentage);
+    const desiredArray = resultArray.map((item) => ({
+      ...item._doc,
+      selectedPercentage: item.selectedPercentage,
+      contendedPercentage: item.contendedPercentage,
+    }));
+
+    res.status(200).json({
+      data: desiredArray,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: `An error occurred while getQuestByUniqueShareLink InfoQuest: ${error.message}`,
+    });
+  }
+};
+
 const getAllQuestsWithCompletedStatus = async (req, res) => {
   try {
     let allQuestions;
@@ -2190,6 +2226,7 @@ module.exports = {
   getAllQuestsWithChangeAnsStatus,
   getQuestionsWithStatus,
   getQuestByUniqueShareLink,
+  getQuestByUniqueId,
   getQuestionsWithUserSettings,
   checkMediaDuplicateUrl,
   getFullSoundcloudUrlFromShortUrl,
