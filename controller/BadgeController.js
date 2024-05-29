@@ -959,6 +959,8 @@ const updatePersonalBadge = async (req, res) => {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
 
+    const eyk = req.body.infoc;
+
     const userBadges = User.badges;
 
     const index = userBadges.findIndex((badge) => {
@@ -967,7 +969,7 @@ const updatePersonalBadge = async (req, res) => {
 
     if (index !== -1) {
       if (User.isPasswordEncryption) {
-        if (!req.body.eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+        if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
         userBadges[index].personal[req.body.type] = userCustomizedEncryptData(encryptData(req.body.newData), eyk);
       }
       else {
