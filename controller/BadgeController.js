@@ -1568,8 +1568,7 @@ const removeFarCasterBadge = async (req, res) => {
 const addPasswordBadgesUpdate = async (req, res) => {
   try {
 
-    const { uuid } = req.body;
-    const eyk = req.params.infoc
+    const { uuid, eyk } = req.body;
     const user = await User.findOne({
       uuid: uuid,
     });
