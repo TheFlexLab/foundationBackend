@@ -246,7 +246,7 @@ router.get(
 );
 
 router.get(
-  "/findCategoryByLink/:categoryLink",
+  "/findCategoryByLink/:categoryLink/:uuid?",
   /**
    * @swagger
    * /userlists/findCategoryByLink/{categoryLink}:
@@ -260,6 +260,12 @@ router.get(
    *         name: categoryLink
    *         required: true
    *         description: The categoryLink of the user
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: uuid
+   *         required: false
+   *         description: The uuid of the user
    *         schema:
    *           type: string
    *     responses:

@@ -1,6 +1,12 @@
 const User = require("../models/UserModel");
 const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
 const shortLink = require("shortlink");
+const InfoQuestQuestions = require("../models/InfoQuestQuestions");
+const StartQuests = require("../models/StartQuests");
+const { createLedger } = require("../utils/createLedger");
+const { updateTreasury } = require("../utils/treasuryService");
+const { updateUserBalance } = require("../utils/userServices")
+const crypto = require("crypto");
 
 // User's List APIs
 
@@ -9,7 +15,7 @@ const userList = async (req, res) => {
 
         const userUuid = req.params.userUuid;
         const categoryName = req.query.categoryName;
-        
+
         if (categoryName) {
             const userList = await UserListSchema.findOne({ userUuid: userUuid })
                 .populate({
@@ -164,7 +170,7 @@ const findCategoryByName = async (req, res) => {
 const updateCategoryInUserList = async (req, res) => {
     try {
 
-        const { userUuid, categoryId} = req.params;
+        const { userUuid, categoryId } = req.params;
         const postId = req.query.postId;
         const category = req.body.category;
 
@@ -262,9 +268,55 @@ const generateCategoryShareLink = async (req, res) => {
             if (customizedLink) {
                 categoryDoc.link = customizedLink;
                 categoryDoc.isLinkUserCustomized = true;
+                await createLedger({
+                    uuid: userUuid,
+                    txUserAction: "listLinkCreatedCustom",
+                    txID: crypto.randomBytes(11).toString("hex"),
+                    txAuth: "User",
+                    txFrom: userUuid,
+                    txTo: "dao",
+                    txAmount: 2.5,
+                    txData: userUuid,
+                    txDate: Date.now(),
+                    txDescription: "List Link Customized",
+                });
+                // Create Ledger
+                await createLedger({
+                    uuid: userUuid,
+                    txUserAction: "listLinkCreatedCustom",
+                    txID: crypto.randomBytes(11).toString("hex"),
+                    txAuth: "DAO",
+                    txFrom: "DAO Treasury",
+                    txTo: userUuid,
+                    txAmount: 0,
+                    txDate: Date.now(),
+                    txDescription: "List Link Customized",
+                });
+                // Increment the Treasury
+                await updateTreasury({
+                    amount: 2.5,
+                    inc: true,
+                });
+                // Decrement the UserBalance
+                await updateUserBalance({
+                    uuid: userUuid,
+                    amount: 2.5,
+                    dec: true,
+                });
             }
             else {
                 categoryDoc.link = shortLink.generate(8);
+                await createLedger({
+                    uuid: userUuid,
+                    txUserAction: "listLinkCreated",
+                    txID: crypto.randomBytes(11).toString("hex"),
+                    txAuth: "User",
+                    txFrom: userUuid,
+                    txTo: "dao",
+                    txAmount: "0",
+                    txData: userUuid,
+                    // txDescription : "User changes password"
+                });
             }
 
             categoryDoc.updatedAt = new Date().toISOString();
@@ -289,6 +341,7 @@ const findCategoryByLink = async (req, res) => {
     try {
 
         const { categoryLink } = req.params;
+        const { uuid } = req.query;
 
         // Find the user list that contains a category with the given link
         const userList = await UserListSchema.findOne({
@@ -304,10 +357,73 @@ const findCategoryByLink = async (req, res) => {
         const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
         if (!categoryDoc) throw new Error('Category not found');
 
-        res.status(200).json({
-            message: `Category found successfully`,
-            category: categoryDoc,
-        });
+        if (uuid) {
+            const questForeignKeys = categoryDoc.post.map(post => post.questForeginKey._id);
+            let startQuestData;
+            if (uuid && questForeignKeys.length > 0) {
+                startQuestData = await StartQuests.find({
+                    uuid: uuid,
+                    questForeignKey: { $in: questForeignKeys }
+                });
+            }
+
+            if (startQuestData.length === 0) {
+                res.status(200).json({
+                    message: `Category found successfully`,
+                    category: categoryDoc,
+                });
+            } else {
+
+
+                // Create a map for quick lookup of startQuestData by questForeignKey
+                const startQuestDataMap = startQuestData.reduce((map, data) => {
+                    map[data.questForeignKey.toString()] = data;
+                    return map;
+                }, {});
+
+                // Add the startQuestData field to the questForeginKey object of each post
+                const updatedPosts = categoryDoc.post.map(post => {
+                    const questForeignKey = post.questForeginKey._id.toString();
+                    const questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        startQuestData: startQuestDataMap[questForeignKey] || null
+                    };
+
+                    return {
+                        ...post.toObject(), // Convert Mongoose document to plain JS object
+                        questForeginKey: questForeginKeyWithStartQuestData
+                    };
+                });
+
+                const newCategoryDoc = {
+                    category: categoryDoc.category,
+                    post: updatedPosts,
+                    link: categoryDoc.link,
+                    isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
+                    clicks: categoryDoc.clicks,
+                    participents: categoryDoc.participents,
+                    createdAt: categoryDoc.createdAt,
+                    updatedAt: categoryDoc.updatedAt,
+                    deletedAt: categoryDoc.deletedAt,
+                    isActive: categoryDoc.isActive,
+                    _id: categoryDoc._id
+                };
+
+                res.status(200).json({
+                    message: `Category found successfully`,
+                    category: newCategoryDoc,
+                });
+
+            }
+        }
+        else {
+
+            res.status(200).json({
+                message: `Category found successfully`,
+                category: categoryDoc,
+            });
+
+        }
 
     } catch (error) {
         console.error(error.message);

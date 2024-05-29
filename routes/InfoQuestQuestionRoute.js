@@ -283,6 +283,40 @@ router.get(
   InfoQuestQuestionController.getQuestByUniqueShareLink
 );
 
+router.get(
+  "/getQuestByUniqueId/:postId/:uuid",
+  /**
+   * @swagger
+   * /infoquestions/getQuestByUniqueId/{postId}/{uuid}:
+   *   get:
+   *     tags:
+   *       - Info Quest Question
+   *     summary: Get quest by unique share link
+   *     description: Endpoint to retrieve a specific info quest question by its unique share link
+   *     parameters:
+   *       - in: path
+   *         name: postId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The unique share link of the quest
+   *       - in: path
+   *         name: uuid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The unique share link of the quest
+   *     responses:
+   *       '200':
+   *         description: Successfully retrieved the info quest question
+   *       '404':
+   *         description: Info quest question not found
+   *       '500':
+   *         description: Internal server error
+   */
+  InfoQuestQuestionController.getQuestByUniqueId
+);
+
 router.post(
   "/getAllQuestsWithCompletedStatus",
   /**
