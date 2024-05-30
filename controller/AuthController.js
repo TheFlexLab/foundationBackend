@@ -27,20 +27,29 @@ const { getUserBalance, updateUserBalance } = require("../utils/userServices");
 const { eduEmailCheck } = require("../utils/eduEmailCheck");
 const { getRandomDigits } = require("../utils/getRandomDigits");
 const { sendEmailMessage } = require("../utils/sendEmailMessage");
-const { FRONTEND_URL, JWT_SECRET, FACEBOOK_APP_SECRET } = require("../config/env");
+const {
+  FRONTEND_URL,
+  JWT_SECRET,
+  FACEBOOK_APP_SECRET,
+} = require("../config/env");
 const personalKeys = [
-  'firstName',
-  'lastName',
-  'geolocation',
-  'security-question',
-  'dateOfBirth',
-  'currentCity',
-  'homeTown',
-  'relationshipStatus'
+  "firstName",
+  "lastName",
+  "geolocation",
+  "security-question",
+  "dateOfBirth",
+  "currentCity",
+  "homeTown",
+  "relationshipStatus",
 ];
 
 // Encryption/Decryption Security Purposes.
-const { encryptData, decryptData, userCustomizedEncryptData, userCustomizedDecryptData } = require("../utils/security");
+const {
+  encryptData,
+  decryptData,
+  userCustomizedEncryptData,
+  userCustomizedDecryptData,
+} = require("../utils/security");
 
 const changePassword = async (req, res) => {
   try {
@@ -183,8 +192,8 @@ const signUpUserBySocialLogin = async (req, res) => {
     await user.save();
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid
-    })
+      userUuid: user.uuid,
+    });
 
     if (!userList) {
       const createUserList = new UserListSchema({
@@ -266,7 +275,7 @@ const signUpUserBySocialLogin = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
@@ -341,8 +350,8 @@ const signUpUserBySocialBadges = async (req, res) => {
     await user.save();
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid
-    })
+      userUuid: user.uuid,
+    });
 
     if (!userList) {
       const createUserList = new UserListSchema({
@@ -424,7 +433,7 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
@@ -485,16 +494,15 @@ const signInUser = async (req, res) => {
       // txDescription : "user logs in"
     });
 
-    if(user.isPasswordEncryption) {
+    if (user.isPasswordEncryption) {
       res.cookie("uuid", user.uuid, cookieConfiguration());
       res.cookie("jwt", token, cookieConfiguration());
-      res.status(200).json({user, isPasswordEncryption: true});
+      res.status(200).json({ user, isPasswordEncryption: true });
     } else {
       res.cookie("uuid", user.uuid, cookieConfiguration());
       res.cookie("jwt", token, cookieConfiguration());
       res.status(200).json(user);
     }
-
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -516,8 +524,8 @@ const createGuestMode = async (req, res) => {
     if (!users) throw new Error("User not Created");
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid
-    })
+      userUuid: user.uuid,
+    });
 
     if (!userList) {
       const createUserList = new UserListSchema({
@@ -591,8 +599,8 @@ const signUpGuestMode = async (req, res) => {
     );
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid
-    })
+      userUuid: user.uuid,
+    });
 
     if (!userList) {
       const createUserList = new UserListSchema({
@@ -674,8 +682,8 @@ const signUpSocialGuestMode = async (req, res) => {
     await user.save();
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid
-    })
+      userUuid: user.uuid,
+    });
 
     if (!userList) {
       const createUserList = new UserListSchema({
@@ -757,7 +765,7 @@ const signUpSocialGuestMode = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].accountName = decryptUser.badges[0].accountName
+    decryptUser.badges[0].accountName = decryptUser.badges[0].accountName;
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
@@ -847,8 +855,8 @@ const signUpGuestBySocialBadges = async (req, res) => {
     await user.save();
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid
-    })
+      userUuid: user.uuid,
+    });
 
     if (!userList) {
       const createUserList = new UserListSchema({
@@ -924,7 +932,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = user._doc;
-    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
 
     res.cookie("uuid", user.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
@@ -1100,7 +1108,6 @@ const updateUserSettings = async (req, res) => {
 
 const userInfo = async (req, res) => {
   try {
-
     const password = req.query.infoc;
 
     const user = await User.findOne({
@@ -1108,40 +1115,60 @@ const userInfo = async (req, res) => {
     });
     // Check if user exists
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (user.isPasswordEncryption) {
-      if (!password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
-      user.badges.forEach(badge => {
+      if (!password)
+        throw new Error(
+          "No Password Provided in request body, Request can't be proceeded."
+        );
+      user.badges.forEach((badge) => {
         if (badge.legacy) {
-          return
-        }
-        else if (badge.type && badge.type === "cell-phone") {
+          return;
+        } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, password);
-        }
-        else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+        } else if (
+          badge.type &&
+          ["work", "education", "personal", "social", "default"].includes(
+            badge.type
+          )
+        ) {
           badge.details = userCustomizedDecryptData(badge.details, password);
-        }
-        else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+        } else if (
+          badge.accountName &&
+          [
+            "facebook",
+            "linkedin",
+            "twitter",
+            "instagram",
+            "github",
+            "Email",
+            "google",
+          ].includes(badge.accountName)
+        ) {
           badge.details = userCustomizedDecryptData(badge.details, password);
-        }
-        else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map((item) => { return userCustomizedDecryptData(item, password) });
-        }
-        else if (badge.personal) {
+        } else if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map((item) => {
+            return userCustomizedDecryptData(item, password);
+          });
+        } else if (badge.personal) {
           const decryptedPersonal = {};
           for (const key of personalKeys) {
             if (badge.personal.hasOwnProperty(key)) {
-              decryptedPersonal[key] = userCustomizedDecryptData(badge.personal[key], password);
+              decryptedPersonal[key] = userCustomizedDecryptData(
+                badge.personal[key],
+                password
+              );
             }
           }
           badge.personal = decryptedPersonal;
-        }
-        else if (badge.web3) {
+        } else if (badge.web3) {
           badge.web3 = userCustomizedDecryptData(badge.web3, password);
-        }
-        else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+        } else if (
+          badge.type &&
+          ["desktop", "mobile", "farcaster"].includes(badge.type)
+        ) {
           badge.data = userCustomizedDecryptData(badge.data, password);
         }
       });
@@ -1150,26 +1177,39 @@ const userInfo = async (req, res) => {
     // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
       if (badge.legacy) {
-        return
-      }
-      else if (badge.type && badge.type === "cell-phone") {
-        console.log("I am AT Cell-Phone------------------------")
-        badge.details = decryptData(badge.details)
-      }
-      else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-        console.log("I am AT TYPE------------------------")
-        badge.details = decryptData(badge.details)
-      }
-      else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-        console.log("I am AT Acc-Name------------------------")
-        badge.details = decryptData(badge.details)
-      }
-      else if (badge.personal && badge.personal.work) {
-        console.log("I am AT Personal Work------------------------")
-        badge.personal.work = badge.personal.work.map((encryptedData) => { return decryptData(encryptedData) });
-      }
-      else if (badge.personal) {
-        console.log("I am AT Personal------------------------")
+        return;
+      } else if (badge.type && badge.type === "cell-phone") {
+        console.log("I am AT Cell-Phone------------------------");
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.type &&
+        ["work", "education", "personal", "social", "default"].includes(
+          badge.type
+        )
+      ) {
+        console.log("I am AT TYPE------------------------");
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.accountName &&
+        [
+          "facebook",
+          "linkedin",
+          "twitter",
+          "instagram",
+          "github",
+          "Email",
+          "google",
+        ].includes(badge.accountName)
+      ) {
+        console.log("I am AT Acc-Name------------------------");
+        badge.details = decryptData(badge.details);
+      } else if (badge.personal && badge.personal.work) {
+        console.log("I am AT Personal Work------------------------");
+        badge.personal.work = badge.personal.work.map((encryptedData) => {
+          return decryptData(encryptedData);
+        });
+      } else if (badge.personal) {
+        console.log("I am AT Personal------------------------");
         // Decrypt each key in the personal object if it matches one of the personalKeys
         const decryptedPersonal = {};
         for (const key of personalKeys) {
@@ -1179,14 +1219,15 @@ const userInfo = async (req, res) => {
         }
 
         badge.personal = decryptedPersonal;
-      }
-      else if (badge.web3) {
-        console.log("I am AT WEB3------------------------")
-        badge.web3 = decryptData(badge.web3)
-      }
-      else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-        console.log("I am AT Passkey------------------------")
-        badge.data = decryptData(badge.data)
+      } else if (badge.web3) {
+        console.log("I am AT WEB3------------------------");
+        badge.web3 = decryptData(badge.web3);
+      } else if (
+        badge.type &&
+        ["desktop", "mobile", "farcaster"].includes(badge.type)
+      ) {
+        console.log("I am AT Passkey------------------------");
+        badge.data = decryptData(badge.data);
       }
     });
 
@@ -1202,49 +1243,69 @@ const userInfo = async (req, res) => {
 const runtimeSignInPassword = async (req, res) => {
   try {
     const infoc = req.body.infoc;
-    const hash = crypto.createHash('sha256').update(infoc).digest('hex');
+    const hash = crypto.createHash("sha256").update(infoc).digest("hex");
 
     const password = hash;
 
     const user = await User.findOne({
-      uuid: req.params.userUuid,
+      uuid: req.body.userUuid,
     });
     // Check if user exists
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (user.isPasswordEncryption) {
-      if (!password) throw new Error("No Password Provided in request body, Request can't be proceeded.");
-      user.badges.forEach(badge => {
+      if (!password)
+        throw new Error(
+          "No Password Provided in request body, Request can't be proceeded."
+        );
+      user.badges.forEach((badge) => {
         if (badge.legacy) {
-          return
-        }
-        else if (badge.type && badge.type === "cell-phone") {
+          return;
+        } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, password);
-        }
-        else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
+        } else if (
+          badge.type &&
+          ["work", "education", "personal", "social", "default"].includes(
+            badge.type
+          )
+        ) {
           badge.details = userCustomizedDecryptData(badge.details, password);
-        }
-        else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
+        } else if (
+          badge.accountName &&
+          [
+            "facebook",
+            "linkedin",
+            "twitter",
+            "instagram",
+            "github",
+            "Email",
+            "google",
+          ].includes(badge.accountName)
+        ) {
           badge.details = userCustomizedDecryptData(badge.details, password);
-        }
-        else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map((item) => { return userCustomizedDecryptData(item, password) });
-        }
-        else if (badge.personal) {
+        } else if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map((item) => {
+            return userCustomizedDecryptData(item, password);
+          });
+        } else if (badge.personal) {
           const decryptedPersonal = {};
           for (const key of personalKeys) {
             if (badge.personal.hasOwnProperty(key)) {
-              decryptedPersonal[key] = userCustomizedDecryptData(badge.personal[key], password);
+              decryptedPersonal[key] = userCustomizedDecryptData(
+                badge.personal[key],
+                password
+              );
             }
           }
           badge.personal = decryptedPersonal;
-        }
-        else if (badge.web3) {
+        } else if (badge.web3) {
           badge.web3 = userCustomizedDecryptData(badge.web3, password);
-        }
-        else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
+        } else if (
+          badge.type &&
+          ["desktop", "mobile", "farcaster"].includes(badge.type)
+        ) {
           badge.data = userCustomizedDecryptData(badge.data, password);
         }
       });
@@ -1253,26 +1314,39 @@ const runtimeSignInPassword = async (req, res) => {
     // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
       if (badge.legacy) {
-        return
-      }
-      else if (badge.type && badge.type === "cell-phone") {
-        console.log("I am AT Cell-Phone------------------------")
-        badge.details = decryptData(badge.details)
-      }
-      else if (badge.type && ["work", "education", "personal", "social", "default"].includes(badge.type)) {
-        console.log("I am AT TYPE------------------------")
-        badge.details = decryptData(badge.details)
-      }
-      else if (badge.accountName && ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"].includes(badge.accountName)) {
-        console.log("I am AT Acc-Name------------------------")
-        badge.details = decryptData(badge.details)
-      }
-      else if (badge.personal && badge.personal.work) {
-        console.log("I am AT Personal Work------------------------")
-        badge.personal.work = badge.personal.work.map((encryptedData) => { return decryptData(encryptedData) });
-      }
-      else if (badge.personal) {
-        console.log("I am AT Personal------------------------")
+        return;
+      } else if (badge.type && badge.type === "cell-phone") {
+        console.log("I am AT Cell-Phone------------------------");
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.type &&
+        ["work", "education", "personal", "social", "default"].includes(
+          badge.type
+        )
+      ) {
+        console.log("I am AT TYPE------------------------");
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.accountName &&
+        [
+          "facebook",
+          "linkedin",
+          "twitter",
+          "instagram",
+          "github",
+          "Email",
+          "google",
+        ].includes(badge.accountName)
+      ) {
+        console.log("I am AT Acc-Name------------------------");
+        badge.details = decryptData(badge.details);
+      } else if (badge.personal && badge.personal.work) {
+        console.log("I am AT Personal Work------------------------");
+        badge.personal.work = badge.personal.work.map((encryptedData) => {
+          return decryptData(encryptedData);
+        });
+      } else if (badge.personal) {
+        console.log("I am AT Personal------------------------");
         // Decrypt each key in the personal object if it matches one of the personalKeys
         const decryptedPersonal = {};
         for (const key of personalKeys) {
@@ -1282,18 +1356,19 @@ const runtimeSignInPassword = async (req, res) => {
         }
 
         badge.personal = decryptedPersonal;
-      }
-      else if (badge.web3) {
-        console.log("I am AT WEB3------------------------")
-        badge.web3 = decryptData(badge.web3)
-      }
-      else if (badge.type && ["desktop", "mobile", "farcaster"].includes(badge.type)) {
-        console.log("I am AT Passkey------------------------")
-        badge.data = decryptData(badge.data)
+      } else if (badge.web3) {
+        console.log("I am AT WEB3------------------------");
+        badge.web3 = decryptData(badge.web3);
+      } else if (
+        badge.type &&
+        ["desktop", "mobile", "farcaster"].includes(badge.type)
+      ) {
+        console.log("I am AT Passkey------------------------");
+        badge.data = decryptData(badge.data);
       }
     });
 
-    res.status(200).json({user: user, hash: hash});
+    res.status(200).json({ user: user, hash: hash });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -1305,7 +1380,7 @@ const runtimeSignInPassword = async (req, res) => {
 const infoc = async (req, res) => {
   try {
     const infoc = req.body.infoc;
-    const hash = crypto.createHash('sha256').update(infoc).digest('hex');
+    const hash = crypto.createHash("sha256").update(infoc).digest("hex");
     res.status(200).json({
       message: "Success",
       data: hash,
@@ -1993,22 +2068,28 @@ const getFacebookUserInfo = async (req, res) => {
       }
     );
     // console.log("Response Token Via Facebook: ", responseAccessToken);
-    if (!responseAccessToken.data.access_token) throw new Error("Token not found!");
+    if (!responseAccessToken.data.access_token)
+      throw new Error("Token not found!");
     // if token found
     // // Second Axios request to get user info using the access token
-    const response = await axios.get(`https://graph.facebook.com/v19.0/me?access_token=${responseAccessToken.data.access_token}&fields=${"id,first_name,last_name,middle_name,name,name_format,picture,short_name,email,gender,age_range,friends,link,birthday"}`, {
-      // headers: {
-      //   Authorization: `Bearer ${responseAccessToken.data.access_token}`,
-      //   "Content-Type": "application/json",
-      // },
-      timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
-    });
+    const response = await axios.get(
+      `https://graph.facebook.com/v19.0/me?access_token=${
+        responseAccessToken.data.access_token
+      }&fields=${"id,first_name,last_name,middle_name,name,name_format,picture,short_name,email,gender,age_range,friends,link,birthday"}`,
+      {
+        // headers: {
+        //   Authorization: `Bearer ${responseAccessToken.data.access_token}`,
+        //   "Content-Type": "application/json",
+        // },
+        timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
+      }
+    );
     if (!response.data) throw new Error("No Data Found");
     console.log("LinkedIn API Response:", response.data);
-    res.status(200).send(response.data)
+    res.status(200).send(response.data);
   } catch (error) {
-    console.error('Error:', error);
-    return error.message
+    console.error("Error:", error);
+    return error.message;
   }
 };
 
