@@ -372,6 +372,33 @@ router.get(
 );
 
 router.post(
+  "/runtimeSignInPassword",
+  /**
+   * @swagger
+   * /user/runtimeSignInPassword:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Get user information by ID
+   *     description: Endpoint to get information of a user by their ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UserInfoByIdRequest'
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.runtimeSignInPassword
+);
+
+router.post(
   "/infoc",
   /**
    * @swagger
