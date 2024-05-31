@@ -662,14 +662,14 @@ const signUpSocialGuestMode = async (req, res) => {
         },
       }
     );
-
+    const updatedUser = await User.findOne({ uuid: payload.uuid });
     // Check Email Category
     const emailStatus = await eduEmailCheck(req, res, payload.email);
     let type = "";
     if (emailStatus.status === "OK") type = "Education";
 
     // Create a Badge at starting index
-    user.badges.unshift({
+    updatedUser.badges.unshift({
       accountId: payload.sub,
       accountName: payload.provider,
       details: encryptData(payload),
@@ -678,20 +678,20 @@ const signUpSocialGuestMode = async (req, res) => {
     });
 
     // Update user verification status to true
-    user.gmailVerified = payload.email_verified;
-    await user.save();
+    updatedUser.gmailVerified = payload.email_verified;
+    await updatedUser.save();
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid,
+      userUuid: updatedUser.uuid,
     });
 
     if (!userList) {
       const createUserList = new UserListSchema({
-        userUuid: user.uuid,
+        userUuid: updatedUser.uuid,
       });
       const newUserList = await createUserList.save();
       if (!newUserList) {
-        await user.deleteOne({
+        await updatedUser.deleteOne({
           uuid: uuid,
         });
         throw new Error("User not created due to list");
@@ -712,14 +712,14 @@ const signUpSocialGuestMode = async (req, res) => {
     });
     // Create Ledger
     await createLedger({
-      uuid: user.uuid,
+      uuid: updatedUser.uuid,
       txUserAction: "accountLogin",
       txID: crypto.randomBytes(11).toString("hex"),
       txAuth: "User",
       txFrom: user.uuid,
       txTo: "dao",
       txAmount: "0",
-      txData: user.uuid,
+      txData: updatedUser.uuid,
       // txDescription : "user logs in"
     });
     // Create Ledger
@@ -731,7 +731,7 @@ const signUpSocialGuestMode = async (req, res) => {
       txFrom: uuid,
       txTo: "dao",
       txAmount: "0",
-      txData: user.badges[0]._id,
+      txData: updatedUser.badges[0]._id,
       // txDescription : "User adds a verification badge"
     });
     await createLedger({
@@ -750,7 +750,7 @@ const signUpSocialGuestMode = async (req, res) => {
 
     // Increment the UserBalance
     await updateUserBalance({
-      uuid: user.uuid,
+      uuid: updatedUser.uuid,
       amount: ACCOUNT_BADGE_ADDED_AMOUNT,
       inc: true,
     });
@@ -758,16 +758,16 @@ const signUpSocialGuestMode = async (req, res) => {
     // Generate a JWT token
     const token = createToken({ uuid: user.uuid });
 
-    if (user.badges[0].type !== "Education") {
-      user.requiredAction = true;
-      await user.save();
+    if (updatedUser.badges[0].type !== "Education") {
+      updatedUser.requiredAction = true;
+      await updatedUser.save();
     }
 
     // Decrypt Saved Data
-    const decryptUser = user._doc;
-    decryptUser.badges[0].accountName = decryptUser.badges[0].accountName;
+    const decryptUser = updatedUser._doc;
+    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
 
-    res.cookie("uuid", user.uuid, cookieConfiguration());
+    res.cookie("uuid", updatedUser.uuid, cookieConfiguration());
     res.cookie("jwt", token, cookieConfiguration());
     res.status(200).json({ ...decryptUser, token });
   } catch (error) {
