@@ -94,10 +94,10 @@ const changePassword = async (req, res) => {
 
 const signUpUser = async (req, res) => {
   try {
-    const alreadyUser = await User.findOne({ email: req.body.userEmail });
+    const alreadyUser = await User.findOne({ email: req.body.email });
     if (alreadyUser) throw new Error("Email Already Exists");
 
-    const checkGoogleEmail = await isGoogleEmail(req.body.userEmail);
+    const checkGoogleEmail = await isGoogleEmail(req.body.email);
     if (checkGoogleEmail)
       throw new Error(
         "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
@@ -107,9 +107,9 @@ const signUpUser = async (req, res) => {
     console.log(uuid);
 
     const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(req.body.userPassword, salt);
+    const hashPassword = await bcrypt.hash(req.body.password, salt);
     const user = await new User({
-      email: req.body.userEmail,
+      email: req.body.email,
       password: hashPassword,
       uuid: uuid,
       role: "user",
@@ -118,7 +118,24 @@ const signUpUser = async (req, res) => {
     if (!users) throw new Error("User not Created");
 
     // Generate a JWT token
-    const token = createToken({ uuid: user.uuid });
+    // const token = createToken({ uuid: user.uuid });
+
+    const userList = await UserListSchema.findOne({
+      userUuid: uuid,
+    });
+
+    if (!userList) {
+      const createUserList = new UserListSchema({
+        userUuid: uuid,
+      });
+      const newUserList = await createUserList.save();
+      if (!newUserList) {
+        await user.deleteOne({
+          uuid: uuid,
+        });
+        throw new Error("User not created due to list");
+      }
+    }
 
     // Create Ledger
     await createLedger({
@@ -571,12 +588,13 @@ const createGuestMode = async (req, res) => {
 
 const signUpGuestMode = async (req, res) => {
   try {
-    console.log(req.body.uuid);
-    const guestUserMode = await User.findOne({ uuid: req.body.uuid });
-    if (!guestUserMode) throw new Error("Guest Mode not Exist!");
-
     const alreadyUser = await User.findOne({ email: req.body.email });
     if (alreadyUser) throw new Error("Email Already Exists");
+    const guestUserMode = await User.findOne({ uuid: req.body.uuid });
+    if (!guestUserMode) {
+      await signUpUser(req, res); //Do a regular signup if user not found
+      return;
+    }
 
     const checkGoogleEmail = await isGoogleEmail(req.body.email);
     if (checkGoogleEmail)
@@ -599,24 +617,24 @@ const signUpGuestMode = async (req, res) => {
     );
 
     const userList = await UserListSchema.findOne({
-      userUuid: user.uuid,
+      userUuid: req.body.uuid,
     });
 
     if (!userList) {
       const createUserList = new UserListSchema({
-        userUuid: user.uuid,
+        userUuid: req.body.uuid,
       });
       const newUserList = await createUserList.save();
       if (!newUserList) {
         await user.deleteOne({
-          uuid: uuid,
+          uuid: req.body.uuid,
         });
         throw new Error("User not created due to list");
       }
     }
 
     // Generate a JWT token
-    const token = createToken({ uuid: req.body.uuid });
+    // const token = createToken({ uuid: req.body.uuid });
 
     // Create Ledger
     await createLedger({
@@ -973,7 +991,7 @@ const signInUserBySocialLogin = async (req, res) => {
     });
 
     user.badges.forEach((badge) => {
-      if (badge.legacy) {
+      if (badge.legacy || badge.accountName === "Email") {
         return;
       } else if (badge.type && badge.type === "cell-phone") {
         badge.details = decryptData(badge.details);
@@ -1098,7 +1116,7 @@ const signInUserBySocialBadges = async (req, res) => {
     // decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
 
     user.badges.forEach((badge) => {
-      if (badge.legacy) {
+      if (badge.legacy || badge.accountName === "Email") {
         return;
       } else if (badge.type && badge.type === "cell-phone") {
         badge.details = decryptData(badge.details);
@@ -1220,7 +1238,8 @@ const userInfo = async (req, res) => {
           "No Password Provided in request body, Request can't be proceeded."
         );
       user.badges.forEach((badge) => {
-        if (badge.legacy) {
+        if (badge.legacy || badge.accountName === "Email") {
+          console.log("Email");
           return;
         } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, password);
@@ -1272,7 +1291,7 @@ const userInfo = async (req, res) => {
 
     // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
-      if (badge.legacy) {
+      if (badge.legacy || badge.accountName === "Email") {
         return;
       } else if (badge.type && badge.type === "cell-phone") {
         console.log("I am AT Cell-Phone------------------------");
@@ -1357,7 +1376,7 @@ const runtimeSignInPassword = async (req, res) => {
           "No Password Provided in request body, Request can't be proceeded."
         );
       user.badges.forEach((badge) => {
-        if (badge.legacy) {
+        if (badge.legacy || badge.accountName === "Email") {
           return;
         } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, password);
@@ -1409,7 +1428,7 @@ const runtimeSignInPassword = async (req, res) => {
 
     // Decrypt the 'personal' field or the 'work' array in each badge
     user.badges.forEach((badge) => {
-      if (badge.legacy) {
+      if (badge.legacy || badge.accountName === "Email") {
         return;
       } else if (badge.type && badge.type === "cell-phone") {
         console.log("I am AT Cell-Phone------------------------");
@@ -1558,6 +1577,7 @@ const sendVerifyEmailGuest = async (req, res) => {
 
     // Step 3 - Email the user a unique verification link
     const url = `${FRONTEND_URL}/VerifyCode/?${verificationTokenFull}`;
+    return res.status(200).json({ url });
 
     const SES_CONFIG = {
       region: process.env.AWS_SES_REGION,
@@ -1617,7 +1637,7 @@ const sendVerifyEmailGuest = async (req, res) => {
 
 const sendVerifyEmail = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.userEmail });
+    const user = await User.findOne({ email: req.body.email });
 
     console.log("user", user);
     !user && res.status(404).json("User not Found");
@@ -1637,7 +1657,7 @@ const sendVerifyEmail = async (req, res) => {
 
     // Step 3 - Email the user a unique verification link
     const url = `${FRONTEND_URL}/VerifyCode/?${verificationTokenFull}`;
-    // return res.status(200).json({ url });
+    return res.status(200).json({ url });
     // console.log("url", url);
 
     // NODEMAILER
@@ -1681,7 +1701,7 @@ const sendVerifyEmail = async (req, res) => {
     let params = {
       Source: process.env.AWS_SES_SENDER,
       Destination: {
-        ToAddresses: [req.body.userEmail],
+        ToAddresses: [req.body.email],
       },
       ReplyToAddresses: [],
       Message: {
@@ -1712,7 +1732,7 @@ const sendVerifyEmail = async (req, res) => {
     }
 
     return res.status(200).send({
-      message: `Sent a verification email to ${req.body.userEmail}`,
+      message: `Sent a verification email to ${req.body.email}`,
     });
   } catch (error) {
     console.error(error.message);
@@ -1840,7 +1860,11 @@ const verify = async (req, res) => {
     }
 
     // Create a Badge
-    user.badges.unshift({ accountName: "Email", isVerified: true });
+    user.badges.unshift({
+      accountId: user.email,
+      accountName: "Email",
+      isVerified: true,
+    });
     // Step 3 - Update user verification status to true
     user.requiredAction = true;
     user.gmailVerified = true;

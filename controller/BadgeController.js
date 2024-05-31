@@ -36,6 +36,7 @@ const {
 
 const update = async (req, res) => {
   try {
+    let legacyEmail = false;
     const { userId, badgeId } = req.params;
     const User = await UserModel.findOne({ _id: userId });
     if (!User) throw new Error("No such User!");
@@ -43,6 +44,9 @@ const update = async (req, res) => {
     const userBadges = User.badges;
     const updatedUserBadges = userBadges.map((item) => {
       if (item._id.toHexString() == badgeId) {
+        if (item.accountName === "Email") {
+          legacyEmail = true;
+        }
         return { ...item, type: req.body.type, primary: req.body.primary };
         // return item.type = req.body.type;
       }
@@ -58,7 +62,12 @@ const update = async (req, res) => {
 
     // Decrypt Saved Data
     const decryptUser = User._doc;
-    decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
+
+    if (!legacyEmail) {
+      decryptUser.badges[0].details = decryptData(
+        decryptUser.badges[0].details
+      );
+    }
 
     res.status(200).json({ ...decryptUser, token });
   } catch (error) {
@@ -1799,7 +1808,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
       // As Legacy Password is added so we need to Remove it.
       user.badges.forEach((badge) => {
-        if (badge.legacy) {
+        if (badge.legacy || badge.accountName === "Email") {
           return;
         } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, eyk);
@@ -1880,7 +1889,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
       // As Legacy Password is removed so we need to Add it.
       user.badges.forEach((badge) => {
-        if (badge.legacy) {
+        if (badge.legacy || badge.accountName === "Email") {
           return;
         } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedEncryptData(badge.details, eyk);
