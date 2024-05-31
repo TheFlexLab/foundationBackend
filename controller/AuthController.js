@@ -972,11 +972,56 @@ const signInUserBySocialLogin = async (req, res) => {
       // txDescription : "user logs in"
     });
 
-    // Decrypt Saved Data
-    // const decryptUser = user._doc;
-    // decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    user.badges.forEach((badge) => {
+      if (badge.legacy) {
+        return;
+      } else if (badge.type && badge.type === "cell-phone") {
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.type &&
+        ["work", "education", "personal", "social", "default"].includes(
+          badge.type
+        )
+      ) {
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.accountName &&
+        [
+          "facebook",
+          "linkedin",
+          "twitter",
+          "instagram",
+          "github",
+          "Email",
+          "google",
+        ].includes(badge.accountName)
+      ) {
+        badge.details = decryptData(badge.details);
+      } else if (badge.personal && badge.personal.work) {
+        badge.personal.work = badge.personal.work.map((encryptedData) => {
+          return decryptData(encryptedData);
+        });
+      } else if (badge.personal) {
+        // Decrypt each key in the personal object if it matches one of the personalKeys
+        const decryptedPersonal = {};
+        for (const key of personalKeys) {
+          if (badge.personal.hasOwnProperty(key)) {
+            decryptedPersonal[key] = decryptData(badge.personal[key]);
+          }
+        }
 
-    // res.status(200).json(user);
+        badge.personal = decryptedPersonal;
+      } else if (badge.web3) {
+        console.log("I am AT WEB3------------------------");
+        badge.web3 = decryptData(badge.web3);
+      } else if (
+        badge.type &&
+        ["desktop", "mobile", "farcaster"].includes(badge.type)
+      ) {
+        console.log("I am AT Passkey------------------------");
+        badge.data = decryptData(badge.data);
+      }
+    });
 
     if (user.isPasswordEncryption) {
       res.cookie("uuid", user.uuid, cookieConfiguration());
@@ -985,7 +1030,7 @@ const signInUserBySocialLogin = async (req, res) => {
     } else {
       res.cookie("uuid", user.uuid, cookieConfiguration());
       res.cookie("jwt", token, cookieConfiguration());
-      res.status(200).json({ ...decryptUser, token });
+      res.status(200).json({ ...user._doc, token });
     }
     // res.status(201).send("Signed in Successfully");
     // if(req.query.GoogleAccount){
@@ -1048,9 +1093,60 @@ const signInUserBySocialBadges = async (req, res) => {
       // txDescription : "user logs in"
     });
 
-    // Decrypt Saved Data
+    // // Decrypt Saved Data
     // const decryptUser = user._doc;
-    // decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details)
+    // decryptUser.badges[0].details = decryptData(decryptUser.badges[0].details);
+
+    user.badges.forEach((badge) => {
+      if (badge.legacy) {
+        return;
+      } else if (badge.type && badge.type === "cell-phone") {
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.type &&
+        ["work", "education", "personal", "social", "default"].includes(
+          badge.type
+        )
+      ) {
+        badge.details = decryptData(badge.details);
+      } else if (
+        badge.accountName &&
+        [
+          "facebook",
+          "linkedin",
+          "twitter",
+          "instagram",
+          "github",
+          "Email",
+          "google",
+        ].includes(badge.accountName)
+      ) {
+        badge.details = decryptData(badge.details);
+      } else if (badge.personal && badge.personal.work) {
+        badge.personal.work = badge.personal.work.map((encryptedData) => {
+          return decryptData(encryptedData);
+        });
+      } else if (badge.personal) {
+        // Decrypt each key in the personal object if it matches one of the personalKeys
+        const decryptedPersonal = {};
+        for (const key of personalKeys) {
+          if (badge.personal.hasOwnProperty(key)) {
+            decryptedPersonal[key] = decryptData(badge.personal[key]);
+          }
+        }
+
+        badge.personal = decryptedPersonal;
+      } else if (badge.web3) {
+        console.log("I am AT WEB3------------------------");
+        badge.web3 = decryptData(badge.web3);
+      } else if (
+        badge.type &&
+        ["desktop", "mobile", "farcaster"].includes(badge.type)
+      ) {
+        console.log("I am AT Passkey------------------------");
+        badge.data = decryptData(badge.data);
+      }
+    });
 
     // res.status(200).json(user);
     if (user.isPasswordEncryption) {
