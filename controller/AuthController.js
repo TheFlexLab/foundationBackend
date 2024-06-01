@@ -1052,15 +1052,52 @@ const userInfo = async (req, res) => {
       return acc;
     }, { questImpression: 0, questsCompleted: 0 });
 
-    res.status(200).json({
+
+    // Search where same questForeignKey exist with same hiddenMessage more then once
+    const result = await UserQuestSetting.aggregate([
+      {
+        $match: {
+          hidden: true,
+          uuid: req.params.userUuid,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            questForeignKey: "$questForeignKey",
+            hiddenMessage: "$hiddenMessage",
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $match: {
+          count: { $gt: 1 },
+        },
+      },
+      {
+        $count: "total"
+      }
+    ]);
+    const count = result.length > 0 ? result[0].total : 0;
+
+    const resUser = {
       ...user._doc,
       sharedQuestsStatistics: {
         sharedQuests: sharedQuests.length,
         totalQuestsImpression: totals.questImpression,
         totalQuestsCompleted: totals.questsCompleted
+      },
+      feedBackQuestsStatistics: {
+        hiddenCount: await UserQuestSetting.countDocuments({
+          hidden: true,
+          uuid: req.params.userUuid
+        }),
+        suppressCount: count
       }
-
-    });
+    }
+    console.log(resUser);
+    res.status(200).json(resUser);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -1752,7 +1789,7 @@ const getFacebookUserInfo = async (req, res) => {
       // },
       timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
     });
-    if(!response.data) throw new Error("No Data Found");
+    if (!response.data) throw new Error("No Data Found");
     //console.log("LinkedIn API Response:", response.data);
     res.status(200).send(response.data)
   } catch (error) {
