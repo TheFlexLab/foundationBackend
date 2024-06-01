@@ -28,6 +28,7 @@ const { eduEmailCheck } = require("../utils/eduEmailCheck");
 const { getRandomDigits } = require("../utils/getRandomDigits");
 const { sendEmailMessage } = require("../utils/sendEmailMessage");
 const { FRONTEND_URL, JWT_SECRET, FACEBOOK_APP_SECRET } = require("../config/env");
+const UserQuestSetting = require("../models/UserQuestSetting");
 
 const changePassword = async (req, res) => {
   try {
@@ -173,7 +174,7 @@ const signUpUserBySocialLogin = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -326,7 +327,7 @@ const signUpUserBySocialBadges = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -489,7 +490,7 @@ const createGuestMode = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -564,7 +565,7 @@ const signUpGuestMode = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -647,7 +648,7 @@ const signUpSocialGuestMode = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -815,7 +816,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
       userUuid: user.uuid
     })
 
-    if(!userList){
+    if (!userList) {
       const createUserList = new UserListSchema({
         userUuid: user.uuid,
       });
@@ -1043,8 +1044,23 @@ const userInfo = async (req, res) => {
     const user = await User.findOne({
       uuid: req.params.userUuid,
     });
-    console.log(user);
-    res.status(200).json(user);
+
+    const sharedQuests = await UserQuestSetting.find({ uuid: req.params.userUuid })
+    const totals = sharedQuests.reduce((acc, quest) => {
+      acc.questImpression += quest.questImpression || 0;
+      acc.questsCompleted += quest.questsCompleted || 0;
+      return acc;
+    }, { questImpression: 0, questsCompleted: 0 });
+
+    res.status(200).json({
+      ...user._doc,
+      sharedQuestsStatistics: {
+        sharedQuests: sharedQuests.length,
+        totalQuestsImpression: totals.questImpression,
+        totalQuestsCompleted: totals.questsCompleted
+      }
+
+    });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -1739,7 +1755,7 @@ const getFacebookUserInfo = async (req, res) => {
       // },
       timeout: 10000, // Set timeout to 10 seconds (adjust as needed)
     });
-    if(!response.data) throw new Error("No Data Found");
+    if (!response.data) throw new Error("No Data Found");
     console.log("LinkedIn API Response:", response.data);
     res.status(200).send(response.data)
   } catch (error) {
