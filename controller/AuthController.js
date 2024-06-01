@@ -793,11 +793,6 @@ const signUpGuestBySocialBadges = async (req, res) => {
   try {
     const payload = req.body;
 
-    // Check if email already exist
-    if (payload.email) {
-      const alreadyUser = await User.findOne({ email: payload.data.email });
-      if (alreadyUser) throw new Error("Email Already Exists");
-    }
     let id;
     let type;
     if (payload.type === "facebook") {
@@ -1059,35 +1054,27 @@ const signInUserBySocialLogin = async (req, res) => {
 const signInUserBySocialBadges = async (req, res) => {
   try {
     let id;
-    let email;
     const payload = req.body;
     if (payload.type === "facebook") {
       id = payload.data.id;
-      email = payload.data.email;
     }
 
     if (payload.type === "twitter") {
       id = payload.data.user.uid;
-      email = payload.data.email;
     }
 
     if (payload.type === "github") {
       id = payload.data.user.uid;
-      email = payload.data.user.email;
     }
 
     if (payload.type === "instagram") {
       id = payload.data.user_id;
-      email = "";
     }
     if (payload.type === "linkedin") {
       id = payload.data.sub;
-      email = payload.data.email;
     }
 
-    const user = await User.findOne({
-      $or: [{ email: email }, { "badges.0.accountId": id }],
-    });
+    const user = await User.findOne({ "badges.0.accountId": id });
     if (!user) throw new Error("User not Found");
 
     // Generate a JWT token
@@ -1571,7 +1558,7 @@ const sendVerifyEmailGuest = async (req, res) => {
 
     // Step 3 - Email the user a unique verification link
     const url = `${FRONTEND_URL}/VerifyCode/?${verificationTokenFull}`;
-    return res.status(200).json({ url });
+    // return res.status(200).json({ url });
 
     const SES_CONFIG = {
       region: process.env.AWS_SES_REGION,
@@ -1651,7 +1638,7 @@ const sendVerifyEmail = async (req, res) => {
 
     // Step 3 - Email the user a unique verification link
     const url = `${FRONTEND_URL}/VerifyCode/?${verificationTokenFull}`;
-    return res.status(200).json({ url });
+    // return res.status(200).json({ url });
     // console.log("url", url);
 
     // NODEMAILER
