@@ -321,8 +321,8 @@ const getAll = async (req, res) => {
 //       ],
 //     });
 //     const pageCount = Math.ceil(totalCount / limit);
-//     console.log(pageCount);
-//     console.log(totalCount);
+//     //console.log(pageCount);
+//     //console.log(totalCount);
 
 //     res.status(200).json({
 //       data: redeem,

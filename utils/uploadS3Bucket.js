@@ -96,7 +96,7 @@ const uploadS3Bucket = async ({ fileName, description }) => {
       if (err) {
         console.error('Error uploading HTML to S3:', err);
       } else {
-        console.log('HTML uploaded successfully:', data.Location);
+        //console.log('HTML uploaded successfully:', data.Location);
         return true;
       }
     });

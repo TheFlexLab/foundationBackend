@@ -55,6 +55,6 @@ module.exports.sendEmailMessage = async (email, subject, message, sender) => {
   try {
     return await sesClient.sendEmail(params).promise()
   } catch (error) {
-    console.log(error);
+    //console.log(error);
   }
 }

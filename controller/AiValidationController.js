@@ -124,7 +124,7 @@ async function handleRequest(
 
 function checkResponse(responseData, userMessage, callType, req, res) {
   let filtered = responseData.choices[0].message.content;
-  console.log("🚀 ~ checkResponse ~ filtered:", filtered)
+  //console.log("🚀 ~ checkResponse ~ filtered:", filtered)
   let status = "OK";
 
   let found;

@@ -3,7 +3,7 @@ const LedgerController = require("../controller/LedgerController");
 
 module.exports = cronIntialize = () => {
 
-  console.log("Cron initialized successfully");
+  // console.log("Cron initialized successfully");
   
 
   // */1 * * * * * -- Run At every 2 second

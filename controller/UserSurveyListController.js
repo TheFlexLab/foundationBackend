@@ -1690,8 +1690,8 @@ const viewListAll = async (req, res) => {
                 newSelectedPercentage[key] = Math.round((value / totalCount) * 100) + '%';
             }
 
-            // console.log("mergedResult", { selected: mergedResult })
-            // console.log("newSelectedPercentage", [newSelectedPercentage])
+            // //console.log("mergedResult", { selected: mergedResult })
+            // //console.log("newSelectedPercentage", [newSelectedPercentage])
 
             const questForeginKeyWithStartQuestDataR = {
                 ...desiredResult,
@@ -1704,14 +1704,14 @@ const viewListAll = async (req, res) => {
                 // },
             }
 
-            console.log(questForeginKeyWithStartQuestDataR)
+            //console.log(questForeginKeyWithStartQuestDataR)
             
             updatedPosts.push({
                 ...post.toObject(),
                 questForeginKey: questForeginKeyWithStartQuestDataR
             })
 
-            console.log(updatedPosts)
+            //console.log(updatedPosts)
 
         }
 

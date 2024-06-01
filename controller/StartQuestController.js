@@ -850,11 +850,11 @@ const updateChangeAnsStartQuest = async (req, res) => {
             }`
           ] = -1;
         }
-        // console.log(
+        // //console.log(
         //   "🚀 ~ updateChangeAnsStartQuest ~ initialStartQuestData:",
         //   initialStartQuestData[0].selected
         // );
-        // console.log(
+        // //console.log(
         //   "🚀 ~ updateChangeAnsStartQuest ~ selectedCounter:",
         //   selectedCounter
         // );
@@ -1032,17 +1032,17 @@ const getRankedQuestPercent = async (req, res) => {
         if (optionsCount[question]) {
           optionsCount[question] +=
             res.data[res.data.length - 1].selected.length - i;
-          console.log("selected option" + optionsCount[question]);
-          console.log(question);
+          //console.log("selected option" + optionsCount[question]);
+          //console.log(question);
         } else {
           optionsCount[question] =
             res.data[res.data.length - 1].selected.length - i;
-          console.log("selected option first" + optionsCount[question]);
-          console.log(question);
+          //console.log("selected option first" + optionsCount[question]);
+          //console.log(question);
         }
         totalCount += res.data[res.data.length - 1].selected.length - i;
         i++;
-        console.log("Total responses :" + totalCount);
+        //console.log("Total responses :" + totalCount);
       });
     });
 
@@ -1057,8 +1057,8 @@ const getRankedQuestPercent = async (req, res) => {
           : Number(Math.round(percentage));
       }
 
-      console.log("🚀 ~ returnPromise.all ~ optionsCount:", optionsCount);
-      console.log("🚀 ~ returnPromise.all ~ totalCount:", totalCount);
+      //console.log("🚀 ~ returnPromise.all ~ optionsCount:", optionsCount);
+      //console.log("🚀 ~ returnPromise.all ~ totalCount:", totalCount);
       const responseObj = {
         rankedPercentage: percentageOfOptions,
       };
@@ -1074,7 +1074,7 @@ const getStartQuestPercent = async (req, res) => {
       questForeignKey: req.body.questForeignKey,
       // questForeignKey: "64a6d5a9313105966b9682f2",
     });
-    // console.log("StartQuestsData", StartQuestsData);
+    // //console.log("StartQuestsData", StartQuestsData);
 
     let startQuestWithNagativeAns = 0,
       startQuestWithPositiveAns = 0; //length of total length
@@ -1134,38 +1134,34 @@ const getStartQuestPercent = async (req, res) => {
             const question = option.question.trim();
             if (selectedOptionsCount[question]) {
               selectedOptionsCount[question]++;
-              console.log("selected option" + selectedOptionsCount[question]);
-              console.log(question);
+              //console.log("selected option" + selectedOptionsCount[question]);
+              //console.log(question);
             } else {
               selectedOptionsCount[question] = 1;
-              console.log(
-                "selected option first" + selectedOptionsCount[question]
-              );
-              console.log(question);
+              //console.log("selected option first" + selectedOptionsCount[question]);
+              //console.log(question);
             }
           });
           totalSelectedResponses++;
         }
-        console.log("Total Selected responses :" + totalSelectedResponses);
+        //console.log("Total Selected responses :" + totalSelectedResponses);
 
         if (res.data[res.data.length - 1].contended) {
           res.data[res.data.length - 1].contended.map((option) => {
             const question = option.question.trim();
             if (contendedOptionsCount[question]) {
               contendedOptionsCount[question]++;
-              console.log("contended option" + contendedOptionsCount[question]);
-              console.log(question);
+              //console.log("contended option" + contendedOptionsCount[question]);
+              //console.log(question);
             } else {
               contendedOptionsCount[question] = 1;
-              console.log(
-                "First contended option" + contendedOptionsCount[question]
-              );
-              console.log(question);
+              //console.log("First contended option" + contendedOptionsCount[question]);
+              //console.log(question);
             }
           });
           totalContendedResponses++;
         }
-        console.log("Total Contended responses :" + totalContendedResponses);
+        //console.log("Total Contended responses :" + totalContendedResponses);
       }
     });
 
@@ -1173,29 +1169,29 @@ const getStartQuestPercent = async (req, res) => {
       if (questype === 1) {
         let TotalNumberOfAns =
           startQuestWithPositiveAns + startQuestWithNagativeAns;
-        console.log("TotalNumberOfAns", TotalNumberOfAns);
+        //console.log("TotalNumberOfAns", TotalNumberOfAns);
 
         let percentageOfYesAns =
           startQuestWithPositiveAns === 0
             ? 0
             : (startQuestWithPositiveAns * 100) / TotalNumberOfAns;
-        console.log("startQuestWithPositiveAns", percentageOfYesAns);
+        //console.log("startQuestWithPositiveAns", percentageOfYesAns);
 
         let percentageOfNoAns =
           startQuestWithNagativeAns === 0
             ? 0
             : (startQuestWithNagativeAns * 100) / TotalNumberOfAns;
-        console.log("startQuestWithNagativeAns", percentageOfNoAns);
+        //console.log("startQuestWithNagativeAns", percentageOfNoAns);
 
         let TotalNumberOfConAns =
           startQuestWithPositiveConAns + startQuestWithNagativeConAns;
-        console.log("TotalNumberOfConAns", TotalNumberOfConAns);
+        //console.log("TotalNumberOfConAns", TotalNumberOfConAns);
 
         let percentageOfYesConAns =
           startQuestWithPositiveConAns === 0
             ? 0
             : (startQuestWithPositiveConAns * 100) / TotalNumberOfConAns;
-        console.log("startQuestWithPositiveConAns", percentageOfYesConAns);
+        //console.log("startQuestWithPositiveConAns", percentageOfYesConAns);
 
         let percentageOfNoConAns =
           startQuestWithNagativeConAns === 0
@@ -1229,7 +1225,7 @@ const getStartQuestPercent = async (req, res) => {
           },
         };
 
-        console.log(responseObj);
+        //console.log(responseObj);
         res.status(200).json([responseObj]);
       } else {
         const percentageOfSelectedOptions = {};
@@ -1265,7 +1261,7 @@ const getStartQuestPercent = async (req, res) => {
           selectedPercentage: percentageOfSelectedOptions,
           contendedPercentage: percentageOfContendedOptions,
         };
-        console.log(responseObj);
+        //console.log(responseObj);
         res.status(200).json([responseObj]);
       }
     });

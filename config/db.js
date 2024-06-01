@@ -16,7 +16,7 @@ const connectDB = async () => {
         `DocumentDB Connected! Database Name: ${conn.connection.db.databaseName} -  Host: ${conn.connection.host}`.cyan.underline.bold
       );
     } catch (err) {
-      console.log("Could not establish connection to DocDB! " + err);
+      //console.log("Could not establish connection to DocDB! " + err);
     }
   } else {
     try {
@@ -31,7 +31,7 @@ const connectDB = async () => {
         `MongoDB Connected! Database Name: ${conn.connection.db.databaseName} -  Host: ${conn.connection.host}`.cyan.underline.bold
       );
     } catch (err) {
-      console.log("Could not establish connection to MongoDB! " + err);
+      //console.log("Could not establish connection to MongoDB! " + err);
     }
   }
 };

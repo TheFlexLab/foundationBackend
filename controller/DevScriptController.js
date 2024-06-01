@@ -60,7 +60,7 @@ const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserLi
 //     const bulkOps = users
 //       .map(user => {
 //         if(user.badges.length !== 0) {
-//           console.log("user================>", user);
+//           //console.log("user================>", user);
 //           user.badges.forEach(badge => {
 //             if (badge.type && badge.type === "cell-phone") {
 //               badge.details = encryptData(badge.details);
