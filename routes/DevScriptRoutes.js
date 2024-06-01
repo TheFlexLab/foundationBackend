@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 // controller
-// const DevScriptController = require("../controller/DevScriptController");
+const DevScriptController = require("../controller/DevScriptController");
 
 /**
  * @swagger
@@ -48,23 +48,23 @@ const router = express.Router();
 //   DevScriptController.encryptBadgeData
 // )
 
-// router.get(
-//   "/createUserListForAllUsers",
-//   /**
-//    * @swagger
-//    * /devscript/createUserListForAllUsers:
-//    *   get:
-//    *     tags:
-//    *       - DevScriptRoutes
-//    *     summary: Get user's list information
-//    *     description: Endpoint to get information of a user
-//    *     responses:
-//    *       '200':
-//    *         description: User information retrieved successfully
-//    *       '500':
-//    *         description: Internal server error
-//    */
-//   DevScriptController.createUserListForAllUsers
-// );
+router.get(
+  "/createUserListForAllUsers",
+  /**
+   * @swagger
+   * /devscript/createUserListForAllUsers:
+   *   get:
+   *     tags:
+   *       - DevScriptRoutes
+   *     summary: Get user's list information
+   *     description: Endpoint to get information of a user
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  DevScriptController.createUserListForAllUsers
+);
 
 module.exports = router;

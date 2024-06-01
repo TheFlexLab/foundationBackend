@@ -1,5 +1,8 @@
 const User = require("../models/UserModel");
-const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
+const { UserListSchema, CategorySchema, PostSchema, } = require("../models/UserList");
+const BookmarkQuestsSchema = require("../models/BookmarkQuests");
+const { getQuestByIdQuestForeignKey } = require("../controller/InfoQuestQuestionController");
+const { PostDataSchema, ResponseDataSchema, } = require("../models/PostData");
 const shortLink = require("shortlink");
 const InfoQuestQuestions = require("../models/InfoQuestQuestions");
 const StartQuests = require("../models/StartQuests");
@@ -7,6 +10,7 @@ const { createLedger } = require("../utils/createLedger");
 const { updateTreasury } = require("../utils/treasuryService");
 const { updateUserBalance } = require("../utils/userServices")
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 
 // User's List APIs
 
@@ -51,9 +55,17 @@ const userList = async (req, res) => {
                 });
             if (!userList) throw new Error(`No list is found for User: ${userUuid}`);
 
+            // Create a deep copy of the userList object to sort and return without saving
+            const sortedUserList = JSON.parse(JSON.stringify(userList));
+
+            // Iterate over each category in the list array and sort the post array by order
+            sortedUserList.list.forEach(category => {
+                category.post.sort((a, b) => a.order - b.order);
+            });
+
             res.status(200).json({
-                message: "List found successfully.",
-                userList: userList.list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+                message: 'List found successfully.',
+                userList: sortedUserList.list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
             });
         } 
         
@@ -358,63 +370,460 @@ const findCategoryByLink = async (req, res) => {
         if (!categoryDoc) throw new Error('Category not found');
 
         if (uuid) {
-            const questForeignKeys = categoryDoc.post.map(post => post.questForeginKey._id);
-            let startQuestData;
-            if (uuid && questForeignKeys.length > 0) {
-                startQuestData = await StartQuests.find({
-                    uuid: uuid,
-                    questForeignKey: { $in: questForeignKeys }
-                });
-            }
+            let updatedPosts = [];
 
-            if (startQuestData.length === 0) {
-                res.status(200).json({
-                    message: `Category found successfully`,
-                    category: categoryDoc,
-                });
-            } else {
+            for (const post of categoryDoc.post) {
+                const postId = new mongoose.Types.ObjectId(post._id.toString());
+                // Find the postData document
+                const bookmark = await BookmarkQuestsSchema.findOne({
+                    questForeignKey: post.questForeginKey.toString(),
+                    createdBy: uuid
+                })
+                const user = await User.findOne({ uuid: userList.userUuid });
 
+                const postData = await PostDataSchema.findOne({ postId: postId });
+                if (!postData) {
 
-                // Create a map for quick lookup of startQuestData by questForeignKey
-                const startQuestDataMap = startQuestData.reduce((map, data) => {
-                    map[data.questForeignKey.toString()] = data;
-                    return map;
-                }, {});
-
-                // Add the startQuestData field to the questForeginKey object of each post
-                const updatedPosts = categoryDoc.post.map(post => {
-                    const questForeignKey = post.questForeginKey._id.toString();
                     const questForeginKeyWithStartQuestData = {
                         ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
-                        startQuestData: startQuestDataMap[questForeignKey] || null
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
                     };
-
-                    return {
+                    // Add the updated post to the array
+                    updatedPosts.push({
                         ...post.toObject(), // Convert Mongoose document to plain JS object
                         questForeginKey: questForeginKeyWithStartQuestData
-                    };
-                });
+                    });
 
-                const newCategoryDoc = {
-                    category: categoryDoc.category,
-                    post: updatedPosts,
-                    link: categoryDoc.link,
-                    isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
-                    clicks: categoryDoc.clicks,
-                    participents: categoryDoc.participents,
-                    createdAt: categoryDoc.createdAt,
-                    updatedAt: categoryDoc.updatedAt,
-                    deletedAt: categoryDoc.deletedAt,
-                    isActive: categoryDoc.isActive,
-                    _id: categoryDoc._id
-                };
+                }
+                else {
+                    const responseDataDoc = postData.responseData.find(item => item.responsingUserUuid === uuid);
+                    if (!responseDataDoc) {
+                        const questForeginKeyWithStartQuestData = {
+                            ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                            bookmark: bookmark ? true : false,
+                            getUserBadge: {
+                                _id: user._id,
+                                badges: user.badges,
+                            },
+                        };
+                        // Add the updated post to the array
+                        updatedPosts.push({
+                            ...post.toObject(), // Convert Mongoose document to plain JS object
+                            questForeginKey: questForeginKeyWithStartQuestData
+                        });
+                    }
+                    else {
+                        const responseDataStats = await PostDataSchema.aggregate([
+                            {
+                                $match: { postId: postId }
+                            },
+                            {
+                                $unwind: '$responseData'
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    totalCount: { $sum: 1 },
+                                    yesCount: {
+                                        $sum: {
+                                            $cond: [{ $eq: ['$responseData.response.selected', 'Yes'] }, 1, 0]
+                                        }
+                                    },
+                                    noCount: {
+                                        $sum: {
+                                            $cond: [{ $eq: ['$responseData.response.selected', 'No'] }, 1, 0]
+                                        }
+                                    },
+                                    agreeCount: {
+                                        $sum: {
+                                            $cond: [{ $eq: ['$responseData.response.selected', 'Agree'] }, 1, 0]
+                                        }
+                                    },
+                                    disagreeCount: {
+                                        $sum: {
+                                            $cond: [{ $eq: ['$responseData.response.selected', 'Disagree'] }, 1, 0]
+                                        }
+                                    },
+                                    likeCount: {
+                                        $sum: {
+                                            $cond: [{ $eq: ['$responseData.response.selected', 'Like'] }, 1, 0]
+                                        }
+                                    },
+                                    dislikeCount: {
+                                        $sum: {
+                                            $cond: [{ $eq: ['$responseData.response.selected', 'Dislike'] }, 1, 0]
+                                        }
+                                    },
+                                    multipleChoiceResponses: {
+                                        $push: '$responseData.response.selected'
+                                    }
+                                }
+                            },
+                            {
+                                $unwind: {
+                                    path: '$multipleChoiceResponses',
+                                    preserveNullAndEmptyArrays: true
+                                }
+                            },
+                            {
+                                $unwind: {
+                                    path: '$multipleChoiceResponses',
+                                    preserveNullAndEmptyArrays: true
+                                }
+                            },
+                            {
+                                $group: {
+                                    _id: {
+                                        question: '$multipleChoiceResponses.question'
+                                    },
+                                    questionCount: { $sum: 1 },
+                                    totalMultipleChoiceCount: { $sum: 1 },  // Total count for this specific group
+                                    totalCount: { $first: '$totalCount' },
+                                    yesCount: { $first: '$yesCount' },
+                                    noCount: { $first: '$noCount' },
+                                    agreeCount: { $first: '$agreeCount' },
+                                    disagreeCount: { $first: '$disagreeCount' },
+                                    likeCount: { $first: '$likeCount' },
+                                    dislikeCount: { $first: '$dislikeCount' }
+                                }
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    totalCount: { $first: '$totalCount' },
+                                    yesCount: { $first: '$yesCount' },
+                                    noCount: { $first: '$noCount' },
+                                    agreeCount: { $first: '$agreeCount' },
+                                    disagreeCount: { $first: '$disagreeCount' },
+                                    likeCount: { $first: '$likeCount' },
+                                    dislikeCount: { $first: '$dislikeCount' },
+                                    totalMultipleChoiceCount: { $sum: '$totalMultipleChoiceCount' },  // Sum of all multiple choice counts
+                                    questions: {
+                                        $push: {
+                                            question: '$_id.question',
+                                            count: '$questionCount'
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $addFields: {
+                                    questions: {
+                                        $map: {
+                                            input: '$questions',
+                                            as: 'question',
+                                            in: {
+                                                question: '$$question.question',
+                                                count: '$$question.count',
+                                                percentage: { $multiply: [{ $divide: ['$$question.count', '$totalMultipleChoiceCount'] }, 100] }  // Calculate percentage correctly
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 0,
+                                    yesNo: {
+                                        $cond: {
+                                            if: { $gt: [{ $add: ['$yesCount', '$noCount'] }, 0] },
+                                            then: {
+                                                Yes: '$yesCount',
+                                                YesPercentage: { $multiply: [{ $divide: ['$yesCount', '$totalCount'] }, 100] },
+                                                No: '$noCount',
+                                                NoPercentage: { $multiply: [{ $divide: ['$noCount', '$totalCount'] }, 100] }
+                                            },
+                                            else: '$$REMOVE'
+                                        }
+                                    },
+                                    agreeDisagree: {
+                                        $cond: {
+                                            if: { $gt: [{ $add: ['$agreeCount', '$disagreeCount'] }, 0] },
+                                            then: {
+                                                Agree: '$agreeCount',
+                                                AgreePercentage: { $multiply: [{ $divide: ['$agreeCount', '$totalCount'] }, 100] },
+                                                Disagree: '$disagreeCount',
+                                                DisagreePercentage: { $multiply: [{ $divide: ['$disagreeCount', '$totalCount'] }, 100] }
+                                            },
+                                            else: '$$REMOVE'
+                                        }
+                                    },
+                                    likeDislike: {
+                                        $cond: {
+                                            if: { $gt: [{ $add: ['$likeCount', '$dislikeCount'] }, 0] },
+                                            then: {
+                                                Like: '$likeCount',
+                                                LikePercentage: { $multiply: [{ $divide: ['$likeCount', '$totalCount'] }, 100] },
+                                                Dislike: '$dislikeCount',
+                                                DislikePercentage: { $multiply: [{ $divide: ['$dislikeCount', '$totalCount'] }, 100] }
+                                            },
+                                            else: '$$REMOVE'
+                                        }
+                                    },
+                                    multipleChoice: {
+                                        $cond: {
+                                            if: { $gt: [{ $size: '$questions' }, 0] },
+                                            then: '$questions',
+                                            else: '$$REMOVE'
+                                        }
+                                    }
+                                }
+                            }
+                        ]);
+                        let questForeginKeyWithStartQuestData;
 
-                res.status(200).json({
-                    message: `Category found successfully`,
-                    category: newCategoryDoc,
-                });
+                        const isPostRankedChoice = await InfoQuestQuestions.findOne({ _id: new mongoose.Types.ObjectId((post.questForeginKey._id).toString()) })
+                        if (isPostRankedChoice.whichTypeQuestion === "ranked choise") {
+                            // continue;
+                            const choices = isPostRankedChoice.QuestAnswers.map(answer => answer.question);
 
+                            // Initialize a ranks object to store the rank totals for each choice
+                            const ranks = {};
+
+                            // Initialize the ranks object with each choice
+                            choices.forEach(choice => {
+                                ranks[choice] = 0;
+                            });
+
+                            // Iterate through each user's response in the responseData array
+                            postData.responseData.forEach(responseDoc => {
+                                const response = responseDoc.response;
+                                if (response && Array.isArray(response.selected)) {
+                                    response.selected.forEach((selectedItem, index) => {
+                                        const choice = selectedItem.question;
+                                        if (ranks.hasOwnProperty(choice)) {
+                                            // Add the rank (index) to the total rank for this choice
+                                            ranks[choice] += index + 1;  // Adding 1 because index is 0-based
+                                        }
+                                    });
+                                }
+                            });
+
+                            // Sort ranks by total rank values
+                            const sortedRanks = Object.entries(ranks).sort((a, b) => a[1] - b[1]);
+                            const data = {
+                                ...responseDataDoc.response,
+                                contended: []
+                            }
+
+                            // Calculate the total rank sum
+                            const totalRanksSum = Object.values(ranks).reduce((sum, rank) => sum + rank, 0);
+
+                            // Calculate the inverted percentages
+                            const invertedPercentages = {};
+                            choices.forEach(choice => {
+                                const choiceRank = ranks[choice];
+                                // Calculate the inverted rank sum as the difference between the total rank sum and the choice's rank sum
+                                const invertedRank = totalRanksSum - choiceRank;
+                                invertedPercentages[choice] = (invertedRank / (totalRanksSum * (choices.length - 1))) * 100;
+                            });
+
+                            // Transform inverted percentages to formatted strings
+                            const formattedPercentages = {};
+                            Object.entries(invertedPercentages).forEach(([choice, percentage]) => {
+                                formattedPercentages[choice] = `${Math.round(percentage)}%`;
+                            });
+
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: [data],
+                                    questForeignKey: post.questForeginKey._id,
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                startStatus: responseDataDoc.startStatus,
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                                result: [
+                                    {
+                                        selected: ranks
+                                    }
+                                ],
+                                selectedPercentage: [
+                                    formattedPercentages
+                                ],
+                            };
+                        }
+                        else if (responseDataStats[0].yesNo) {
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startStatus: responseDataDoc.startStatus,
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: [responseDataDoc.response],
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                result: [
+                                    {
+                                        selected: {
+                                            Yes: responseDataStats[0].yesNo.Yes,
+                                            No: responseDataStats[0].yesNo.No,
+                                        }
+                                    }
+                                ],
+                                selectedPercentage: [
+                                    {
+                                        Yes: (Math.round(responseDataStats[0].yesNo.YesPercentage)).toString() + "%",
+                                        No: (Math.round(responseDataStats[0].yesNo.NoPercentage)).toString() + "%",
+                                    }
+                                ],
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                            };
+                        }
+                        else if (responseDataStats[0].agreeDisagree) {
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startStatus: responseDataDoc.startStatus,
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: [responseDataDoc.response],
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                result: [
+                                    {
+                                        selected: {
+                                            Agree: responseDataStats[0].agreeDisagree.Agree,
+                                            Disagree: responseDataStats[0].agreeDisagree.Disagree,
+                                        }
+                                    }
+                                ],
+                                selectedPercentage: [
+                                    {
+                                        Agree: (Math.round(responseDataStats[0].agreeDisagree.AgreePercentage)).toString() + "%",
+                                        Disagree: (Math.round(responseDataStats[0].agreeDisagree.DisagreePercentage)).toString() + "%",
+                                    }
+                                ],
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                            };
+                        }
+                        else if (responseDataStats[0].likeDislike) {
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startStatus: responseDataDoc.startStatus,
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: [responseDataDoc.response],
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                result: [
+                                    {
+                                        selected: {
+                                            Like: responseDataStats[0].likeDislike.Like,
+                                            Dislike: responseDataStats[0].likeDislike.Dislike,
+                                        }
+                                    }
+                                ],
+                                selectedPercentage: [
+                                    {
+                                        Like: (Math.round(responseDataStats[0].likeDislike.LikePercentage)).toString() + "%",
+                                        Dislike: (Math.round(responseDataStats[0].likeDislike.DislikePercentage)).toString() + "%",
+                                    }
+                                ],
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                            };
+                        }
+                        else if (responseDataStats[0].multipleChoice) {
+                            let result = [{
+                                selected: {}
+                            }];
+                            responseDataStats[0].multipleChoice.forEach(item => {
+                                result[0].selected[item.question] = item.count;
+                            });
+                            let selectedPercentage = [{}];
+                            // Iterate over the multipleChoice array and populate the object
+                            responseDataStats[0].multipleChoice.forEach(item => {
+                                selectedPercentage[0][item.question] = (Math.round(item.percentage)).toString() + "%";
+                            });
+                            const data = {
+                                ...responseDataDoc.response,
+                                contended: []
+                            }
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startStatus: responseDataDoc.startStatus,
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: [data],
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                result: result,
+                                selectedPercentage: selectedPercentage,
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                            };
+                        }
+                        else {
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: [responseDataDoc.response],
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                startStatus: responseDataDoc.startStatus,
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                            };
+                        }
+                        // Add the updated post to the array
+                        updatedPosts.push({
+                            ...post.toObject(), // Convert Mongoose document to plain JS object
+                            questForeginKey: questForeginKeyWithStartQuestData
+                        });
+                    }
+                }
             }
+
+            const newCategoryDoc = {
+                category: categoryDoc.category,
+                post: updatedPosts,
+                link: categoryDoc.link,
+                isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
+                clicks: categoryDoc.clicks,
+                participents: categoryDoc.participents,
+                createdAt: categoryDoc.createdAt,
+                updatedAt: categoryDoc.updatedAt,
+                deletedAt: categoryDoc.deletedAt,
+                isActive: categoryDoc.isActive,
+                _id: categoryDoc._id
+            };
+
+            res.status(200).json({
+                message: `Category found successfully`,
+                category: newCategoryDoc,
+            });
         }
         else {
 
@@ -425,6 +834,905 @@ const findCategoryByLink = async (req, res) => {
 
         }
 
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
+const viewList = async (req, res) => {
+    try {
+
+        const { categoryId, userUuid } = req.params;
+
+        // Find the user list that contains a category with the given link
+        const userList = await UserListSchema.findOne({
+            userUuid: userUuid,
+        }).populate({
+            path: 'list.post.questForeginKey',
+            model: 'InfoQuestQuestions'
+        });
+        if (!userList) throw new Error(`No list is found with the category ID: ${categoryId}`);
+
+        // Find the category within the list array based on the category link
+        const categoryDoc = userList.list.id(categoryId);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        let updatedPosts = [];
+
+        for (const post of categoryDoc.post) {
+            const postId = new mongoose.Types.ObjectId(post._id.toString());
+            // Find the postData document
+            const bookmark = await BookmarkQuestsSchema.findOne({
+                questForeignKey: post.questForeginKey.toString(),
+                createdBy: userUuid
+            })
+            const user = await User.findOne({ uuid: userList.userUuid });
+
+            const postData = await PostDataSchema.findOne({
+                postId: postId
+            })
+
+            if (postData) {
+                const responseDataStats = await PostDataSchema.aggregate([
+                    {
+                        $match: { postId: postId }
+                    },
+                    {
+                        $unwind: '$responseData'
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalCount: { $sum: 1 },
+                            yesCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Yes'] }, 1, 0]
+                                }
+                            },
+                            noCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'No'] }, 1, 0]
+                                }
+                            },
+                            agreeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Agree'] }, 1, 0]
+                                }
+                            },
+                            disagreeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Disagree'] }, 1, 0]
+                                }
+                            },
+                            likeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Like'] }, 1, 0]
+                                }
+                            },
+                            dislikeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Dislike'] }, 1, 0]
+                                }
+                            },
+                            multipleChoiceResponses: {
+                                $push: '$responseData.response.selected'
+                            }
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$multipleChoiceResponses',
+                            preserveNullAndEmptyArrays: true
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$multipleChoiceResponses',
+                            preserveNullAndEmptyArrays: true
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                question: '$multipleChoiceResponses.question'
+                            },
+                            questionCount: { $sum: 1 },
+                            totalMultipleChoiceCount: { $sum: 1 },  // Total count for this specific group
+                            totalCount: { $first: '$totalCount' },
+                            yesCount: { $first: '$yesCount' },
+                            noCount: { $first: '$noCount' },
+                            agreeCount: { $first: '$agreeCount' },
+                            disagreeCount: { $first: '$disagreeCount' },
+                            likeCount: { $first: '$likeCount' },
+                            dislikeCount: { $first: '$dislikeCount' }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalCount: { $first: '$totalCount' },
+                            yesCount: { $first: '$yesCount' },
+                            noCount: { $first: '$noCount' },
+                            agreeCount: { $first: '$agreeCount' },
+                            disagreeCount: { $first: '$disagreeCount' },
+                            likeCount: { $first: '$likeCount' },
+                            dislikeCount: { $first: '$dislikeCount' },
+                            totalMultipleChoiceCount: { $sum: '$totalMultipleChoiceCount' },  // Sum of all multiple choice counts
+                            questions: {
+                                $push: {
+                                    question: '$_id.question',
+                                    count: '$questionCount'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            questions: {
+                                $map: {
+                                    input: '$questions',
+                                    as: 'question',
+                                    in: {
+                                        question: '$$question.question',
+                                        count: '$$question.count',
+                                        percentage: { $multiply: [{ $divide: ['$$question.count', '$totalMultipleChoiceCount'] }, 100] }  // Calculate percentage correctly
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            yesNo: {
+                                $cond: {
+                                    if: { $gt: [{ $add: ['$yesCount', '$noCount'] }, 0] },
+                                    then: {
+                                        Yes: '$yesCount',
+                                        YesPercentage: { $multiply: [{ $divide: ['$yesCount', '$totalCount'] }, 100] },
+                                        No: '$noCount',
+                                        NoPercentage: { $multiply: [{ $divide: ['$noCount', '$totalCount'] }, 100] }
+                                    },
+                                    else: '$$REMOVE'
+                                }
+                            },
+                            agreeDisagree: {
+                                $cond: {
+                                    if: { $gt: [{ $add: ['$agreeCount', '$disagreeCount'] }, 0] },
+                                    then: {
+                                        Agree: '$agreeCount',
+                                        AgreePercentage: { $multiply: [{ $divide: ['$agreeCount', '$totalCount'] }, 100] },
+                                        Disagree: '$disagreeCount',
+                                        DisagreePercentage: { $multiply: [{ $divide: ['$disagreeCount', '$totalCount'] }, 100] }
+                                    },
+                                    else: '$$REMOVE'
+                                }
+                            },
+                            likeDislike: {
+                                $cond: {
+                                    if: { $gt: [{ $add: ['$likeCount', '$dislikeCount'] }, 0] },
+                                    then: {
+                                        Like: '$likeCount',
+                                        LikePercentage: { $multiply: [{ $divide: ['$likeCount', '$totalCount'] }, 100] },
+                                        Dislike: '$dislikeCount',
+                                        DislikePercentage: { $multiply: [{ $divide: ['$dislikeCount', '$totalCount'] }, 100] }
+                                    },
+                                    else: '$$REMOVE'
+                                }
+                            },
+                            multipleChoice: {
+                                $cond: {
+                                    if: { $gt: [{ $size: '$questions' }, 0] },
+                                    then: '$questions',
+                                    else: '$$REMOVE'
+                                }
+                            }
+                        }
+                    }
+                ]);
+
+                let questForeginKeyWithStartQuestData;
+
+                const isPostRankedChoice = await InfoQuestQuestions.findOne({ _id: new mongoose.Types.ObjectId((post.questForeginKey._id).toString()) })
+                if (isPostRankedChoice.whichTypeQuestion === "ranked choise") {
+                    // continue;
+                    const choices = isPostRankedChoice.QuestAnswers.map(answer => answer.question);
+
+                    // Initialize a ranks object to store the rank totals for each choice
+                    const ranks = {};
+
+                    // Initialize the ranks object with each choice
+                    choices.forEach(choice => {
+                        ranks[choice] = 0;
+                    });
+
+                    // Iterate through each user's response in the responseData array
+                    postData.responseData.forEach(responseDoc => {
+                        const response = responseDoc.response;
+                        if (response && Array.isArray(response.selected)) {
+                            response.selected.forEach((selectedItem, index) => {
+                                const choice = selectedItem.question;
+                                if (ranks.hasOwnProperty(choice)) {
+                                    // Add the rank (index) to the total rank for this choice
+                                    ranks[choice] += index + 1;  // Adding 1 because index is 0-based
+                                }
+                            });
+                        }
+                    });
+
+                    // Sort ranks by total rank values
+                    const sortedRanks = Object.entries(ranks).sort((a, b) => a[1] - b[1]);
+                    // const data = {
+                    //     ...postData.responseData.response,
+                    //     contended: []
+                    // }
+
+                    // Calculate the total rank sum
+                    const totalRanksSum = Object.values(ranks).reduce((sum, rank) => sum + rank, 0);
+
+                    // Calculate the inverted percentages
+                    const invertedPercentages = {};
+                    choices.forEach(choice => {
+                        const choiceRank = ranks[choice];
+                        // Calculate the inverted rank sum as the difference between the total rank sum and the choice's rank sum
+                        const invertedRank = totalRanksSum - choiceRank;
+                        invertedPercentages[choice] = (invertedRank / (totalRanksSum * (choices.length - 1))) * 100;
+                    });
+
+                    // Transform inverted percentages to formatted strings
+                    const formattedPercentages = {};
+                    Object.entries(invertedPercentages).forEach(([choice, percentage]) => {
+                        formattedPercentages[choice] = `${Math.round(percentage)}%`;
+                    });
+
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        // startQuestData: {
+                        //     uuid: responseDataDoc.responsingUserUuid,
+                        //     postId: postId,
+                        //     data: [data],
+                        //     questForeignKey: post.questForeginKey._id,
+                        //     addedAnswer: responseDataDoc.addedAnswer,
+                        // },
+                        // startStatus: responseDataDoc.startStatus,
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                        result: [
+                            {
+                                selected: ranks
+                            }
+                        ],
+                        selectedPercentage: [
+                            formattedPercentages
+                        ],
+                    };
+                }
+                else if (responseDataStats[0].yesNo) {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: [
+                            {
+                                selected: {
+                                    Yes: responseDataStats[0].yesNo.Yes,
+                                    No: responseDataStats[0].yesNo.No,
+                                }
+                            }
+                        ],
+                        selectedPercentage: [
+                            {
+                                Yes: (Math.round(responseDataStats[0].yesNo.YesPercentage)).toString() + "%",
+                                No: (Math.round(responseDataStats[0].yesNo.NoPercentage)).toString() + "%",
+                            }
+                        ],
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else if (responseDataStats[0].agreeDisagree) {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: [
+                            {
+                                selected: {
+                                    Agree: responseDataStats[0].agreeDisagree.Agree,
+                                    Disagree: responseDataStats[0].agreeDisagree.Disagree,
+                                }
+                            }
+                        ],
+                        selectedPercentage: [
+                            {
+                                Agree: (Math.round(responseDataStats[0].agreeDisagree.AgreePercentage)).toString() + "%",
+                                Disagree: (Math.round(responseDataStats[0].agreeDisagree.DisagreePercentage)).toString() + "%",
+                            }
+                        ],
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else if (responseDataStats[0].likeDislike) {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: [
+                            {
+                                selected: {
+                                    Like: responseDataStats[0].likeDislike.Like,
+                                    Dislike: responseDataStats[0].likeDislike.Dislike,
+                                }
+                            }
+                        ],
+                        selectedPercentage: [
+                            {
+                                Like: (Math.round(responseDataStats[0].likeDislike.LikePercentage)).toString() + "%",
+                                Dislike: (Math.round(responseDataStats[0].likeDislike.DislikePercentage)).toString() + "%",
+                            }
+                        ],
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else if (responseDataStats[0].multipleChoice) {
+                    let result = [{
+                        selected: {}
+                    }];
+                    responseDataStats[0].multipleChoice.forEach(item => {
+                        result[0].selected[item.question] = item.count;
+                    });
+                    let selectedPercentage = [{}];
+                    // Iterate over the multipleChoice array and populate the object
+                    responseDataStats[0].multipleChoice.forEach(item => {
+                        selectedPercentage[0][item.question] = (Math.round(item.percentage)).toString() + "%";
+                    });
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: result,
+                        selectedPercentage: selectedPercentage,
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+
+                // Add the updated post to the array
+                updatedPosts.push({
+                    ...post.toObject(), // Convert Mongoose document to plain JS object
+                    questForeginKey: questForeginKeyWithStartQuestData
+                });
+            }
+            else {
+                const questForeginKeyWithStartQuestData = {
+                    ...post.questForeginKey.toObject(),
+                    bookmark: bookmark ? true : false,
+                    getUserBadge: {
+                        _id: user._id,
+                        badges: user.badges,
+                    },
+                }
+                updatedPosts.push({
+                    ...post.toObject(),
+                    questForeginKey: questForeginKeyWithStartQuestData
+                })
+            }
+
+        }
+
+        const newCategoryDoc = {
+            category: categoryDoc.category,
+            post: updatedPosts,
+            link: categoryDoc.link,
+            isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
+            clicks: categoryDoc.clicks,
+            participents: categoryDoc.participents,
+            createdAt: categoryDoc.createdAt,
+            updatedAt: categoryDoc.updatedAt,
+            deletedAt: categoryDoc.deletedAt,
+            isActive: categoryDoc.isActive,
+            _id: categoryDoc._id
+        };
+
+        res.status(200).json({
+            message: `Category found successfully`,
+            category: newCategoryDoc,
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while getting the userList: ${error.message}`,
+        });
+    }
+}
+
+const viewListAll = async (req, res) => {
+    try {
+
+        const { categoryId, userUuid } = req.params;
+
+        // Find the user list that contains a category with the given link
+        const userList = await UserListSchema.findOne({
+            userUuid: userUuid,
+        }).populate({
+            path: 'list.post.questForeginKey',
+            model: 'InfoQuestQuestions'
+        });
+        if (!userList) throw new Error(`No list is found with the category ID: ${categoryId}`);
+
+        // Find the category within the list array based on the category link
+        const categoryDoc = userList.list.id(categoryId);
+        if (!categoryDoc) throw new Error('Category not found');
+
+        let updatedPosts = [];
+
+        for (const post of categoryDoc.post) {
+            const postId = new mongoose.Types.ObjectId(post._id.toString());
+            // Find the postData document
+            const bookmark = await BookmarkQuestsSchema.findOne({
+                questForeignKey: post.questForeginKey.toString(),
+                createdBy: userUuid
+            })
+            const user = await User.findOne({ uuid: userList.userUuid });
+
+            const postData = await PostDataSchema.findOne({
+                postId: postId
+            })
+            let questForeginKeyWithStartQuestData;
+
+            if (postData) {
+                const responseDataStats = await PostDataSchema.aggregate([
+                    {
+                        $match: { postId: postId }
+                    },
+                    {
+                        $unwind: '$responseData'
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalCount: { $sum: 1 },
+                            yesCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Yes'] }, 1, 0]
+                                }
+                            },
+                            noCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'No'] }, 1, 0]
+                                }
+                            },
+                            agreeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Agree'] }, 1, 0]
+                                }
+                            },
+                            disagreeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Disagree'] }, 1, 0]
+                                }
+                            },
+                            likeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Like'] }, 1, 0]
+                                }
+                            },
+                            dislikeCount: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$responseData.response.selected', 'Dislike'] }, 1, 0]
+                                }
+                            },
+                            multipleChoiceResponses: {
+                                $push: '$responseData.response.selected'
+                            }
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$multipleChoiceResponses',
+                            preserveNullAndEmptyArrays: true
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$multipleChoiceResponses',
+                            preserveNullAndEmptyArrays: true
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                question: '$multipleChoiceResponses.question'
+                            },
+                            questionCount: { $sum: 1 },
+                            totalMultipleChoiceCount: { $sum: 1 },  // Total count for this specific group
+                            totalCount: { $first: '$totalCount' },
+                            yesCount: { $first: '$yesCount' },
+                            noCount: { $first: '$noCount' },
+                            agreeCount: { $first: '$agreeCount' },
+                            disagreeCount: { $first: '$disagreeCount' },
+                            likeCount: { $first: '$likeCount' },
+                            dislikeCount: { $first: '$dislikeCount' }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalCount: { $first: '$totalCount' },
+                            yesCount: { $first: '$yesCount' },
+                            noCount: { $first: '$noCount' },
+                            agreeCount: { $first: '$agreeCount' },
+                            disagreeCount: { $first: '$disagreeCount' },
+                            likeCount: { $first: '$likeCount' },
+                            dislikeCount: { $first: '$dislikeCount' },
+                            totalMultipleChoiceCount: { $sum: '$totalMultipleChoiceCount' },  // Sum of all multiple choice counts
+                            questions: {
+                                $push: {
+                                    question: '$_id.question',
+                                    count: '$questionCount'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            questions: {
+                                $map: {
+                                    input: '$questions',
+                                    as: 'question',
+                                    in: {
+                                        question: '$$question.question',
+                                        count: '$$question.count',
+                                        percentage: { $multiply: [{ $divide: ['$$question.count', '$totalMultipleChoiceCount'] }, 100] }  // Calculate percentage correctly
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            yesNo: {
+                                $cond: {
+                                    if: { $gt: [{ $add: ['$yesCount', '$noCount'] }, 0] },
+                                    then: {
+                                        Yes: '$yesCount',
+                                        YesPercentage: { $multiply: [{ $divide: ['$yesCount', '$totalCount'] }, 100] },
+                                        No: '$noCount',
+                                        NoPercentage: { $multiply: [{ $divide: ['$noCount', '$totalCount'] }, 100] }
+                                    },
+                                    else: '$$REMOVE'
+                                }
+                            },
+                            agreeDisagree: {
+                                $cond: {
+                                    if: { $gt: [{ $add: ['$agreeCount', '$disagreeCount'] }, 0] },
+                                    then: {
+                                        Agree: '$agreeCount',
+                                        AgreePercentage: { $multiply: [{ $divide: ['$agreeCount', '$totalCount'] }, 100] },
+                                        Disagree: '$disagreeCount',
+                                        DisagreePercentage: { $multiply: [{ $divide: ['$disagreeCount', '$totalCount'] }, 100] }
+                                    },
+                                    else: '$$REMOVE'
+                                }
+                            },
+                            likeDislike: {
+                                $cond: {
+                                    if: { $gt: [{ $add: ['$likeCount', '$dislikeCount'] }, 0] },
+                                    then: {
+                                        Like: '$likeCount',
+                                        LikePercentage: { $multiply: [{ $divide: ['$likeCount', '$totalCount'] }, 100] },
+                                        Dislike: '$dislikeCount',
+                                        DislikePercentage: { $multiply: [{ $divide: ['$dislikeCount', '$totalCount'] }, 100] }
+                                    },
+                                    else: '$$REMOVE'
+                                }
+                            },
+                            multipleChoice: {
+                                $cond: {
+                                    if: { $gt: [{ $size: '$questions' }, 0] },
+                                    then: '$questions',
+                                    else: '$$REMOVE'
+                                }
+                            }
+                        }
+                    }
+                ]);
+
+
+                const isPostRankedChoice = await InfoQuestQuestions.findOne({ _id: new mongoose.Types.ObjectId((post.questForeginKey._id).toString()) })
+                if (isPostRankedChoice.whichTypeQuestion === "ranked choise") {
+                    // continue;
+                    const choices = isPostRankedChoice.QuestAnswers.map(answer => answer.question);
+
+                    // Initialize a ranks object to store the rank totals for each choice
+                    const ranks = {};
+
+                    // Initialize the ranks object with each choice
+                    choices.forEach(choice => {
+                        ranks[choice] = 0;
+                    });
+
+                    // Iterate through each user's response in the responseData array
+                    postData.responseData.forEach(responseDoc => {
+                        const response = responseDoc.response;
+                        if (response && Array.isArray(response.selected)) {
+                            response.selected.forEach((selectedItem, index) => {
+                                const choice = selectedItem.question;
+                                if (ranks.hasOwnProperty(choice)) {
+                                    // Add the rank (index) to the total rank for this choice
+                                    ranks[choice] += index + 1;  // Adding 1 because index is 0-based
+                                }
+                            });
+                        }
+                    });
+
+                    // Sort ranks by total rank values
+                    const sortedRanks = Object.entries(ranks).sort((a, b) => a[1] - b[1]);
+                    // const data = {
+                    //     ...postData.responseData.response,
+                    //     contended: []
+                    // }
+
+                    // Calculate the total rank sum
+                    const totalRanksSum = Object.values(ranks).reduce((sum, rank) => sum + rank, 0);
+
+                    // Calculate the inverted percentages
+                    const invertedPercentages = {};
+                    choices.forEach(choice => {
+                        const choiceRank = ranks[choice];
+                        // Calculate the inverted rank sum as the difference between the total rank sum and the choice's rank sum
+                        const invertedRank = totalRanksSum - choiceRank;
+                        invertedPercentages[choice] = (invertedRank / (totalRanksSum * (choices.length - 1))) * 100;
+                    });
+
+                    // Transform inverted percentages to formatted strings
+                    const formattedPercentages = {};
+                    Object.entries(invertedPercentages).forEach(([choice, percentage]) => {
+                        formattedPercentages[choice] = `${Math.round(percentage)}%`;
+                    });
+
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        // startQuestData: {
+                        //     uuid: responseDataDoc.responsingUserUuid,
+                        //     postId: postId,
+                        //     data: [data],
+                        //     questForeignKey: post.questForeginKey._id,
+                        //     addedAnswer: responseDataDoc.addedAnswer,
+                        // },
+                        // startStatus: responseDataDoc.startStatus,
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                        result: [
+                            {
+                                selected: ranks
+                            }
+                        ],
+                        selectedPercentage: [
+                            formattedPercentages
+                        ],
+                    };
+                }
+                else if (responseDataStats[0].yesNo) {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: [
+                            {
+                                selected: {
+                                    Yes: responseDataStats[0].yesNo.Yes,
+                                    No: responseDataStats[0].yesNo.No,
+                                }
+                            }
+                        ],
+                        selectedPercentage: [
+                            {
+                                Yes: (Math.round(responseDataStats[0].yesNo.YesPercentage)).toString() + "%",
+                                No: (Math.round(responseDataStats[0].yesNo.NoPercentage)).toString() + "%",
+                            }
+                        ],
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else if (responseDataStats[0].agreeDisagree) {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: [
+                            {
+                                selected: {
+                                    Agree: responseDataStats[0].agreeDisagree.Agree,
+                                    Disagree: responseDataStats[0].agreeDisagree.Disagree,
+                                }
+                            }
+                        ],
+                        selectedPercentage: [
+                            {
+                                Agree: (Math.round(responseDataStats[0].agreeDisagree.AgreePercentage)).toString() + "%",
+                                Disagree: (Math.round(responseDataStats[0].agreeDisagree.DisagreePercentage)).toString() + "%",
+                            }
+                        ],
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else if (responseDataStats[0].likeDislike) {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: [
+                            {
+                                selected: {
+                                    Like: responseDataStats[0].likeDislike.Like,
+                                    Dislike: responseDataStats[0].likeDislike.Dislike,
+                                }
+                            }
+                        ],
+                        selectedPercentage: [
+                            {
+                                Like: (Math.round(responseDataStats[0].likeDislike.LikePercentage)).toString() + "%",
+                                Dislike: (Math.round(responseDataStats[0].likeDislike.DislikePercentage)).toString() + "%",
+                            }
+                        ],
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else if (responseDataStats[0].multipleChoice) {
+                    let result = [{
+                        selected: {}
+                    }];
+                    responseDataStats[0].multipleChoice.forEach(item => {
+                        result[0].selected[item.question] = item.count;
+                    });
+                    let selectedPercentage = [{}];
+                    // Iterate over the multipleChoice array and populate the object
+                    responseDataStats[0].multipleChoice.forEach(item => {
+                        selectedPercentage[0][item.question] = (Math.round(item.percentage)).toString() + "%";
+                    });
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        result: result,
+                        selectedPercentage: selectedPercentage,
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+                else {
+                    questForeginKeyWithStartQuestData = {
+                        ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                        bookmark: bookmark ? true : false,
+                        getUserBadge: {
+                            _id: user._id,
+                            badges: user.badges,
+                        },
+                    };
+                }
+            }
+            else {
+                questForeginKeyWithStartQuestData = {
+                    ...post.questForeginKey.toObject(),
+                    bookmark: bookmark ? true : false,
+                    getUserBadge: {
+                        _id: user._id,
+                        badges: user.badges,
+                    },
+                }
+            }
+
+            const desiredResult = await getQuestByIdQuestForeignKey(post.questForeginKey._id.toString());
+            const questResult = questForeginKeyWithStartQuestData.result && questForeginKeyWithStartQuestData.result[0].selected ? questForeginKeyWithStartQuestData.result[0].selected : {};
+            const desiredResultSelected = desiredResult.result && desiredResult.result[0].selected ? desiredResult.result[0].selected : {};
+
+            // Initialize merged result
+            const mergedResult = {};
+
+            // Sum counts from questData.result
+            for (const [key, value] of Object.entries(questResult)) {
+                if (mergedResult[key]) {
+                    mergedResult[key] += value;
+                } else {
+                    mergedResult[key] = value;
+                }
+            }
+
+            // Sum counts from desiredResult.result
+            for (const [key, value] of Object.entries(desiredResultSelected)) {
+                if (mergedResult[key]) {
+                    mergedResult[key] += value;
+                } else {
+                    mergedResult[key] = value;
+                }
+            }
+
+            // Calculate the total count for percentage calculation
+            const totalCount = Object.values(mergedResult).reduce((sum, count) => sum + count, 0);
+
+            // Calculate new percentages
+            const newSelectedPercentage = {};
+            for (const [key, value] of Object.entries(mergedResult)) {
+                newSelectedPercentage[key] = Math.round((value / totalCount) * 100) + '%';
+            }
+
+            // //console.log("mergedResult", { selected: mergedResult })
+            // //console.log("newSelectedPercentage", [newSelectedPercentage])
+
+            const questForeginKeyWithStartQuestDataR = {
+                ...desiredResult,
+                bookmark: bookmark ? true : false,
+                result: [{selected: mergedResult}],
+                selectedPercentage: [newSelectedPercentage]
+                // getUserBadge: {
+                //     _id: user._id,
+                //     badges: user.badges,
+                // },
+            }
+
+            //console.log(questForeginKeyWithStartQuestDataR)
+            
+            updatedPosts.push({
+                ...post.toObject(),
+                questForeginKey: questForeginKeyWithStartQuestDataR
+            })
+
+            //console.log(updatedPosts)
+
+        }
+
+        const newCategoryDoc = {
+            category: categoryDoc.category,
+            post: updatedPosts,
+            link: categoryDoc.link,
+            isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
+            clicks: categoryDoc.clicks,
+            participents: categoryDoc.participents,
+            createdAt: categoryDoc.createdAt,
+            updatedAt: categoryDoc.updatedAt,
+            deletedAt: categoryDoc.deletedAt,
+            isActive: categoryDoc.isActive,
+            _id: categoryDoc._id
+        };
+
+        res.status(200).json({
+            message: `Category found successfully`,
+            category: newCategoryDoc,
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({
@@ -575,7 +1883,7 @@ const updatePostOrder = async (req, res) => {
             // Use the `hasOwnProperty` method to check for the key in orderMap
             if (!orderMap.hasOwnProperty(postIdString)) throw new Error(`Wrong identifires are being sent in order: ${order}`);
             post.order = orderMap[postIdString]; // Access the value using the key
-            
+
         });
 
         await userList.save();
@@ -644,43 +1952,51 @@ const addPostInCategoryInUserList = async (req, res) => {
     }
 }
 
-const createUserListForAllUsers = async (req, res) => {
+const submitResponse = async (req, res) => {
     try {
-        // Fetch all users from the users collection
-        const users = await User.find({});
+        const postId = req.body.postId;
+        const responsingUserUuid = req.body.uuid;
+        const response = req.body.data;
+        const addedAnswer = req.body.addedAnswer;
 
-        // Array to store promises for creating userlists
-        const userListPromises = [];
-
-        // Iterate over each user
-        for (const user of users) {
-            // Check if a userList already exists for the user
-            const existingUserList = await UserListSchema.findOne({ userUuid: user.uuid });
-
-            // If userList does not exist for the user, create one
-            if (!existingUserList) {
-                const userList = new UserListSchema({
-                    userUuid: user.uuid,
-                    // Other fields will default as per the schema
-                });
-
-                // Save the userList and push the promise to the array
-                userListPromises.push(userList.save());
-            }
+        // Find postData Document
+        let postData = await PostDataSchema.findOne({ postId: new mongoose.Types.ObjectId(postId) })
+        if (!postData) {
+            postData = new PostDataSchema({
+                postId: new mongoose.Types.ObjectId(postId)
+            })
+            await postData.save();
         }
 
-        // Wait for all userlist documents to be created
-        const result = await Promise.all(userListPromises);
+        let newPostData;
+        if (req.body.addedAnswer) {
+            newPostData = new ResponseDataSchema({
+                responsingUserUuid: responsingUserUuid,
+                response: response,
+                addedAnswer: addedAnswer,
+                startStatus: "change answer"
+            });
+        } else {
+            newPostData = new ResponseDataSchema({
+                responsingUserUuid: responsingUserUuid,
+                response: response,
+                startStatus: "change answer"
+            });
+        }
 
-        // Send success response
+        postData.responseData.push(newPostData);
+        postData.updatedAt = new Date().toISOString();
+
+        await postData.save();
         res.status(200).json({
-            message: 'UserList Collection is Refactored successfully',
-            userList: result,
+            message: `Post Response Submitted w.r.t List ${postId}`,
+            userList: postData,
         });
+
     } catch (error) {
         console.error(error.message);
         res.status(500).json({
-            message: `An error occurred while creating the userList: ${error.message}`,
+            message: `An error occurred while getting the userList: ${error.message}`,
         });
     }
 }
@@ -694,10 +2010,12 @@ module.exports = {
     deleteCategoryFromList,
     generateCategoryShareLink,
     findCategoryByLink,
+    viewList,
+    viewListAll,
     categoryViewCount,
     categoryParticipentsCount,
     categoryStatistics,
     updatePostOrder,
     addPostInCategoryInUserList,
-    createUserListForAllUsers,
+    submitResponse
 };

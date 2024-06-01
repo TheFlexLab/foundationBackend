@@ -110,8 +110,8 @@ const search = async (req, res) => {
       ],
     });
     const pageCount = Math.ceil(totalCount / limit);
-    console.log(pageCount);
-    console.log(totalCount);
+    //console.log(pageCount);
+    //console.log(totalCount);
 
     res.status(200).json({
       data: ledger,
@@ -141,7 +141,7 @@ const remove = async (req, res) => {
 
 const getLstActAndEmailForAllUsers = async () => {
   try {
-    console.log("getLstActAndEmailForAllUsers")
+    //console.log("getLstActAndEmailForAllUsers")
     
     // Calculate the date 7 days ago
     const sevenDaysAgo = new Date();
@@ -218,7 +218,7 @@ const getLstActAndEmailForAllUsers = async () => {
         };
         try {
           await sesClient.sendEmail(params).promise();
-          console.log(`Email has been sent to ${item.email}`);
+          //console.log(`Email has been sent to ${item.email}`);
         } catch (error) {
           console.error(`Error sending email to ${item.email}:`, error);
         }
@@ -226,14 +226,14 @@ const getLstActAndEmailForAllUsers = async () => {
 
       // Send the response after all emails have been sent
       // res.json({ lastActiveTimes: finalFilteredUUIDs });
-      console.log({ lastActiveTimes: finalFilteredUUIDs });
+      //console.log({ lastActiveTimes: finalFilteredUUIDs });
     } else {
       // If no records are found, send an appropriate message
       // res.status(404).json({ message: 'No records found where 7 days have passed since last activity' });
-      console.log({ message: 'No records found where 7 days have passed since last activity' });
+      //console.log({ message: 'No records found where 7 days have passed since last activity' });
     }
 
-    console.log('Completed==============')
+    //console.log('Completed==============')
   } catch (error) {
     // If an error occurs during the database query, send an error response
     console.error('Error occurred while fetching last active times for all users:', error);

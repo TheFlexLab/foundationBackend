@@ -1,5 +1,5 @@
-// const User = require("../models/UserModel");
-// const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
+const User = require("../models/UserModel");
+const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
 
 // const excep = async (req, res) => {
 //   try {
@@ -60,7 +60,7 @@
 //     const bulkOps = users
 //       .map(user => {
 //         if(user.badges.length !== 0) {
-//           console.log("user================>", user);
+//           //console.log("user================>", user);
 //           user.badges.forEach(badge => {
 //             if (badge.type && badge.type === "cell-phone") {
 //               badge.details = encryptData(badge.details);
@@ -107,47 +107,47 @@
 //   }
 // };
 
-// const createUserListForAllUsers = async (req, res) => {
-//     try {
-//         // Fetch all users from the users collection
-//         const users = await User.find({});
+const createUserListForAllUsers = async (req, res) => {
+    try {
+        // Fetch all users from the users collection
+        const users = await User.find({});
 
-//         // Array to store promises for creating userlists
-//         const userListPromises = [];
+        // Array to store promises for creating userlists
+        const userListPromises = [];
 
-//         // Iterate over each user
-//         for (const user of users) {
-//             // Check if a userList already exists for the user
-//             const existingUserList = await UserListSchema.findOne({ userUuid: user.uuid });
+        // Iterate over each user
+        for (const user of users) {
+            // Check if a userList already exists for the user
+            const existingUserList = await UserListSchema.findOne({ userUuid: user.uuid });
 
-//             // If userList does not exist for the user, create one
-//             if (!existingUserList) {
-//                 const userList = new UserListSchema({
-//                     userUuid: user.uuid,
-//                     // Other fields will default as per the schema
-//                 });
+            // If userList does not exist for the user, create one
+            if (!existingUserList) {
+                const userList = new UserListSchema({
+                    userUuid: user.uuid,
+                    // Other fields will default as per the schema
+                });
 
-//                 // Save the userList and push the promise to the array
-//                 userListPromises.push(userList.save());
-//             }
-//         }
+                // Save the userList and push the promise to the array
+                userListPromises.push(userList.save());
+            }
+        }
 
-//         // Wait for all userlist documents to be created
-//         const result = await Promise.all(userListPromises);
+        // Wait for all userlist documents to be created
+        const result = await Promise.all(userListPromises);
 
-//         // Send success response
-//         res.status(200).json({
-//             message: 'UserList Collection is Refactored successfully',
-//             userList: result,
-//         });
-//     } catch (error) {
-//         console.error(error.message);
-//         res.status(500).json({
-//             message: `An error occurred while creating the userList: ${error.message}`,
-//         });
-//     }
-// }
+        // Send success response
+        res.status(200).json({
+            message: 'UserList Collection is Refactored successfully',
+            userList: result,
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while creating the userList: ${error.message}`,
+        });
+    }
+}
 
 module.exports = {
-    // createUserListForAllUsers,
+    createUserListForAllUsers,
 };

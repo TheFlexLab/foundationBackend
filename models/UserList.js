@@ -5,7 +5,7 @@ const InfoQuestQuestions = require("../models/InfoQuestQuestions");
 const postSchema = mongoose.Schema({
     questForeginKey: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: InfoQuestQuestions,
+        ref: "InfoQuestQuestions",
         required: true
     },
     order: { type: Number, required: true, },

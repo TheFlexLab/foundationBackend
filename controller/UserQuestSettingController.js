@@ -315,7 +315,7 @@ const create = async (req, res) => {
     if (payload.hidden === true) {
       updateData.$set.hiddenTime = new Date(); // Set to the current timestamp
     }
-    console.log(updateData);
+    //console.log(updateData);
     let userQuestSettingSaved;
     userQuestSettingSaved = await UserQuestSetting.findOneAndUpdate(
       // Query criteria
@@ -578,7 +578,7 @@ const getAllHiddenQuests = async (req, res) => {
     const Questions = await BookmarkQuests.find({
       uuid: req.cookies.uuid,
     });
-    // console.log(Questions);
+    // //console.log(Questions);
     res.status(200).json(Questions);
   } catch (err) {
     res.status(500).send(err);
@@ -736,7 +736,7 @@ const ledgerEntryRemoved = async (uuid, questOwnerUuid) => {
 
 const sharedLinkDynamicImage = async (req, res) => {
   try {
-    console.log("Req body", req.body);
+    //console.log("Req body", req.body);
     const { questStartData, link } = req.body;
 
     // Generate a image name for the image file
@@ -753,7 +753,7 @@ const sharedLinkDynamicImage = async (req, res) => {
       puppeteerArgs: puppeteerOptions,
     })
       .then(async () => {
-        console.log("The image was created successfully!");
+        //console.log("The image was created successfully!");
 
         // Read the image file from the backend directory
         const filePath = `./assets/uploads/images/${imgName}`;
@@ -767,7 +767,7 @@ const sharedLinkDynamicImage = async (req, res) => {
 
         if (!s3UploadData) throw new Error("File not uploaded");
 
-        console.log("s3UploadData", s3UploadData);
+        //console.log("s3UploadData", s3UploadData);
 
         const { imageName, s3Url } = s3UploadData;
 
@@ -777,10 +777,10 @@ const sharedLinkDynamicImage = async (req, res) => {
             console.error("Error deleting file:", err);
             return;
           }
-          console.log("File deleted successfully");
+          //console.log("File deleted successfully");
         });
 
-        console.log(imageName);
+        //console.log(imageName);
 
         const userQuestSettingUpdate = await UserQuestSetting.findOneAndUpdate(
           { link: req.body.link },

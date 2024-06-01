@@ -22,7 +22,7 @@ const googleHandler = async (req, res) => {
   try {
     // Check Google Account
     const payload = req.user;
-    console.log("🚀 ~ googleHandler ~ payload:", payload)
+    //console.log("🚀 ~ googleHandler ~ payload:", payload)
     // Check if email already exist
     const user = await User.findOne({ email: payload._json.email });
 
@@ -96,7 +96,7 @@ const googleHandler = async (req, res) => {
 
       // Generate a JWT token
       const token = createToken({ uuid: newUser.uuid });
-      // console.log(req.get('host'));
+      // //console.log(req.get('host'));
       res.cookie("jwt", token, cookieConfiguration());
       res.cookie("uuid", newUser.uuid, cookieConfiguration());
       res.redirect(`${FRONTEND_URL}/auth0`);
@@ -133,7 +133,7 @@ const googleHandler = async (req, res) => {
 
 const addBadge = async (req, res) => {
   try {
-    console.log(req.user);
+    //console.log(req.user);
     // return
     // const { userId, badgeId } = req.params;
     if (!req.user._json.email) throw new Error("No Email Exist!");

@@ -31,7 +31,7 @@ const update = async (req, res) => {
 //     const totalCount = await QuestTopics.countDocuments({ uuid });
 //     const pageCount = Math.ceil(totalCount / limit);
 
-//     console.log(questTopics);
+//     //console.log(questTopics);
 
 //     res.status(200).json({
 //       // data: questTopics,
@@ -61,7 +61,7 @@ const getAllTopic = async (req, res) => {
     // const totalCount = await QuestTopics.countDocuments({ uuid });
     // const pageCount = Math.ceil(totalCount / limit);
 
-    // console.log(questTopics);
+    // //console.log(questTopics);
     const masterArr = [
       "Architecture",
       "Arts",

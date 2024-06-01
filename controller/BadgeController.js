@@ -171,7 +171,7 @@ const addContactBadge = async (req, res) => {
     if (req.body.type === "education") {
       // Check Email Category
       const emailStatus = await eduEmailCheck(req, res, req.body.email);
-      console.log("🚀 ~ addContactBadge ~ emailStatus:", emailStatus);
+      //console.log("🚀 ~ addContactBadge ~ emailStatus:", emailStatus);
       if (emailStatus.status !== "OK") throw new Error(emailStatus.message);
     }
 
@@ -184,7 +184,7 @@ const addContactBadge = async (req, res) => {
       const usersWithEmail = await UserModel.find({
         email: req.body.email,
       });
-      console.log("wamiq", usersWithBadge);
+      //console.log("wamiq", usersWithBadge);
       if (usersWithBadge.length !== 0 || usersWithEmail.length !== 0)
         throw new Error("Oops! This account is already linked.");
 
@@ -652,6 +652,7 @@ const removeAWorkEducationBadge = async (req, res) => {
         badge.personal &&
         badge.personal[req.body.type] &&
         badge.personal[req.body.type].some((edu) => {
+          //console.log(edu.id, req.body.id);
           return edu.id === req.body.id;
         })
       );
@@ -752,6 +753,7 @@ const getAWorkAndEducationBadge = async (req, res) => {
         badge.personal &&
         badge.personal[req.body.type] &&
         badge.personal[req.body.type].some((edu) => {
+          //console.log(edu.id, req.body.id);
           return edu.id === req.body.id;
         })
       );
@@ -889,6 +891,7 @@ const updateWorkAndEducationBadge = async (req, res) => {
         badge.personal &&
         badge.personal[req.body.type] &&
         badge.personal[req.body.type].some((edu) => {
+          //console.log(edu.id, req.body.id, "new");
           return edu.id === req.body.id;
         })
       );
@@ -1371,7 +1374,7 @@ const sendVerifyEmail = async ({ email, uuid, type }) => {
     );
 
     // const verificationToken = user.generateVerificationToken();
-    console.log("verificationToken", verificationToken);
+    //console.log("verificationToken", verificationToken);
 
     // Step 3 - Email the user a unique verification link
     // const url = `${FRONTEND_URL}/VerifyCode?token=${verificationTokenFull}&badge=true`;
@@ -1385,7 +1388,7 @@ const sendVerifyEmail = async ({ email, uuid, type }) => {
       },
     };
     // Create SES service object
-    console.log("before sesClient", SES_CONFIG);
+    //console.log("before sesClient", SES_CONFIG);
 
     const sesClient = new AWS.SES(SES_CONFIG);
 
@@ -1419,7 +1422,7 @@ const sendVerifyEmail = async ({ email, uuid, type }) => {
       const emailRes = await sesClient.sendEmail(params).promise();
       return emailRes;
     } catch (error) {
-      console.log(error);
+      //console.log(error);
     }
 
     // return res.status(200).send({
@@ -1490,7 +1493,7 @@ const addContactBadgeAdd = async (req, res) => {
     const usersWithEmail = await UserModel.find({
       email: decodedToken.email,
     });
-    console.log("wamiq", usersWithBadge);
+    //console.log("wamiq", usersWithBadge);
     if (usersWithBadge.length !== 0 || usersWithEmail.length !== 0)
       throw new Error("Oops! This account is already linked.");
 

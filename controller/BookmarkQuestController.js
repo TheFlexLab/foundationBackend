@@ -81,7 +81,7 @@ const getAllBookmarkQuests = async (req, res) => {
     const Questions = await BookmarkQuests.find({
       uuid: req.cookies.uuid,
     });
-    // console.log(Questions);
+    // //console.log(Questions);
     res.status(200).json(Questions);
   } catch (err) {
     res.status(500).send(err);
