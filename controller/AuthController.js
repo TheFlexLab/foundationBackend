@@ -29,11 +29,6 @@ const { getRandomDigits } = require("../utils/getRandomDigits");
 const { sendEmailMessage } = require("../utils/sendEmailMessage");
 const { FRONTEND_URL, JWT_SECRET, FACEBOOK_APP_SECRET } = require("../config/env");
 const UserQuestSetting = require("../models/UserQuestSetting");
-const {
-  FRONTEND_URL,
-  JWT_SECRET,
-  FACEBOOK_APP_SECRET,
-} = require("../config/env");
 const personalKeys = [
   "firstName",
   "lastName",
@@ -44,6 +39,8 @@ const personalKeys = [
   "homeTown",
   "relationshipStatus",
 ];
+const InfoQuestQuestions = require("../models/InfoQuestQuestions");
+const StartQuests = require("../models/StartQuests");
 
 // Encryption/Decryption Security Purposes.
 const {
@@ -1329,7 +1326,80 @@ const userInfo = async (req, res) => {
       }
     });
 
-    res.status(200).json(user);
+    const sharedQuests = await UserQuestSetting.find({ uuid: req.params.userUuid })
+    const totals = sharedQuests.reduce((acc, quest) => {
+      acc.questImpression += quest.questImpression || 0;
+      acc.questsCompleted += quest.questsCompleted || 0;
+      return acc;
+    }, { questImpression: 0, questsCompleted: 0 });
+
+    const questsIds = await InfoQuestQuestions.find({ uuid: req.params.userUuid })
+    const questsIdsArray = questsIds.map(doc => doc._id);
+
+    // Other Hiding Our Quests Count
+    const result = await db.UserQuestSetting.aggregate([
+      {
+        $match: {
+          hidden: true,
+          questForeignKey: { $in: questsIdsArray }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalCount: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalCount: 1
+        }
+      }
+    ]).toArray();
+    const otherHidingOurQuestsCount = result.length > 0 ? result[0].totalCount : 0;
+
+    // Initialize a set to track unique hidden messages
+    const uniqueHiddenMessages = new Set();
+    for (const questId of questsIdsArray) {
+      // Find all UserQuestSetting documents with the current questId
+      const userQuestSettings = await UserQuestSetting.find({ questForeignKey: questId });
+      // Use a set to track hiddenMessages within the current questId
+      const hiddenMessagesSet = new Set();
+      for (const setting of userQuestSettings) {
+        hiddenMessagesSet.add(setting.hiddenMessage);
+      }
+      // Add the unique hidden messages to the overall set
+      hiddenMessagesSet.forEach(hiddenMessage => uniqueHiddenMessages.add(hiddenMessage));
+    }
+    // The size of the set gives the count of unique hidden messages
+    const suppressQuestsCount = uniqueHiddenMessages.size;
+
+    const resUser = {
+      ...user._doc,
+      sharedQuestsStatistics: {
+        sharedQuests: sharedQuests.length,
+        totalQuestsImpression: totals.questImpression,
+        totalQuestsCompleted: totals.questsCompleted
+      },
+      feedBackQuestsStatistics: {
+        otherHidingOurQuestsCount: otherHidingOurQuestsCount,
+        suppressQuestsCount: suppressQuestsCount
+      },
+      questsActivity: {
+        myHiddenQuestsCount: await UserQuestSetting.countDocuments({
+          hidden: true,
+          uuid: req.params.userUuid
+        }),
+        myCreatedQuestsCouont: await InfoQuestQuestions.countDocuments({
+          uuid: req.params.userUuid
+        }),
+        myQuestsEngagementCount: await StartQuests.countDocuments({
+          uuid: req.params.userUuid
+        }),
+      }
+    }
+    res.status(200).json(resUser);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -2173,8 +2243,7 @@ const getFacebookUserInfo = async (req, res) => {
     // if token found
     // // Second Axios request to get user info using the access token
     const response = await axios.get(
-      `https://graph.facebook.com/v19.0/me?access_token=${
-        responseAccessToken.data.access_token
+      `https://graph.facebook.com/v19.0/me?access_token=${responseAccessToken.data.access_token
       }&fields=${"id,first_name,last_name,middle_name,name,name_format,picture,short_name,email,gender,age_range,friends,link,birthday"}`,
       {
         // headers: {
