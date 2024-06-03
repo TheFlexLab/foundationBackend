@@ -30,6 +30,11 @@ module.exports = {
     AWS_SNS_ACCESS_KEY: process.env.AWS_SNS_ACCESS_KEY,
     AWS_SNS_SECRET_KEY: process.env.AWS_SNS_ACCESS_KEY,
     AWS_SNS_REGION: process.env.AWS_SNS_REGION,
+    AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    AWS_SES_REGION: process.env.AWS_SES_REGION,
+    // AWS_SES_SENDER: process.env.AWS_SES_SENDER,
+    // AWS_SES_ReceiverEmails: process.env.AWS_SES_ReceiverEmails,
     rpID: process.env.rpID,
     ALGORITHM: process.env.ALGORITHM,
   };

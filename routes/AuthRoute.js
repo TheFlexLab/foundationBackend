@@ -314,7 +314,7 @@ router.post(
   "/signUpGuest/SocialBadges",
   /**
    * @swagger
-   * /user/signUpSocial/guestMode:
+   * /user/signUpGuest/SocialBadges:
    *   post:
    *     tags:
    *       - Authentication
@@ -340,7 +340,7 @@ router.post(
 router.post("/updateUserSettings", AuthController.updateUserSettings);
 
 router.get(
-  "/userInfo/:userUuid",
+  "/userInfo/:userUuid/:infoc?",
   /**
    * @swagger
    * /user/userInfo/{userUuid}:
@@ -356,6 +356,12 @@ router.get(
    *         description: The userUuid of the user
    *         schema:
    *           type: string
+   *       - in: query
+   *         name: infoc
+   *         required: true
+   *         description: The infoc of the user
+   *         schema:
+   *           type: string
    *     responses:
    *       '200':
    *         description: User information retrieved successfully
@@ -363,6 +369,60 @@ router.get(
    *         description: Internal server error
    */
   AuthController.userInfo
+);
+
+router.post(
+  "/runtimeSignInPassword",
+  /**
+   * @swagger
+   * /user/runtimeSignInPassword:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Get user information by ID
+   *     description: Endpoint to get information of a user by their ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UserInfoByIdRequest'
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.runtimeSignInPassword
+);
+
+router.post(
+  "/infoc",
+  /**
+   * @swagger
+   * /user/infoc:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Get user information by ID
+   *     description: Endpoint to get information of a user by their ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UserInfoByIdRequest'
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  AuthController.infoc
 );
 
 router.post(

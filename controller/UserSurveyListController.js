@@ -67,8 +67,8 @@ const userList = async (req, res) => {
                 message: 'List found successfully.',
                 userList: sortedUserList.list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
             });
-        }
-
+        } 
+        
     } catch (error) {
         console.error(error.message);
         res.status(500).json({
