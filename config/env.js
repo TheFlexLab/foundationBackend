@@ -35,6 +35,8 @@ module.exports = {
     AWS_SES_REGION: process.env.AWS_SES_REGION,
     // AWS_SES_SENDER: process.env.AWS_SES_SENDER,
     // AWS_SES_ReceiverEmails: process.env.AWS_SES_ReceiverEmails,
+    STRIPE_CLIENT_ID: process.env.STRIPE_CLIENT_ID,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     rpID: process.env.rpID,
     ALGORITHM: process.env.ALGORITHM,
   };
