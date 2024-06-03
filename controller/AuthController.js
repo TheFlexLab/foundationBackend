@@ -988,49 +988,23 @@ const signInUserBySocialLogin = async (req, res) => {
       user.badges.forEach((badge) => {
         if (badge.legacy || badge.accountName === "Email") {
           return;
-        } else if (badge.type && badge.type === "cell-phone") {
+        }
+        const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
+        const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
+        if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
           badge.details = decryptData(badge.details);
-        } else if (
-          badge.type &&
-          ["work", "education", "personal", "social", "default"].includes(
-            badge.type
-          )
-        ) {
-          badge.details = decryptData(badge.details);
-        } else if (
-          badge.accountName &&
-          [
-            "facebook",
-            "linkedin",
-            "twitter",
-            "instagram",
-            "github",
-            "Email",
-            "google",
-          ].includes(badge.accountName)
-        ) {
-          badge.details = decryptData(badge.details);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map((encryptedData) => {
-            return decryptData(encryptedData);
-          });
+        }
+        if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map(decryptData);
         } else if (badge.personal) {
-          // Decrypt each key in the personal object if it matches one of the personalKeys
-          const decryptedPersonal = {};
-          for (const key of personalKeys) {
-            if (badge.personal.hasOwnProperty(key)) {
-              decryptedPersonal[key] = decryptData(badge.personal[key]);
-            }
-          }
-
-          badge.personal = decryptedPersonal;
-        } else if (badge.web3) {
+          badge.personal = Object.fromEntries(
+            Object.entries(badge.personal).map(([key, value]) =>
+              [key, decryptData(value)]
+            )
+          );
+        }
+        if (badge.web3) {
           badge.web3 = decryptData(badge.web3);
-        } else if (
-          badge.type &&
-          ["desktop", "mobile", "farcaster"].includes(badge.type)
-        ) {
-          badge.data = decryptData(badge.data);
         }
       });
       res.cookie("uuid", user.uuid, cookieConfiguration());
@@ -1103,49 +1077,23 @@ const signInUserBySocialBadges = async (req, res) => {
       user.badges.forEach((badge) => {
         if (badge.legacy || badge.accountName === "Email") {
           return;
-        } else if (badge.type && badge.type === "cell-phone") {
+        }
+        const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
+        const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
+        if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
           badge.details = decryptData(badge.details);
-        } else if (
-          badge.type &&
-          ["work", "education", "personal", "social", "default"].includes(
-            badge.type
-          )
-        ) {
-          badge.details = decryptData(badge.details);
-        } else if (
-          badge.accountName &&
-          [
-            "facebook",
-            "linkedin",
-            "twitter",
-            "instagram",
-            "github",
-            "Email",
-            "google",
-          ].includes(badge.accountName)
-        ) {
-          badge.details = decryptData(badge.details);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map((encryptedData) => {
-            return decryptData(encryptedData);
-          });
+        }
+        if (badge.personal && badge.personal.work) {
+          badge.personal.work = badge.personal.work.map(decryptData);
         } else if (badge.personal) {
-          // Decrypt each key in the personal object if it matches one of the personalKeys
-          const decryptedPersonal = {};
-          for (const key of personalKeys) {
-            if (badge.personal.hasOwnProperty(key)) {
-              decryptedPersonal[key] = decryptData(badge.personal[key]);
-            }
-          }
-
-          badge.personal = decryptedPersonal;
-        } else if (badge.web3) {
+          badge.personal = Object.fromEntries(
+            Object.entries(badge.personal).map(([key, value]) =>
+              [key, decryptData(value)]
+            )
+          );
+        }
+        if (badge.web3) {
           badge.web3 = decryptData(badge.web3);
-        } else if (
-          badge.type &&
-          ["desktop", "mobile", "farcaster"].includes(badge.type)
-        ) {
-          badge.data = decryptData(badge.data);
         }
       });
       res.cookie("uuid", user.uuid, cookieConfiguration());
