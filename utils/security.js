@@ -7,14 +7,14 @@ let buffer = require('buffer');
 let userCustomizedKey = crypto.createHash('sha256').update("Wad-Ge-Bhaiya").digest();
 
 const encryptData = (data) => {
-    const cipher = crypto.createCipheriv(ALGORITHM, key, new Buffer('1234567812345678', 'binary'));
+    const cipher = crypto.createCipheriv(ALGORITHM, key, Buffer.from('1234567812345678', 'binary'));
     let encrypted = cipher.update(data instanceof Buffer ? data : JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return encrypted;
 };
 
 const decryptData = (data) => {
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, new Buffer('1234567812345678', 'binary'));
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from('1234567812345678', 'binary'));
     let decrypted = decipher.update(data, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     try {
@@ -26,7 +26,7 @@ const decryptData = (data) => {
 
 const userCustomizedEncryptData = (data, eyk) => {
     const eykBuffer = Buffer.from(eyk, 'hex'); // Convert hexadecimal string to buffer
-    const cipher = crypto.createCipheriv(ALGORITHM, eykBuffer, new Buffer('1234567812345678', 'binary'));
+    const cipher = crypto.createCipheriv(ALGORITHM, eykBuffer, Buffer.from('1234567812345678', 'binary'));
     let encrypted = cipher.update(data instanceof Buffer ? data : JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return encrypted;
@@ -34,7 +34,7 @@ const userCustomizedEncryptData = (data, eyk) => {
 
 const userCustomizedDecryptData = (data, eyk) => {
     const eykBuffer = Buffer.from(eyk, 'hex'); // Convert hexadecimal string to buffer
-    const decipher = crypto.createDecipheriv(ALGORITHM, eykBuffer, new Buffer('1234567812345678', 'binary'));
+    const decipher = crypto.createDecipheriv(ALGORITHM, eykBuffer, Buffer.from('1234567812345678', 'binary'));
     let decrypted = decipher.update(data, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     try {
