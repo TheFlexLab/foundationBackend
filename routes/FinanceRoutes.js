@@ -10,29 +10,36 @@ const FinanceController = require("../controller/FinanceController");
  *   description: Endpoints for managing finance
  */
 
-// router.post("/create",
-//   /**
-//    * @swagger
-//    * /treasury/create:
-//    *   post:
-//    *     tags:
-//    *       - Treasury
-//    *     summary: Create treasury
-//    *     description: Endpoint to create a new treasury
-//    *     requestBody:
-//    *       required: true
-//    *       content:
-//    *         application/json:
-//    *           schema:
-//    *             $ref: '#/components/schemas/TreasuryCreationRequest'
-//    *     responses:
-//    *       '200':
-//    *         description: Treasury created successfully
-//    *       '500':
-//    *         description: Internal server error
-//    */
-//   TreasuryController.create
-// );
+router.get("/connectStripe",
+  /**
+   * @swagger
+   * /finance/connectStripe:
+   *   get:
+   *     tags:
+   *       - Finance
+   *     summary: Get Finance
+   *     description: Endpoint for Stripe
+   *     parameters:
+   *       - in: query
+   *         name: userUuid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: UUID of the user
+   *       - in: query
+   *         name: uiRedirectUri
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: URI to redirect the user interface
+   *     responses:
+   *       '200':
+   *         description: Stripe Connected Successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.connectStripe
+);
 
 // router.patch("/update",
 //   /**
