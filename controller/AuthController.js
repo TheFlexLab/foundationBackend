@@ -992,7 +992,15 @@ const signInUserBySocialLogin = async (req, res) => {
         const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
         const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
         if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
-          badge.details = decryptData(badge.details);
+          if (badge.data) {
+            badge.data = decryptData(badge.data);
+          }
+          else if (badge.details) {
+            badge.details = decryptData(badge.details);
+          }
+          else {
+            throw new Error("Neither Badge Details nor Data is found");
+          }
         }
         if (badge.personal && badge.personal.work) {
           badge.personal.work = badge.personal.work.map(decryptData);
@@ -1081,7 +1089,15 @@ const signInUserBySocialBadges = async (req, res) => {
         const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
         const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
         if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
-          badge.details = decryptData(badge.details);
+          if (badge.data) {
+            badge.data = decryptData(badge.data);
+          }
+          else if (badge.details) {
+            badge.details = decryptData(badge.details);
+          }
+          else {
+            throw new Error("Neither Badge Details nor Data is found");
+          }
         }
         if (badge.personal && badge.personal.work) {
           badge.personal.work = badge.personal.work.map(decryptData);
@@ -1372,7 +1388,15 @@ const userInfo = async (req, res) => {
         const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
         const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
         if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
-          badge.details = userCustomizedDecryptData(badge.details, password);
+          if (badge.data) {
+            badge.data = userCustomizedDecryptData(badge.data, password);
+          }
+          else if (badge.details) {
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          }
+          else {
+            throw new Error("Neither Badge Details nor Data is found");
+          }
         }
         if (badge.personal && badge.personal.work) {
           badge.personal.work = badge.personal.work.map((item) => userCustomizedDecryptData(item, password));
@@ -1396,7 +1420,15 @@ const userInfo = async (req, res) => {
       const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
       const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
       if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
-        badge.details = decryptData(badge.details);
+        if (badge.data) {
+          badge.data = decryptData(badge.data);
+        }
+        else if (badge.details) {
+          badge.details = decryptData(badge.details);
+        }
+        else {
+          throw new Error("Neither Badge Details nor Data is found");
+        }
       }
       if (badge.personal && badge.personal.work) {
         badge.personal.work = badge.personal.work.map(decryptData);
@@ -1487,7 +1519,15 @@ const runtimeSignInPassword = async (req, res) => {
         const typesToDecrypt = ["cell-phone", "work", "education", "personal", "social", "default", "desktop", "mobile", "farcaster"];
         const accountsToDecrypt = ["facebook", "linkedin", "twitter", "instagram", "github", "Email", "google"];
         if (typesToDecrypt.includes(badge.type) || accountsToDecrypt.includes(badge.accountName)) {
-          badge.details = userCustomizedDecryptData(badge.details, password);
+          if (badge.data) {
+            badge.data = userCustomizedDecryptData(badge.data, password);
+          }
+          else if (badge.details) {
+            badge.details = userCustomizedDecryptData(badge.details, password);
+          }
+          else {
+            throw new Error("Neither Badge Details nor Data is found");
+          }
         }
         if (badge.personal && badge.personal.work) {
           badge.personal.work = badge.personal.work.map((item) => userCustomizedDecryptData(item, password));
