@@ -1697,8 +1697,9 @@ const viewListAll = async (req, res) => {
             // //console.log("mergedResult", { selected: mergedResult })
             // //console.log("newSelectedPercentage", [newSelectedPercentage])
 
+            const { startQuestData, ...rest } = desiredResult;
             const questForeginKeyWithStartQuestDataR = {
-                ...desiredResult,
+                ...rest,
                 bookmark: bookmark ? true : false,
                 // result: [{ selected: mergedResult }],
                 // selectedPercentage: [newSelectedPercentage]
