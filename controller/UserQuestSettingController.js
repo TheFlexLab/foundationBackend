@@ -936,15 +936,15 @@ async function sharedLinkDynamicImageUserList(link, questStartData) {
       })
       .catch((error) => {
         console.error("Error generating image:", error);
-        return res.status(500).json({
+        throw new Error({
           message: `An error occurred while generating image: ${error.message}`,
         });
       });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
+    return {
       message: `An error occurred on shaedLinkDynamicImage: ${error.message}`,
-    });
+    }
   }
 };
 

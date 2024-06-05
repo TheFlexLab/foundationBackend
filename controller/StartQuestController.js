@@ -924,9 +924,9 @@ async function createStartQuestUserList (req, res) {
     };
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    return {
       message: `An error occurred while createStartQuest: ${err.message}`,
-    });
+    };
   }
 };
 const updateChangeAnsStartQuest = async (req, res) => {
