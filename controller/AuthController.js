@@ -45,6 +45,8 @@ const personalKeys = [
 ];
 const InfoQuestQuestions = require("../models/InfoQuestQuestions");
 const StartQuests = require("../models/StartQuests");
+const Email = require("../models/Email")
+const guestUserEmailRegex = /^user-\d+@guest\.com$/;
 
 // Encryption/Decryption Security Purposes.
 const {
@@ -119,6 +121,20 @@ const signUpUser = async (req, res) => {
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
+
+    if(users.email !== null && users.email !== undefined && users.email !== "" && !guestUserEmailRegex.test(user.email)) {
+      const userEmailModel = new Email({
+        userUuid: users.uuid,
+        email: users.email
+      })
+      const userEmail = await userEmailModel.save();
+      if(!userEmail) {
+        await user.deleteOne({
+          uuid: users.uuid,
+        });
+        throw new Error("User not created due to Email");
+      }
+    }
 
     // Generate a JWT token
     // const token = createToken({ uuid: user.uuid });
@@ -210,6 +226,20 @@ const signUpUserBySocialLogin = async (req, res) => {
     // Update user verification status to true
     user.gmailVerified = payload.email_verified;
     await user.save();
+
+    if(user.email !== null && user.email !== undefined && user.email !== "" && !guestUserEmailRegex.test(user.email)) {
+      const userEmailModel = new Email({
+        userUuid: user.uuid,
+        email: user.email
+      })
+      const userEmail = await userEmailModel.save();
+      if(!userEmail) {
+        await user.deleteOne({
+          uuid: user.uuid,
+        });
+        throw new Error("User not created due to Email");
+      }
+    }
 
     const userList = await UserListSchema.findOne({
       userUuid: user.uuid,
@@ -364,6 +394,20 @@ const signUpUserBySocialBadges = async (req, res) => {
 
     // Update user verification status to true
     await user.save();
+
+    if(user.email !== null && user.email !== undefined && user.email !== "" && !guestUserEmailRegex.test(user.email)) {
+      const userEmailModel = new Email({
+        userUuid: user.uuid,
+        email: user.email
+      })
+      const userEmail = await userEmailModel.save();
+      if(!userEmail) {
+        await user.deleteOne({
+          uuid: user.uuid,
+        });
+        throw new Error("User not created due to Email");
+      }
+    }
 
     const userList = await UserListSchema.findOne({
       userUuid: user.uuid,
@@ -609,6 +653,20 @@ const signUpGuestMode = async (req, res) => {
       }
     );
 
+    if(user.email !== null && user.email !== undefined && user.email !== "" && !guestUserEmailRegex.test(user.email)) {
+      const userEmailModel = new Email({
+        userUuid: user.uuid,
+        email: user.email
+      })
+      const userEmail = await userEmailModel.save();
+      if(!userEmail) {
+        await user.deleteOne({
+          uuid: user.uuid,
+        });
+        throw new Error("User not created due to Email");
+      }
+    }
+
     const userList = await UserListSchema.findOne({
       userUuid: req.body.uuid,
     });
@@ -694,6 +752,20 @@ const signUpSocialGuestMode = async (req, res) => {
     // Update user verification status to true
     updatedUser.gmailVerified = payload.email_verified;
     await updatedUser.save();
+
+    if(updatedUser.email !== null && updatedUser.email !== undefined && updatedUser.email !== "" && !guestUserEmailRegex.test(updatedUser.email)) {
+      const userEmailModel = new Email({
+        userUuid: updatedUser.uuid,
+        email: updatedUser.email
+      })
+      const userEmail = await userEmailModel.save();
+      if(!userEmail) {
+        await user.deleteOne({
+          uuid: updatedUser.uuid,
+        });
+        throw new Error("User not created due to Email");
+      }
+    }
 
     const userList = await UserListSchema.findOne({
       userUuid: updatedUser.uuid,
@@ -865,6 +937,20 @@ const signUpGuestBySocialBadges = async (req, res) => {
 
     // Update user verification status to true
     await user.save();
+
+    if(user.email !== null && user.email !== undefined && user.email !== "" && !guestUserEmailRegex.test(user.email)) {
+      const userEmailModel = new Email({
+        userUuid: user.uuid,
+        email: user.email
+      })
+      const userEmail = await userEmailModel.save();
+      if(!userEmail) {
+        await user.deleteOne({
+          uuid: user.uuid,
+        });
+        throw new Error("User not created due to Email");
+      }
+    }
 
     const userList = await UserListSchema.findOne({
       userUuid: user.uuid,
