@@ -14,7 +14,7 @@ const mongoose = require("mongoose");
 const { QUEST_COMPLETED_AMOUNT } = require("../constants/index");
 const UserQuestSetting = require("../models/UserQuestSetting");
 const { linkUserList, sharedLinkDynamicImageUserList } = require("../controller/UserQuestSettingController")
-const { createStartQuestUserList } = require("../controller/StartQuestController")
+const { createStartQuestUserList, updateChangeAnsStartQuestUserList } = require("../controller/StartQuestController")
 
 // User's List APIs
 

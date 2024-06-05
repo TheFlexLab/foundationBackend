@@ -1464,6 +1464,541 @@ const updateChangeAnsStartQuest = async (req, res) => {
     }
   }
 };
+const updateChangeAnsStartQuestUserList = async (req) => {
+  try {
+    const checkSuppression = await InfoQuestQuestions.findOne({
+      _id: req.body.questId,
+    });
+    if (checkSuppression.suppressed) {
+      if (checkSuppression.suppressed) {
+        throw new Error(
+          "Sorry, this content has been suppressed and is not available at the moment. Please try again later or contact support for further assistance."
+        );
+      }
+    }
+    const startQuestQuestion = await StartQuests.findOne({
+      questForeignKey: req.body.questId,
+      uuid: req.body.uuid,
+    });
+    const initialStartQuestData = [...startQuestQuestion.data];
+
+    // Get the current date and time
+    const currentDate = new Date();
+
+    const getInfoQuestQuestion = await InfoQuestQuestions.findByIdAndUpdate(
+      { _id: req.body.questId },
+      {
+        $set: { lastInteractedAt: currentDate.toISOString() },
+        $inc: { interactingCounter: 1 },
+      }
+    ).exec();
+
+    User.findOneAndUpdate(
+      { uuid: req.body.uuid },
+      { $inc: { changedAnswers: 1 } }
+    ).exec();
+
+    // Check req.body.data and the last element's contended and selected arrays objects
+    const lastDataElement = req.body.changeAnswerAddedObj;
+    if (
+      getInfoQuestQuestion.whichTypeQuestion === "open choice" &&
+      getInfoQuestQuestion.whichTypeQuestion !== "ranked choise"
+    ) {
+      const beforeAnsLength =
+        startQuestQuestion.data[startQuestQuestion.data.length - 1].selected
+          .length;
+      const afterAnsLength = lastDataElement.selected.length;
+
+      if (beforeAnsLength !== afterAnsLength) {
+        const actualAnsLength = afterAnsLength - beforeAnsLength;
+
+        await User.findOneAndUpdate(
+          { uuid: getInfoQuestQuestion.uuid },
+          {
+            $inc: {
+              selectionsOnAddedAns: actualAnsLength,
+            },
+          }
+        );
+      }
+    }
+
+    if (
+      getInfoQuestQuestion.whichTypeQuestion === "open choice" ||
+      getInfoQuestQuestion.whichTypeQuestion === "ranked choise" ||
+      getInfoQuestQuestion.whichTypeQuestion === "multiple choise"
+    ) {
+      const beforeAnsLength =
+        startQuestQuestion.data[startQuestQuestion.data.length - 1].contended
+          .length;
+      const afterAnsLength = lastDataElement.contended.length;
+      if (beforeAnsLength !== afterAnsLength) {
+        const actualAnsLength = afterAnsLength - beforeAnsLength;
+
+        await User.findOneAndUpdate(
+          { uuid: getInfoQuestQuestion.uuid },
+          {
+            $inc: {
+              contentionsOnAddedAns: actualAnsLength,
+            },
+          }
+        );
+      }
+    }
+
+    // INCREMENT
+    // Function to process an array
+    // const incrementProcessArray = async (array, fieldToUpdate) => {
+    //   if (array && Array.isArray(array)) {
+    //     for (const item of array) {
+    //       // Check if item.question matches addedAnswer in StartQuests
+    //       const matchingStartQuest = await StartQuests.findOne({
+    //         addedAnswer: item.question,
+    //       });
+
+    //       if (matchingStartQuest) {
+    //         // Get the uuid of the matching record
+    //         const matchingUuid = matchingStartQuest.uuid;
+
+    //         // Define the field to update based on the provided fieldToUpdate parameter
+    //         const updateField = {};
+    //         updateField[fieldToUpdate] = 1;
+
+    //         // Increment the specified field in the User table
+    //         await User.findOneAndUpdate(
+    //           { uuid: matchingUuid },
+    //           { $inc: updateField }
+    //         );
+    //       }
+    //     }
+    //   }
+    // };
+
+    // Process both 'contended' and 'selected' arrays for increment
+    // await Promise.all([
+    //   incrementProcessArray(lastDataElement.contended, "contentionsOnAddedAns"),
+    //   incrementProcessArray(lastDataElement.selected, "selectionsOnAddedAns"),
+    // ]);
+
+    // DECREMENT
+    // Function to process an array
+    // const decrementProcessArray = async (array, field, fieldToUpdate) => {
+    //   if (array && Array.isArray(array)) {
+    //     for (const item of array) {
+    //       const isMatch = lastDataElement[field].some(
+    //         (contendedItem) => contendedItem.question === item.question
+    //       );
+    //       if (!isMatch) {
+    //         // Check if item.question matches addedAnswer in StartQuests
+    //         const matchingStartQuest = await StartQuests.findOne({
+    //           addedAnswer: item.question,
+    //         });
+    //         if (matchingStartQuest) {
+    //           // Get the uuid of the matching record
+    //           const matchingUuid = matchingStartQuest.uuid;
+
+    //           // Define the field to update based on the provided fieldToUpdate parameter
+    //           const updateField = {};
+    //           updateField[fieldToUpdate] = -1;
+
+    //           // Increment the specified field in the User table
+    //           await User.findOneAndUpdate(
+    //             { uuid: matchingUuid },
+    //             { $inc: updateField }
+    //           );
+    //         }
+    //       }
+    //     }
+    //   }
+    // };
+
+    // // DECREMENT
+    // if (startQuestQuestion?.data.length > 1) {
+    //   let lstTimeSelectionsAndContentions =
+    //     startQuestQuestion?.data[startQuestQuestion?.data.length - 1];
+
+    //   // Process both 'contended' and 'selected' arrays for decrement
+    //   await Promise.all([
+    //     decrementProcessArray(
+    //       lstTimeSelectionsAndContentions.contended,
+    //       "contended",
+    //       "contentionsOnAddedAns"
+    //     ),
+    //     decrementProcessArray(
+    //       lstTimeSelectionsAndContentions.selected,
+    //       "selected",
+    //       "selectionsOnAddedAns"
+    //     ),
+    //   ]);
+    // }
+
+    // Increment 'contentionsGiven' based on the length of 'contended' array
+    const contendedArray = req.body.changeAnswerAddedObj?.contended || [];
+    const contentionsGivenIncrement =
+      startQuestQuestion?.data[startQuestQuestion?.data.length - 1][
+        "contended"
+      ] && contendedArray.length === 0
+        ? -1
+        : contendedArray.length;
+    // requested contention - saved contention
+    const requestedContention = contendedArray.length;
+    // const savedContention = startQuestQuestion?.data[startQuestQuestion?.data.length-1]['contended'].length;
+    const savedContention =
+      startQuestQuestion?.data?.[startQuestQuestion?.data.length - 1]?.contended
+        ?.length ?? 0;
+    let contentionGivenCounter = requestedContention - savedContention;
+
+    // Increment Counter
+    if (contentionGivenCounter > 0) {
+      const userBalance = await getUserBalance(req.body.uuid);
+      if (
+        userBalance <
+        QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter
+      )
+        throw new Error("The balance is insufficient to give the contention!");
+      // Create Ledger
+      await createLedger({
+        uuid: req.body.uuid,
+        txUserAction: "postOptionContentionGiven",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "User",
+        txFrom: req.body.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: req.body.uuid,
+        // txDescription : "User gives contention to a quest answer"
+      });
+      // Create Ledger
+      await createLedger({
+        uuid: req.body.uuid,
+        txUserAction: "postOptionContentionGiven",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "DAO",
+        txFrom: req.body.uuid,
+        txTo: "DAO Treasury",
+        txAmount: QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter,
+        // txData : req.body.uuid,
+        // txDescription : "DisInsentive for giving contention"
+      });
+      // increment the Treasury
+      await updateTreasury({
+        amount: QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter,
+        inc: true,
+      });
+      // Decrement the User Balance
+      await updateUserBalance({
+        amount: QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter,
+        dec: true,
+        uuid: req.body.uuid,
+      });
+    } else if (contentionGivenCounter < 0) {
+      // Create Ledger
+      await createLedger({
+        uuid: req.body.uuid,
+        txUserAction: "postOptionContentionRemoved",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "User",
+        txFrom: req.body.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: req.body.uuid,
+        // txDescription : "User gives contention to a quest answer"
+      });
+      // Create Ledger
+      await createLedger({
+        uuid: req.body.uuid,
+        txUserAction: "postOptionContentionRemoved",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "DAO",
+        txFrom: req.body.uuid,
+        txTo: "DAO Treasury",
+        txAmount:
+          QUEST_OPTION_CONTENTION_REMOVED_AMOUNT *
+          Math.abs(contentionGivenCounter),
+        // txData : req.body.uuid,
+        // txDescription : "DisInsentive for giving contention"
+      });
+      // increment the Treasury
+      await updateTreasury({
+        amount:
+          QUEST_OPTION_CONTENTION_REMOVED_AMOUNT *
+          Math.abs(contentionGivenCounter),
+        dec: true,
+      });
+      // Decrement the User Balance
+      await updateUserBalance({
+        amount:
+          QUEST_OPTION_CONTENTION_REMOVED_AMOUNT *
+          Math.abs(contentionGivenCounter),
+        inc: true,
+        uuid: req.body.uuid,
+      });
+    }
+
+    await User.findOneAndUpdate(
+      { uuid: req.body.uuid },
+      { $inc: { contentionsGiven: contentionGivenCounter } }
+    );
+
+    let startQuestAnswersSelected = startQuestQuestion?.data;
+    let responseMsg = "";
+
+    let timeWhenUserUpdated = new Date(
+      startQuestQuestion?.data[startQuestQuestion?.data.length - 1].created
+    );
+
+    let date1 = new Date();
+    let date2 = date1.getTime();
+
+    let dateFinal = date2 - timeWhenUserUpdated.getTime();
+
+    if (dateFinal > 2) {
+      if (
+        Compare(
+          startQuestQuestion?.data[startQuestQuestion?.data?.length - 1],
+          req.body.changeAnswerAddedObj
+        )
+      ) {
+        let AnswerAddedOrNot = startQuestQuestion.addedAnswerByUser;
+
+        if (typeof req.body.changeAnswerAddedObj.selected !== "string") {
+          req.body.changeAnswerAddedObj.selected.map(async (option) => {
+            if (option.addedAnswerByUser === true) {
+              await User.findOneAndUpdate(
+                { uuid: req.body.uuid },
+                { $inc: { addedAnswers: 1 } }
+              );
+              AnswerAddedOrNot = option.question;
+              const addAnswer = {
+                question: option.question,
+                selected: req.body.isAddedAnsSelected,
+                uuid: req.body.addedAnswerUuid,
+              };
+              InfoQuestQuestions.findByIdAndUpdate(
+                { _id: req.body.questId },
+                { $push: { QuestAnswers: addAnswer } }
+              ).exec();
+            }
+          });
+        }
+
+        responseMsg = "Start Quest Updated Successfully";
+        if (req.body.isAddedAnsSelected === false) {
+          req.body.changeAnswerAddedObj.selected =
+            req.body.changeAnswerAddedObj.selected.filter(
+              (entry) => !entry.addedAnswerByUser
+            );
+        }
+        startQuestAnswersSelected.push(req.body.changeAnswerAddedObj);
+
+        // decrement the selected and contended count
+        let selectedCounter = {};
+        let contendedCounter = {};
+        if (
+          getInfoQuestQuestion.whichTypeQuestion === "multiple choise" ||
+          getInfoQuestQuestion.whichTypeQuestion === "open choice"
+        ) {
+          initialStartQuestData[
+            initialStartQuestData.length - 1
+          ]?.selected?.forEach((item) => {
+            selectedCounter[`result.selected.${item.question}`] = -1;
+          });
+          initialStartQuestData[
+            initialStartQuestData.length - 1
+          ]?.contended?.forEach((item) => {
+            contendedCounter[`result.contended.${item.question}`] = -1;
+          });
+        } else if (getInfoQuestQuestion.whichTypeQuestion === "ranked choise") {
+          initialStartQuestData[
+            initialStartQuestData.length - 1
+          ]?.selected?.forEach((item, index) => {
+            const count =
+              initialStartQuestData[initialStartQuestData.length - 1]?.selected
+                .length -
+              index -
+              1;
+            selectedCounter[`result.selected.${item.question}`] = -count;
+          });
+
+          initialStartQuestData[
+            initialStartQuestData.length - 1
+          ]?.contended?.forEach((item) => {
+            contendedCounter[`result.contended.${item.question}`] = -1;
+          });
+        } else {
+          selectedCounter[
+            `result.selected.${
+              initialStartQuestData[initialStartQuestData.length - 1]?.selected
+            }`
+          ] = -1;
+        }
+        // //console.log(
+        //   "🚀 ~ updateChangeAnsStartQuest ~ initialStartQuestData:",
+        //   initialStartQuestData[0].selected
+        // );
+        // //console.log(
+        //   "🚀 ~ updateChangeAnsStartQuest ~ selectedCounter:",
+        //   selectedCounter
+        // );
+        await InfoQuestQuestions.findByIdAndUpdate(
+          { _id: req.body.questId },
+          {
+            $inc: {
+              // totalStartQuest: 1,
+              ...selectedCounter,
+              ...contendedCounter,
+            },
+          }
+        );
+
+        await StartQuests.findByIdAndUpdate(
+          { _id: startQuestQuestion._id },
+          { data: startQuestAnswersSelected, addedAnswer: AnswerAddedOrNot },
+          { upsert: true }
+        ).exec();
+
+        // increment the selected and contended count
+        selectedCounter = {};
+        contendedCounter = {};
+        if (
+          getInfoQuestQuestion.whichTypeQuestion === "multiple choise" ||
+          getInfoQuestQuestion.whichTypeQuestion === "open choice"
+        ) {
+          startQuestQuestion.data[
+            startQuestQuestion.data.length - 1
+          ]?.selected?.forEach((item) => {
+            selectedCounter[`result.selected.${item.question}`] = 1;
+          });
+          startQuestQuestion.data[
+            startQuestQuestion.data.length - 1
+          ]?.contended?.forEach((item) => {
+            contendedCounter[`result.contended.${item.question}`] = 1;
+          });
+        } else if (getInfoQuestQuestion.whichTypeQuestion === "ranked choise") {
+          startQuestQuestion.data[
+            startQuestQuestion.data.length - 1
+          ]?.selected?.forEach((item, index) => {
+            const count =
+              startQuestQuestion.data[startQuestQuestion.data.length - 1]
+                ?.selected.length -
+              index -
+              1;
+            selectedCounter[`result.selected.${item.question}`] = count;
+          });
+          startQuestQuestion.data[
+            startQuestQuestion.data.length - 1
+          ]?.contended?.forEach((item) => {
+            contendedCounter[`result.contended.${item.question}`] = 1;
+          });
+        } else {
+          selectedCounter[
+            `result.selected.${
+              startQuestQuestion.data[startQuestQuestion.data.length - 1]
+                ?.selected
+            }`
+          ] = 1;
+        }
+        await InfoQuestQuestions.findByIdAndUpdate(
+          { _id: req.body.questId },
+          {
+            $inc: {
+              // totalStartQuest: 1,
+              ...selectedCounter,
+              ...contendedCounter,
+            },
+          }
+        );
+
+        const commonTxId = crypto.randomBytes(11).toString("hex");
+        // Create Ledger
+        await createLedger({
+          uuid: req.body.uuid,
+          txUserAction: "postCompletedChange",
+          txID: commonTxId,
+          txAuth: "User",
+          txFrom: req.body.uuid,
+          txTo: "dao",
+          txAmount: "0",
+          txData: startQuestQuestion._id,
+          // txDescription : "User changes their answer on a quest"
+        });
+        // // Create Ledger
+        // await createLedger({
+        //   uuid: req.body.uuid,
+        //   txUserAction: "postCompletedChange",
+        //   txID: commonTxId,
+        //   txAuth: "DAO",
+        //   txFrom: "DAO Treasury",
+        //   txTo: req.body.uuid,
+        //   txAmount: QUEST_COMPLETED_CHANGE_AMOUNT,
+        //   // txData : startQuestQuestion._id,
+        //   // txDescription : "Incentive for changing a quest answer"
+        // });
+        // // Decrement the Treasury
+        // await updateTreasury({
+        //   amount: QUEST_COMPLETED_CHANGE_AMOUNT,
+        //   dec: true,
+        // });
+        // // Increment the UserBalance
+        // await updateUserBalance({
+        //   uuid: req.body.uuid,
+        //   amount: QUEST_COMPLETED_CHANGE_AMOUNT,
+        //   inc: true,
+        // });
+      } else {
+        responseMsg = "Answer has not changed";
+      }
+    } else {
+      responseMsg = "You can change your answer once every 1 hour";
+    }
+    const bookmarkExist = await BookmarkQuests.findOne({
+      questForeignKey: getInfoQuestQuestion._id,
+    });
+    const infoQuest = await InfoQuestQuestions.find({
+      _id: req.body.questId,
+    }).populate("getUserBadge", "badges");
+    // getting the quest status
+    const result = await getQuestionsWithStatus(infoQuest, req.body.uuid);
+    // getQuestionsWithUserSettings
+    const result1 = await getQuestionsWithUserSettings(result, req.body.uuid);
+    // getting the quest percentage
+    const resultArray = result1.map(getPercentage);
+    const desiredArray = resultArray.map((item) => ({
+      ...item._doc,
+      selectedPercentage: item.selectedPercentage,
+      contendedPercentage: item.contendedPercentage,
+      bookmark: !!bookmarkExist,
+    }));
+
+    return {
+      message: responseMsg,
+      startQuestID: startQuestQuestion._id,
+      data: desiredArray[0],
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      message: `An error occurred while updateChangeAnsStartQuest: ${err.message}`,
+    }
+  }
+
+  function Compare(obj1, obj2) {
+    const clonedObj1 = { ...obj1 };
+    const clonedObj2 = { ...obj2 };
+
+    delete clonedObj1.created;
+    delete clonedObj2.created;
+
+    const stringifiedObj1 = JSON.stringify(clonedObj1);
+    const stringifiedObj2 = JSON.stringify(clonedObj2);
+
+    if (stringifiedObj1 === stringifiedObj2) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+};
 const getRankedQuestPercent = async (req, res) => {
   try {
     const StartQuestsData = await StartQuests.find({
@@ -1736,5 +2271,6 @@ module.exports = {
   getRankedQuestPercent,
   getStartQuestPercent,
   getStartQuestInfo,
-  createStartQuestUserList
+  createStartQuestUserList,
+  updateChangeAnsStartQuestUserList
 };
