@@ -500,4 +500,31 @@ router.post(
   UserSurveyListController.submitResponse
 );
 
+router.post(
+  "/changeAnswer",
+  /**
+   * @swagger
+   * /userlists/changeAnswer:
+   *   post:
+   *     tags:
+   *       - UserSurveyList
+   *     summary: Submit the response to the Posts belonging to a particular List
+   *     description: Endpoint to Submit the response to the Posts belonging to a particular List
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: 
+   *             $ref: '#/components/schemas/BookmarkStatesSetRequest'
+   *     responses:
+   *       '200':
+   *         description: Data saved successfully
+   *       '400':
+   *         description: Invalid request body
+   *       '500':
+   *         description: Internal server error
+   */
+  UserSurveyListController.changeAnswer
+);
+
 module.exports = router;

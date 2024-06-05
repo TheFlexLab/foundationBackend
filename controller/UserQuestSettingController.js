@@ -128,6 +128,67 @@ const link = async (req, res) => {
   }
 };
 
+async function linkUserList(payload) {
+  try {
+    // if uniqueLink
+    if (payload.isGenerateLink) {
+      await ledgerEntryPostLinkCreated(payload.uuid);
+      payload.link = shortLink.generate(8);
+    }
+
+    // To check the Question Description
+    const infoQuestQuestion = await InfoQuestQuestions.findOne({
+      _id: payload.questForeignKey,
+    });
+
+    const userQuestSettingExist = await UserQuestSetting.findOne({
+      uuid: payload.uuid,
+      questForeignKey: payload.questForeignKey,
+    });
+
+    let savedOrUpdatedUserQuestSetting;
+    // To check the record exist
+    if (userQuestSettingExist) {
+      savedOrUpdatedUserQuestSetting = await UserQuestSetting.findOneAndUpdate(
+        {
+          uuid: payload.uuid,
+          questForeignKey: payload.questForeignKey,
+        },
+        {
+          // Update fields and values here
+          $set: payload,
+        },
+        {
+          new: true, // Return the modified document rather than the original
+        }
+      );
+      await uploadS3Bucket({
+        fileName: savedOrUpdatedUserQuestSetting.link,
+        description: savedOrUpdatedUserQuestSetting.Question,
+      });
+    } else {
+      // Create a short link
+      const userQuestSetting = new UserQuestSetting({
+        ...payload,
+      });
+      savedOrUpdatedUserQuestSetting = await userQuestSetting.save();
+      await uploadS3Bucket({
+        fileName: savedOrUpdatedUserQuestSetting.link,
+        description: savedOrUpdatedUserQuestSetting.Question,
+      });
+    }
+    return {
+      message: "UserQuestSetting link Created Successfully!",
+      data: savedOrUpdatedUserQuestSetting,
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: ` An error occurred while create UserQuestSetting link: ${error.message}`,
+    });
+  }
+};
+
 const customLink = async (req, res) => {
   try {
     const payload = req.body;
@@ -812,6 +873,81 @@ const sharedLinkDynamicImage = async (req, res) => {
   }
 };
 
+async function sharedLinkDynamicImageUserList(link, questStartData) {
+  try {
+    // Generate a image name for the image file
+    const imgName = link + ".png";
+
+    // Set Puppeteer options with --no-sandbox flag
+    const puppeteerOptions = {
+      args: ["--no-sandbox"],
+    };
+
+    nodeHtmlToImage({
+      output: `./assets/uploads/images/${imgName}`,
+      html: sharedLinkDynamicImageHTML(questStartData),
+      puppeteerArgs: puppeteerOptions,
+    })
+      .then(async () => {
+        //console.log("The image was created successfully!");
+
+        // Read the image file from the backend directory
+        const filePath = `./assets/uploads/images/${imgName}`;
+        const fileBuffer = fs.readFileSync(filePath);
+
+        // Upload the file to S3 bucket
+        const s3UploadData = await s3ImageUpload({
+          fileBuffer,
+          fileName: imgName,
+        });
+
+        if (!s3UploadData) throw new Error("File not uploaded");
+
+        //console.log("s3UploadData", s3UploadData);
+
+        const { imageName, s3Url } = s3UploadData;
+
+        // Delete the file from the backend directory after uploading to S3
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error("Error deleting file:", err);
+            return;
+          }
+          //console.log("File deleted successfully");
+        });
+        
+        //console.log(imageName);
+
+        const userQuestSettingUpdate = await UserQuestSetting.findOneAndUpdate(
+          { link: link },
+          { image: s3Url },
+          { new: true }
+        );
+
+        if (!userQuestSettingUpdate)
+          throw new Error("userQuestSetting not updated");
+
+        return {
+          success: true,
+          imageName: imageName,
+          s3Url: s3Url,
+          userQuestSetting: userQuestSettingUpdate,
+        };
+      })
+      .catch((error) => {
+        console.error("Error generating image:", error);
+        throw new Error({
+          message: `An error occurred while generating image: ${error.message}`,
+        });
+      });
+  } catch (error) {
+    console.error(error);
+    return {
+      message: `An error occurred on shaedLinkDynamicImage: ${error.message}`,
+    }
+  }
+};
+
 module.exports = {
   create,
   createOrUpdate,
@@ -822,5 +958,7 @@ module.exports = {
   ledgerDeductionPostLinkCustomized,
   sharedLinkDynamicImage,
   customLink,
+  linkUserList,
+  sharedLinkDynamicImageUserList,
   // get,
 };

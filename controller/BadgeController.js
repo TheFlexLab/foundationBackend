@@ -18,8 +18,10 @@ const User = require("../models/UserModel");
 const personalKeys = [
   "firstName",
   "lastName",
-  "geolocation",
   "security-question",
+];
+const noEncDecPersonalKeys = [
+  "geolocation",
   "dateOfBirth",
   "currentCity",
   "homeTown",
@@ -492,56 +494,66 @@ const addPersonalBadge = async (req, res) => {
 
     const userBadges = User.badges;
     let updatedUserBadges;
-    if (User.isPasswordEncryption) {
-      if (!req.body.infoc)
-        throw new Error(
-          "No eyk Provided in request body, Request can't be proceeded."
-        );
-      const foundKey = personalKeys.find((key) =>
-        req.body.personal.hasOwnProperty(key)
-      );
-      if (foundKey) {
-        // Create an encrypted object with the found key
-        const encryptedPersonal = {
-          [foundKey]: userCustomizedEncryptData(
-            encryptData(req.body.personal[foundKey]),
-            eyk
-          ),
-        };
-
-        // Update the user badges with the encrypted personal information
-        updatedUserBadges = [
-          ...userBadges,
-          {
-            personal: encryptedPersonal,
-          },
-        ];
-        console.log(updatedUserBadges);
-      } else {
-        // Handle case where no key is found, if needed
-        console.log("No matching key found in personal object.");
-      }
+    const foundKey = personalKeys.find((key) =>
+      req.body.personal.hasOwnProperty(key)
+    );
+    const noEncDecKey = noEncDecPersonalKeys.find((key) =>
+      req.body.personal.hasOwnProperty(key)
+    );
+    if (noEncDecKey) {
+      updatedUserBadges = [
+        ...userBadges,
+        {
+          personal: req.body.personal,
+        },
+      ];
+      console.log(updatedUserBadges);
     } else {
-      const foundKey = personalKeys.find((key) =>
-        req.body.personal.hasOwnProperty(key)
-      );
-      if (foundKey) {
-        // Create an encrypted object with the found key
-        const encryptedPersonal = {
-          [foundKey]: encryptData(req.body.personal[foundKey]),
-        };
+      if (User.isPasswordEncryption) {
+        if (!req.body.infoc)
+          throw new Error(
+            "No eyk Provided in request body, Request can't be proceeded."
+          );
+        if (foundKey) {
+          // Create an encrypted object with the found key
+          const encryptedPersonal = {
+            [foundKey]: userCustomizedEncryptData(
+              encryptData(req.body.personal[foundKey]),
+              eyk
+            ),
+          };
 
-        // Update the user badges with the encrypted personal information
-        updatedUserBadges = [
-          ...userBadges,
-          {
-            personal: encryptedPersonal,
-          },
-        ];
-        console.log(updatedUserBadges);
+          // Update the user badges with the encrypted personal information
+          updatedUserBadges = [
+            ...userBadges,
+            {
+              personal: encryptedPersonal,
+            },
+          ];
+          console.log(updatedUserBadges);
+        } else {
+          // Handle case where no key is found, if needed
+          console.log("No matching key found in personal object.");
+        }
       } else {
-        // Handle case where no key is found, if needed
-        console.log("No matching key found in personal object.");
+        if (foundKey) {
+          // Create an encrypted object with the found key
+          const encryptedPersonal = {
+            [foundKey]: encryptData(req.body.personal[foundKey]),
+          };
+
+          // Update the user badges with the encrypted personal information
+          updatedUserBadges = [
+            ...userBadges,
+            {
+              personal: encryptedPersonal,
+            },
+          ];
+          console.log(updatedUserBadges);
+        } else {
+          // Handle case where no key is found, if needed
+          console.log("No matching key found in personal object.");
+        }
       }
     }
     // Update the user badges
@@ -596,63 +608,14 @@ const removeAWorkEducationBadge = async (req, res) => {
     if (!User) throw new Error("No such User!");
 
     const userBadges = User.badges;
-    let decryptedUserBadges;
-
-    if (User.isPasswordEncryption) {
-      if (!req.body.infoc) throw new Error("Please Provide Password");
-
-      decryptedUserBadges = userBadges.map((badge) => {
-        if (badge?.personal?.[req.body.type]) {
-          const decryptedItems = badge.personal[req.body.type].map((item) => {
-            const decryptedItem = decryptData(
-              userCustomizedDecryptData(item, req.body.infoc)
-            );
-            return decryptedItem;
-          });
-
-          // Creating a new badge object to replace the personal type with decrypted items
-          return {
-            ...badge,
-            personal: {
-              ...badge.personal,
-              [req.body.type]: decryptedItems,
-            },
-          };
-        }
-
-        // If the condition does not match, return the badge unchanged
-        return badge;
-      });
-    } else {
-      decryptedUserBadges = userBadges.map((badge) => {
-        if (badge?.personal?.[req.body.type]) {
-          const decryptedItems = badge.personal[req.body.type].map((item) => {
-            const decryptedItem = decryptData(item);
-            return decryptedItem;
-          });
-
-          // Creating a new badge object to replace the personal type with decrypted items
-          return {
-            ...badge,
-            personal: {
-              ...badge.personal,
-              [req.body.type]: decryptedItems,
-            },
-          };
-        }
-
-        // If the condition does not match, return the badge unchanged
-        return badge;
-      });
-    }
 
     // Find the index of the object to remove
-    const indexToRemove = decryptedUserBadges.findIndex((badge) => {
+    const indexToRemove = userBadges.findIndex((badge) => {
       return (
         badge.personal &&
         badge.personal[req.body.type] &&
         badge.personal[req.body.type].some((edu) => {
-          //console.log(edu.id, req.body.id);
+          console.log(edu.id, req.body.id);
           return edu.id === req.body.id;
         })
       );
@@ -662,9 +625,9 @@ const removeAWorkEducationBadge = async (req, res) => {
         userBadges.splice(indexToRemove, 1);
       } else {
         // Find the index of the education object within the found badge
-        const educationIndexToRemove = decryptedUserBadges[
-          indexToRemove
-        ].personal[req.body.type].findIndex((edu) => edu.id === req.body.id);
+        const educationIndexToRemove = userBadges[indexToRemove].personal[
+          req.body.type
+        ].findIndex((edu) => edu.id === req.body.id);
 
         if (educationIndexToRemove !== -1) {
           // Remove the education object from the array
@@ -691,69 +654,214 @@ const removeAWorkEducationBadge = async (req, res) => {
   }
 };
 
+// const removeAWorkEducationBadge = async (req, res) => {
+//   try {
+//     const User = await UserModel.findOne({ uuid: req.body.uuid });
+//     if (!User) throw new Error("No such User!");
+
+//     const userBadges = User.badges;
+//     let decryptedUserBadges;
+
+//     if (User.isPasswordEncryption) {
+//       if (!req.body.infoc) throw new Error("Please Provide Password");
+
+//       decryptedUserBadges = userBadges.map((badge) => {
+//         if (badge?.personal?.[req.body.type]) {
+//           const decryptedItems = badge.personal[req.body.type].map((item) => {
+//             const decryptedItem = decryptData(
+//               userCustomizedDecryptData(item, req.body.infoc)
+//             );
+//             return decryptedItem;
+//           });
+
+//           // Creating a new badge object to replace the personal type with decrypted items
+//           return {
+//             ...badge,
+//             personal: {
+//               ...badge.personal,
+//               [req.body.type]: decryptedItems,
+//             },
+//           };
+//         }
+
+//         // If the condition does not match, return the badge unchanged
+//         return badge;
+//       });
+//     } else {
+//       decryptedUserBadges = userBadges.map((badge) => {
+//         if (badge?.personal?.[req.body.type]) {
+//           const decryptedItems = badge.personal[req.body.type].map((item) => {
+//             const decryptedItem = decryptData(item);
+//             return decryptedItem;
+//           });
+
+//           // Creating a new badge object to replace the personal type with decrypted items
+//           return {
+//             ...badge,
+//             personal: {
+//               ...badge.personal,
+//               [req.body.type]: decryptedItems,
+//             },
+//           };
+//         }
+
+//         // If the condition does not match, return the badge unchanged
+//         return badge;
+//       });
+//     }
+
+//     // Find the index of the object to remove
+//     const indexToRemove = decryptedUserBadges.findIndex((badge) => {
+//       return (
+//         badge.personal &&
+//         badge.personal[req.body.type] &&
+//         badge.personal[req.body.type].some((edu) => {
+//           //console.log(edu.id, req.body.id);
+//           return edu.id === req.body.id;
+//         })
+//       );
+//     });
+//     if (indexToRemove !== -1) {
+//       if (userBadges[indexToRemove].personal[req.body.type].length === 1) {
+//         userBadges.splice(indexToRemove, 1);
+//       } else {
+//         // Find the index of the education object within the found badge
+//         const educationIndexToRemove = decryptedUserBadges[
+//           indexToRemove
+//         ].personal[req.body.type].findIndex((edu) => edu.id === req.body.id);
+
+//         if (educationIndexToRemove !== -1) {
+//           // Remove the education object from the array
+//           userBadges[indexToRemove].personal[req.body.type].splice(
+//             educationIndexToRemove,
+//             1
+//           );
+//         } else {
+//           throw new Error("Badge Not Found");
+//         }
+//       }
+//     } else {
+//       throw new Error("Badges Not Found");
+//     }
+//     User.badges = userBadges;
+//     User.markModified("badges");
+//     // Save the updated user document
+//     const data = await User.save();
+//     res.status(200).json({ data, message: "Successful" });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: `An error occurred while removeAWorkEducationBadge: ${error.message}`,
+//     });
+//   }
+// };
+
+// const getAWorkAndEducationBadge = async (req, res) => {
+//   try {
+//     const User = await UserModel.findOne({ uuid: req.body.uuid });
+//     if (!User) throw new Error("No such User!");
+
+//     const userBadges = User.badges;
+//     let decryptedUserBadges;
+
+//     if (User.isPasswordEncryption) {
+//       if (!req.body.infoc) throw new Error("Please Provide Password");
+
+//       decryptedUserBadges = userBadges.map((badge) => {
+//         if (badge?.personal?.[req.body.type]) {
+//           const decryptedItems = badge.personal[req.body.type].map((item) => {
+//             const decryptedItem = decryptData(
+//               userCustomizedDecryptData(item, req.body.infoc)
+//             );
+//             return decryptedItem;
+//           });
+
+//           // Creating a new badge object to replace the personal type with decrypted items
+//           return {
+//             ...badge,
+//             personal: {
+//               ...badge.personal,
+//               [req.body.type]: decryptedItems,
+//             },
+//           };
+//         }
+
+//         // If the condition does not match, return the badge unchanged
+//         return badge;
+//       });
+//     } else {
+//       decryptedUserBadges = userBadges.map((badge) => {
+//         if (badge?.personal?.[req.body.type]) {
+//           const decryptedItems = badge.personal[req.body.type].map((item) => {
+//             const decryptedItem = decryptData(item);
+//             return decryptedItem;
+//           });
+
+//           // Creating a new badge object to replace the personal type with decrypted items
+//           return {
+//             ...badge,
+//             personal: {
+//               ...badge.personal,
+//               [req.body.type]: decryptedItems,
+//             },
+//           };
+//         }
+
+//         // If the condition does not match, return the badge unchanged
+//         return badge;
+//       });
+//     }
+
+//     // Find the index of the object to remove
+//     const index = decryptedUserBadges.findIndex((badge) => {
+//       return (
+//         badge.personal &&
+//         badge.personal[req.body.type] &&
+//         badge.personal[req.body.type].some((edu) => {
+//           //console.log(edu.id, req.body.id);
+//           return edu.id === req.body.id;
+//         })
+//       );
+//     });
+//     let obj;
+//     if (index !== -1) {
+//       // Find the index of the education object within the found badge
+//       const educationIndex = decryptedUserBadges[index].personal[
+//         req.body.type
+//       ].findIndex((edu) => edu.id === req.body.id);
+
+//       if (educationIndex !== -1) {
+//         // Remove the education object from the array
+//         obj =
+//           decryptedUserBadges[index].personal[req.body.type][educationIndex];
+//       } else {
+//         throw new Error("Badge Not Found");
+//       }
+//     } else {
+//       throw new Error("Badges Not Found");
+//     }
+
+//     res.status(200).json({ obj, message: "Successful" });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: `An error occurred while fetching WorkEducationBadge: ${error.message}`,
+//     });
+//   }
+// };
+
 const getAWorkAndEducationBadge = async (req, res) => {
   try {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
 
     const userBadges = User.badges;
-    let decryptedUserBadges;
-
-    if (User.isPasswordEncryption) {
-      if (!req.body.infoc) throw new Error("Please Provide Password");
-
-      decryptedUserBadges = userBadges.map((badge) => {
-        if (badge?.personal?.[req.body.type]) {
-          const decryptedItems = badge.personal[req.body.type].map((item) => {
-            const decryptedItem = decryptData(
-              userCustomizedDecryptData(item, req.body.infoc)
-            );
-            return decryptedItem;
-          });
-
-          // Creating a new badge object to replace the personal type with decrypted items
-          return {
-            ...badge,
-            personal: {
-              ...badge.personal,
-              [req.body.type]: decryptedItems,
-            },
-          };
-        }
-
-        // If the condition does not match, return the badge unchanged
-        return badge;
-      });
-    } else {
-      decryptedUserBadges = userBadges.map((badge) => {
-        if (badge?.personal?.[req.body.type]) {
-          const decryptedItems = badge.personal[req.body.type].map((item) => {
-            const decryptedItem = decryptData(item);
-            return decryptedItem;
-          });
-
-          // Creating a new badge object to replace the personal type with decrypted items
-          return {
-            ...badge,
-            personal: {
-              ...badge.personal,
-              [req.body.type]: decryptedItems,
-            },
-          };
-        }
-
-        // If the condition does not match, return the badge unchanged
-        return badge;
-      });
-    }
 
     // Find the index of the object to remove
-    const index = decryptedUserBadges.findIndex((badge) => {
+    const index = userBadges.findIndex((badge) => {
       return (
         badge.personal &&
         badge.personal[req.body.type] &&
         badge.personal[req.body.type].some((edu) => {
-          //console.log(edu.id, req.body.id);
+          console.log(edu.id, req.body.id);
           return edu.id === req.body.id;
         })
       );
@@ -761,14 +869,13 @@ const getAWorkAndEducationBadge = async (req, res) => {
     let obj;
     if (index !== -1) {
       // Find the index of the education object within the found badge
-      const educationIndex = decryptedUserBadges[index].personal[
+      const educationIndex = userBadges[index].personal[
         req.body.type
       ].findIndex((edu) => edu.id === req.body.id);
 
       if (educationIndex !== -1) {
         // Remove the education object from the array
-        obj =
-          decryptedUserBadges[index].personal[req.body.type][educationIndex];
+        obj = userBadges[index].personal[req.body.type][educationIndex];
       } else {
         throw new Error("Badge Not Found");
       }
@@ -779,7 +886,7 @@ const getAWorkAndEducationBadge = async (req, res) => {
     res.status(200).json({ obj, message: "Successful" });
   } catch (error) {
     res.status(500).json({
-      message: `An error occurred while fetching WorkEducationBadge: ${error.message}`,
+      message: `An error occurred while removeAWorkEducationBadge: ${error.message}`,
     });
   }
 };
@@ -803,19 +910,29 @@ const getPersonalBadge = async (req, res) => {
       if (!eyk) throw new Error("Please Provide Password");
       if (index !== -1) {
         // Find the index of the education object within the found badge
-        obj = decryptData(
-          userCustomizedDecryptData(
-            userBadges[index].personal[req.body.type],
-            eyk
-          )
-        );
+        if(personalKeys.includes(req.body.type)){
+          obj = decryptData(
+            userCustomizedDecryptData(
+              userBadges[index].personal[req.body.type],
+              eyk
+            )
+          );
+        }
+        else {
+          obj = userBadges[index].personal[req.body.type]
+        }
       } else {
         throw new Error("Badges Not Found");
       }
     } else {
       if (index !== -1) {
         // Find the index of the education object within the found badge
-        obj = decryptData(userBadges[index].personal[req.body.type]);
+        if(personalKeys.includes(req.body.type)){
+          obj = decryptData(userBadges[index].personal[req.body.type]);
+        }
+        else {
+          obj = userBadges[index].personal[req.body.type]
+        }
       } else {
         throw new Error("Badges Not Found");
       }
@@ -829,95 +946,145 @@ const getPersonalBadge = async (req, res) => {
   }
 };
 
+// const updateWorkAndEducationBadge = async (req, res) => {
+//   try {
+//     const User = await UserModel.findOne({ uuid: req.body.uuid });
+//     if (!User) throw new Error("No such User!");
+
+//     const userBadges = User.badges;
+//     let decryptedUserBadges;
+
+//     if (User.isPasswordEncryption) {
+//       if (!req.body.infoc) throw new Error("Please Provide Password");
+
+//       decryptedUserBadges = userBadges.map((badge) => {
+//         if (badge?.personal?.[req.body.type]) {
+//           const decryptedItems = badge.personal[req.body.type].map((item) => {
+//             const decryptedItem = decryptData(
+//               userCustomizedDecryptData(item, req.body.infoc)
+//             );
+//             return decryptedItem;
+//           });
+
+//           // Creating a new badge object to replace the personal type with decrypted items
+//           return {
+//             ...badge,
+//             personal: {
+//               ...badge.personal,
+//               [req.body.type]: decryptedItems,
+//             },
+//           };
+//         }
+
+//         // If the condition does not match, return the badge unchanged
+//         return badge;
+//       });
+//     } else {
+//       decryptedUserBadges = userBadges.map((badge) => {
+//         if (badge?.personal?.[req.body.type]) {
+//           const decryptedItems = badge.personal[req.body.type].map((item) => {
+//             const decryptedItem = decryptData(item);
+//             return decryptedItem;
+//           });
+
+//           // Creating a new badge object to replace the personal type with decrypted items
+//           return {
+//             ...badge,
+//             personal: {
+//               ...badge.personal,
+//               [req.body.type]: decryptedItems,
+//             },
+//           };
+//         }
+
+//         // If the condition does not match, return the badge unchanged
+//         return badge;
+//       });
+//     }
+
+//     // Find the index of the object
+//     const index = decryptedUserBadges.findIndex((badge) => {
+//       return (
+//         badge.personal &&
+//         badge.personal[req.body.type] &&
+//         badge.personal[req.body.type].some((edu) => {
+//           //console.log(edu.id, req.body.id, "new");
+//           return edu.id === req.body.id;
+//         })
+//       );
+//     });
+//     if (index !== -1) {
+//       // Find the index of the education object within the found badge
+//       const educationIndex = decryptedUserBadges[index].personal[
+//         req.body.type
+//       ].findIndex((edu) => edu.id === req.body.id);
+
+//       if (educationIndex !== -1) {
+//         if (User.isPasswordEncryption) {
+//           if (!req.body.infoc)
+//             throw new Error(
+//               "No eyk Provided in request body, Request can't be proceeded."
+//             );
+//           // Overwrite the existing object with new data
+//           userBadges[index].personal[req.body.type][educationIndex] =
+//             userCustomizedEncryptData(
+//               encryptData(req.body.newData),
+//               req.body.infoc
+//             );
+//         } else {
+//           userBadges[index].personal[req.body.type][educationIndex] =
+//             encryptData(req.body.newData);
+//         }
+
+//         // Update the modified user document
+//         User.badges = userBadges;
+//         User.markModified("badges");
+//         const data = await User.save();
+
+//         return res
+//           .status(200)
+//           .json({ data, message: "Object updated successfully" });
+//       } else {
+//         throw new Error("Badge Not Found");
+//       }
+//     } else {
+//       throw new Error("Badges Not Found");
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       message: `An error occurred while updating the object: ${error.message}`,
+//     });
+//   }
+// };
+
 const updateWorkAndEducationBadge = async (req, res) => {
   try {
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
 
     const userBadges = User.badges;
-    let decryptedUserBadges;
-
-    if (User.isPasswordEncryption) {
-      if (!req.body.infoc) throw new Error("Please Provide Password");
-
-      decryptedUserBadges = userBadges.map((badge) => {
-        if (badge?.personal?.[req.body.type]) {
-          const decryptedItems = badge.personal[req.body.type].map((item) => {
-            const decryptedItem = decryptData(
-              userCustomizedDecryptData(item, req.body.infoc)
-            );
-            return decryptedItem;
-          });
-
-          // Creating a new badge object to replace the personal type with decrypted items
-          return {
-            ...badge,
-            personal: {
-              ...badge.personal,
-              [req.body.type]: decryptedItems,
-            },
-          };
-        }
-
-        // If the condition does not match, return the badge unchanged
-        return badge;
-      });
-    } else {
-      decryptedUserBadges = userBadges.map((badge) => {
-        if (badge?.personal?.[req.body.type]) {
-          const decryptedItems = badge.personal[req.body.type].map((item) => {
-            const decryptedItem = decryptData(item);
-            return decryptedItem;
-          });
-
-          // Creating a new badge object to replace the personal type with decrypted items
-          return {
-            ...badge,
-            personal: {
-              ...badge.personal,
-              [req.body.type]: decryptedItems,
-            },
-          };
-        }
-
-        // If the condition does not match, return the badge unchanged
-        return badge;
-      });
-    }
 
     // Find the index of the object
-    const index = decryptedUserBadges.findIndex((badge) => {
+    const index = userBadges.findIndex((badge) => {
       return (
         badge.personal &&
         badge.personal[req.body.type] &&
         badge.personal[req.body.type].some((edu) => {
-          //console.log(edu.id, req.body.id, "new");
+          console.log(edu.id, req.body.id, "new");
           return edu.id === req.body.id;
         })
       );
     });
     if (index !== -1) {
       // Find the index of the education object within the found badge
-      const educationIndex = decryptedUserBadges[index].personal[
+      const educationIndex = userBadges[index].personal[
         req.body.type
       ].findIndex((edu) => edu.id === req.body.id);
 
       if (educationIndex !== -1) {
-        if (User.isPasswordEncryption) {
-          if (!req.body.infoc)
-            throw new Error(
-              "No eyk Provided in request body, Request can't be proceeded."
-            );
-          // Overwrite the existing object with new data
-          userBadges[index].personal[req.body.type][educationIndex] =
-            userCustomizedEncryptData(
-              encryptData(req.body.newData),
-              req.body.infoc
-            );
-        } else {
-          userBadges[index].personal[req.body.type][educationIndex] =
-            encryptData(req.body.newData);
-        }
+        // Overwrite the existing object with new data
+        userBadges[index].personal[req.body.type][educationIndex] =
+          req.body.newData;
 
         // Update the modified user document
         User.badges = userBadges;
@@ -958,14 +1125,14 @@ const addWorkEducationBadge = async (req, res) => {
         );
       if (personalBadgeIndex !== -1) {
         User.badges[personalBadgeIndex].personal[req.body.type].push(
-          userCustomizedEncryptData(encryptData(newData), eyk)
+          newData,
         );
         User.markModified("badges");
       } else {
         User.badges.push({
           personal: {
             [req.body.type]: [
-              userCustomizedEncryptData(encryptData(newData), eyk),
+              newData,
             ],
           },
         });
@@ -973,12 +1140,12 @@ const addWorkEducationBadge = async (req, res) => {
     } else {
       if (personalBadgeIndex !== -1) {
         User.badges[personalBadgeIndex].personal[req.body.type].push(
-          encryptData(newData)
+          newData
         );
         User.markModified("badges");
       } else {
         User.badges.push({
-          personal: { [req.body.type]: [encryptData(newData)] },
+          personal: { [req.body.type]: [newData] },
         });
       }
     }
@@ -1183,18 +1350,18 @@ const updatePersonalBadge = async (req, res) => {
 
     if (index !== -1) {
       if (User.isPasswordEncryption) {
-        if (!eyk)
-          throw new Error(
-            "No eyk Provided in request body, Request can't be proceeded."
-          );
-        userBadges[index].personal[req.body.type] = userCustomizedEncryptData(
-          encryptData(req.body.newData),
-          eyk
-        );
+        if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+        if (personalKeys.includes(req.body.type)) {
+          userBadges[index].personal[req.body.type] = userCustomizedEncryptData(encryptData(req.body.newData), eyk);
+        } else {
+          userBadges[index].personal[req.body.type] = req.body.newData;
+        }
       } else {
-        userBadges[index].personal[req.body.type] = encryptData(
-          req.body.newData
-        );
+        if (personalKeys.includes(req.body.type)) {
+          userBadges[index].personal[req.body.type] = encryptData(req.body.newData);
+        } else {
+          userBadges[index].personal[req.body.type] = req.body.newData;
+        }
       }
     } else {
       throw new Error("Badge Not Found");
@@ -1835,18 +2002,17 @@ const addPasswordBadgesUpdate = async (req, res) => {
           ].includes(badge.accountName)
         ) {
           badge.details = userCustomizedDecryptData(badge.details, eyk);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map((item) =>
-            userCustomizedDecryptData(item, eyk)
-          );
-        } else if (badge.personal) {
-          const decryptedPersonal = {};
+        }
+        // else if (badge.personal && badge.personal.work) {
+        //   badge.personal.work = badge.personal.work.map((item) =>
+        //     userCustomizedDecryptData(item, eyk)
+        //   );
+        // } 
+        else if (badge.personal) {
+          const decryptedPersonal = badge.personal;
           for (const key of personalKeys) {
             if (badge.personal.hasOwnProperty(key)) {
-              decryptedPersonal[key] = userCustomizedDecryptData(
-                badge.personal[key],
-                eyk
-              );
+              decryptedPersonal[key] = userCustomizedDecryptData(badge.personal[key], eyk);
             }
           }
           badge.personal = decryptedPersonal;
@@ -1916,27 +2082,20 @@ const addPasswordBadgesUpdate = async (req, res) => {
           ].includes(badge.accountName)
         ) {
           badge.details = userCustomizedEncryptData(badge.details, eyk);
-        } else if (badge.personal && badge.personal.work) {
-          badge.personal.work = badge.personal.work.map((item) =>
-            userCustomizedEncryptData(item, eyk)
-          );
-        } else if (badge.personal) {
-          const foundKey = personalKeys.find((key) =>
-            badge.personal.hasOwnProperty(key)
-          );
-          if (foundKey) {
-            // Create an encrypted object with the found key
-            const encryptedPersonal = {
-              [foundKey]: userCustomizedEncryptData(
-                badge.personal[foundKey],
-                eyk
-              ),
-            };
-            badge.personal = encryptedPersonal;
-          } else {
-            // Handle case where no key is found, if needed
-            console.log("No matching key found in personal object.");
+        }
+        // else if (badge.personal && badge.personal.work) {
+        //   badge.personal.work = badge.personal.work.map((item) =>
+        //     userCustomizedEncryptData(item, eyk)
+        //   );
+        // }
+        else if (badge.personal) {
+          const encryptedPersonal = badge.personal;
+          for (const key of personalKeys) {
+            if (badge.personal.hasOwnProperty(key)) {
+              encryptedPersonal[key] = userCustomizedEncryptData(badge.personal[key], eyk);
+            }
           }
+          badge.personal = encryptedPersonal;
         } else if (badge.web3) {
           badge.web3 = userCustomizedEncryptData(badge.web3, eyk);
         } else if (
