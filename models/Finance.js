@@ -3,9 +3,8 @@ const mongoose = require("mongoose");
 // Define the schema for objects within the post array
 const ProviderSchema = mongoose.Schema({
     providerName: { type: String, required: true, },
-    redirectUriId: { type: String, required: true, },
-    accountId: { type: String, default: null, },
-    isAdded: { type: Boolean, default: false, },
+    accountId: { type: String, required: true, },
+    isConnected: { type: Boolean, default: true, },
     createdAt: { type: String, default: () => new Date().toISOString(), },
     updatedAt: { type: String, default: () => new Date().toISOString(), },
     deletedAt: { type: String, default: null, },

@@ -10,6 +10,31 @@ const FinanceController = require("../controller/FinanceController");
  *   description: Endpoints for managing finance
  */
 
+router.get("/checkConnectedAccounts/:userUuid",
+  /**
+   * @swagger
+   * /finance/connectStripe/{userUuid}:
+   *   get:
+   *     tags:
+   *       - Finance
+   *     summary: Get Finance
+   *     description: Endpoint for Stripe
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: UUID of the user
+   *     responses:
+   *       '200':
+   *         description: Stripe Connected Successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.checkConnectedAccounts
+);
+
 router.post("/connect",
   /**
    * @swagger
@@ -29,9 +54,6 @@ router.post("/connect",
    *               userUuid:
    *                 type: string
    *                 description: UUID of the user
-   *               uiRedirectUri:
-   *                 type: string
-   *                 description: URI to redirect the user interface
    *     responses:
    *       '200':
    *         description: Stripe Connected Successfully
