@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const ProviderSchema = mongoose.Schema({
     providerName: { type: String, required: true, },
     redirectUriId: { type: String, required: true, },
-    accountId: { type: String, required: true, },
+    accountId: { type: String, default: null, },
     isAdded: { type: Boolean, default: false, },
     createdAt: { type: String, default: () => new Date().toISOString(), },
     updatedAt: { type: String, default: () => new Date().toISOString(), },

@@ -1,32 +1,60 @@
-const { STRIPE_CLIENT_ID, STRIPE_SECRET_KEY } = require("../config/env");
-const { BACKEND_URL } = require("../config/env");
+const { STRIPE_CLIENT_ID, STRIPE_SECRET_KEY, BACKEND_URL } = require("../config/env");
+const { FinanceSchema, ProviderSchema } = require("../models/Finance")
 
 
-const connectStripe = async (req, res) => {
+const connect = async (req, res) => {
   try {
-    const { amount } = req.query;
-    const treasuryEntry = new Treasury({ amount });
-    const savedTreasury = await treasuryEntry.save();
-    if (!savedTreasury) throw new Error("Treasury Not Created Successfully!");
-    res.status(201).json({ data: savedTreasury });
+    const { userUuid, uiRedirectUri, code, provider } = req.body;
+
+    const userFinanceExist = await FinanceSchema.findOne({ userUuid: userUuid });
+    if (!userFinanceExist) {
+      const userFinanceModel = new FinanceSchema({
+        userUuid: userUuid,
+      })
+      const createUserFinance = await userFinanceModel.save();
+      if (!createUserFinance) throw new Error("Something went wrong, this must not be happening.");
+    }
+    const userFinance = await FinanceSchema.findOne({ userUuid: userUuid });
+    if (!userFinance) throw new Error("Something went wrong, this must not be happening.");
+
+    // Check if provider already exists
+    const providerExists = userFinance.providerDetails.some((provider) =>
+      {
+        if(provider.providerName === "Stripe" && provider.redirectUriId === uiRedirectUri){
+          return providerExists;
+        }
+      }
+    );
+    if (providerExists) {
+      res.status(200).json(
+        {
+          message: "Stripe is already connected.",
+          account: providerExists,
+        }
+      );
+    }
+    // Create a new provider model
+    const stripeProviderModel = new ProviderSchema({
+      providerName: "Stripe",
+      redirectUriId: uiRedirectUri
+    });
+
+    // Push the new provider to providerDetails array
+    userFinance.providerDetails.push(stripeProviderModel);
+
+    // Save the updated userFinance document
+    const providerAdded = await userFinance.save();
+    if(!providerAdded) throw new Error("Could not add Stripe please try again!")
+
+    res.status(200).json({ redirectToConnect: oauthUrl });
   } catch (error) {
     console.error(error);
-    res.status(500).json({message: `Something went wrong, Internal Server Error: ${error.message}`});
+    res.status(500).json({ message: `Something went wrong, Internal Server Error: ${error.message}` });
   }
 };
 
 const update = async (req, res) => {
   try {
-    const {userUuid, uiRedirectUri } = req.params;
-    const BackEndUrl = process.env.BACKEND_URL ?? 'https://0e94-39-62-31-68.ngrok-free.app';
-    const clientId = STRIPE_CLIENT_ID;
-    const redirectUri = `${BackEndUrl}/candor/stripe/account/callback/`;
-    const oauthUrl = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${clientId}&scope=read_write&redirect_uri=${redirectUri}&state=${userUuid}`;
-    const redirectUrl = await this.stripeService.createStripeUser({
-      userId: userId,
-      redirectUri: redirectString,
-    });
-    res.status(200).json({ URL: oauthUrl });
   } catch (error) {
     console.error(error);
     res
@@ -54,7 +82,7 @@ const get = async (req, res) => {
 };
 
 module.exports = {
-  create,
+  connect,
   update,
   get,
 };
