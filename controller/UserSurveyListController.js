@@ -945,15 +945,15 @@ const findCategoryByLink = async (req, res) => {
                         }
                         else if (isPostChoice.whichTypeQuestion === "multiple choise" || isPostChoice.whichTypeQuestion === "open choice") {
                             const choices = isPostChoice.QuestAnswers.map(answer => answer.question);
-        
+
                             // Initialize a counts object to store the count totals for each choice
                             const counts = {};
-        
+
                             // Initialize the counts object with each choice
                             choices.forEach(choice => {
                                 counts[choice] = 0;
                             });
-        
+
                             // Iterate over each document in the responseData array
                             postData.responseData.forEach(responseDoc => {
                                 const responseArray = responseDoc.response;
@@ -975,22 +975,22 @@ const findCategoryByLink = async (req, res) => {
                                     });
                                 }
                             });
-        
+
                             // Calculate the total count sum
                             const totalCountsSum = Object.values(counts).reduce((sum, count) => sum + count, 0);
-        
+
                             // Calculate the percentages
                             const percentages = {};
                             choices.forEach(choice => {
                                 const choiceCount = counts[choice];
                                 percentages[choice] = Math.round((choiceCount / totalCountsSum) * 100).toString() + '%';
                             });
-        
+
                             const data = responseDataDoc.response.map(responseDoc => ({
                                 ...responseDoc,
                                 contended: []
                             }));
-        
+
                             questForeginKeyWithStartQuestData = {
                                 ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
                                 startQuestData: {
@@ -1309,20 +1309,6 @@ const viewList = async (req, res) => {
                         ranks[choice] = 0;
                     });
 
-                    // Iterate through each user's response in the responseData array
-                    // postData.responseData.forEach(responseDoc => {
-                    //     const response = responseDoc.response;
-                    //     if (response && Array.isArray(response.selected)) {
-                    //         response.selected.forEach((selectedItem, index) => {
-                    //             const choice = selectedItem.question;
-                    //             if (ranks.hasOwnProperty(choice)) {
-                    //                 // Add the rank (index) to the total rank for this choice
-                    //                 ranks[choice] += index + 1;  // Adding 1 because index is 0-based
-                    //             }
-                    //         });
-                    //     }
-                    // });
-
                     // Iterate over each document in the responseData array
                     postData.responseData.forEach(responseDoc => {
                         const responseArray = responseDoc.response;
@@ -1347,10 +1333,6 @@ const viewList = async (req, res) => {
 
                     // Sort ranks by total rank values
                     const sortedRanks = Object.entries(ranks).sort((a, b) => a[1] - b[1]);
-                    // const data = {
-                    //     ...postData.responseData.response,
-                    //     contended: []
-                    // }
 
                     // Calculate the total rank sum
                     const totalRanksSum = Object.values(ranks).reduce((sum, rank) => sum + rank, 0);
@@ -1742,9 +1724,9 @@ const submitResponse = async (req, res) => {
 
         await postData.save();
 
-        const user = await User.findOne({ uuid: responsingUserUuid });
-        user.balance = user.balance + QUEST_COMPLETED_AMOUNT
-        await user.save();
+        // const user = await User.findOne({ uuid: responsingUserUuid });
+        // user.balance = user.balance + QUEST_COMPLETED_AMOUNT
+        // await user.save();
 
         if (uuid) {
             let updatedPosts = [];
@@ -2220,40 +2202,13 @@ const submitResponse = async (req, res) => {
 const changeAnswer = async (req, res) => {
     try {
         const postId = req.body.postId;
-        const responsingUserUuid = req.body.uuid;
-        const response = req.body.data;
+        const response = req.body.changeAnswerAddedObj;
         const addedAnswer = req.body.addedAnswer;
+        const addedAnswerUuid = req.body.addedAnswerUuid;
+        const responsingUserUuid = req.body.uuid;
+        const isAddedAnsSelected = req.body.isAddedAnsSelected;
         const categoryLink = req.body.categoryLink;
-        const uuid = req.body.uuid
-
-        // Find postData Document
-        let postData = await PostDataSchema.findOne({ postId: new mongoose.Types.ObjectId(postId) })
-        if (!postData) throw new Error("Something went wrong! This must not be happening that way.")
-
-        let newPostData;
-        if (req.body.addedAnswer) {
-            newPostData = new ResponseDataSchema({
-                responsingUserUuid: responsingUserUuid,
-                response: response,
-                addedAnswer: addedAnswer,
-                startStatus: "change answer"
-            });
-        } else {
-            newPostData = new ResponseDataSchema({
-                responsingUserUuid: responsingUserUuid,
-                response: response,
-                startStatus: "change answer"
-            });
-        }
-
-        postData.responseData.push(newPostData);
-        postData.updatedAt = new Date().toISOString();
-
-        await postData.save();
-
-        const user = await User.findOne({ uuid: responsingUserUuid });
-        user.balance = user.balance + QUEST_COMPLETED_AMOUNT
-        await user.save();
+        const uuid = req.body.uuid;
 
         // Find the user list that contains a category with the given link
         const userList = await UserListSchema.findOne({
@@ -2262,12 +2217,108 @@ const changeAnswer = async (req, res) => {
             path: 'list.post.questForeginKey',
             model: 'InfoQuestQuestions'
         });
-
         if (!userList) throw new Error(`No list is found with the category link: ${categoryLink}`);
 
         // Find the category within the list array based on the category link
         const categoryDoc = userList.list.find(obj => obj.link === categoryLink);
         if (!categoryDoc) throw new Error('Category not found');
+
+        const postObj = categoryDoc.post.find((post) => {
+            if (post._id.toString() === postId.toString()) {
+                return post;
+            }
+        });
+
+        const infoQuest = await InfoQuestQuestions
+            .findById(postObj.questForeginKey._id) // Assuming postId is already defined
+            .populate({
+                path: 'getUserBadge',
+                select: '_id badges',
+                options: { lean: true } // Use lean() option to get plain JavaScript objects instead of Mongoose documents
+            })
+            .exec();
+        if (infoQuest) {
+            // Convert ObjectId of getUserBadge to string
+            if (infoQuest.getUserBadge) {
+                infoQuest.getUserBadge._id = infoQuest.getUserBadge._id.toString();
+            }
+        } else {
+            console.log("Post not found.");
+        }
+
+        // const questSetting = await UserQuestSetting.findOne(
+        //     {
+        //         uuid: responsingUserUuid,
+        //         questForeignKey: infoQuest._id.toString()
+        //     }
+        // )
+
+        // let postLink;
+        // if (questSetting) {
+        //     postLink = questSetting.link;
+        // }
+        // if (!questSetting) {
+        //     const linkPayload = {
+        //         uuid: responsingUserUuid,
+        //         questForeignKey: infoQuest._id.toString(),
+        //         uniqueLink: true,
+        //         Question: infoQuest.Question,
+        //         linkStatus: "Enable",
+        //         isGenerateLink: true,
+        //         sharedTime: new Date().toISOString()
+        //     };
+
+        //     linkResult = await linkUserList(linkPayload);
+        //     if (!linkResult) throw new Error("Cannot Submit Response")
+
+        //     postLink = linkResult.data.link;
+
+        //     sharedLinkDynamicImageUserList(postLink, infoQuest)
+        //         .then(dynamicImage => {
+        //             return dynamicImage;
+        //         })
+        //         .catch(error => {
+        //             console.error("Error in dynamic image generation:", error.message);
+        //         });
+        // }
+
+        let reqStartQuest = {
+            body: {
+                questId: infoQuest._id.toString(),
+                changeAnswerAddedObj: response,
+                addedAnswer: addedAnswer ? addedAnswer : "",
+                addedAnswerUuid: addedAnswerUuid ? addedAnswerUuid : "",
+                uuid: responsingUserUuid,
+                isAddedAnsSelected: isAddedAnsSelected ? isAddedAnsSelected : "",
+            }
+        }
+
+        const createStartQuest = await updateChangeAnsStartQuestUserList(reqStartQuest);
+        if (!createStartQuest) throw new Error("Cannot Update Response");
+
+
+        // Update the document matching the criteria
+        const updatedPostData = await PostDataSchema.findOneAndUpdate(
+            {
+                postId: new mongoose.Types.ObjectId(postId),
+                "responseData.responsingUserUuid": responsingUserUuid
+            },
+            {
+                // Push new data into the response array of the matched subdocument
+                $push: {
+                    "responseData.$.response": response
+                }
+            },
+            {
+                // Return the updated document
+                new: true
+            }
+        );
+        if (!updatedPostData) throw new Error("Something went wrong while updating User List response, This must not be happening.")
+
+        // const user = await User.findOne({ uuid: responsingUserUuid });
+        // user.balance = user.balance + QUEST_COMPLETED_AMOUNT
+        // await user.save();
 
         if (uuid) {
             let updatedPosts = [];
@@ -2325,6 +2376,9 @@ const changeAnswer = async (req, res) => {
                                 $unwind: '$responseData'
                             },
                             {
+                                $unwind: '$responseData.response'
+                            },
+                            {
                                 $group: {
                                     _id: null,
                                     totalCount: { $sum: 1 },
@@ -2356,71 +2410,6 @@ const changeAnswer = async (req, res) => {
                                     dislikeCount: {
                                         $sum: {
                                             $cond: [{ $eq: ['$responseData.response.selected', 'Dislike'] }, 1, 0]
-                                        }
-                                    },
-                                    multipleChoiceResponses: {
-                                        $push: '$responseData.response.selected'
-                                    }
-                                }
-                            },
-                            {
-                                $unwind: {
-                                    path: '$multipleChoiceResponses',
-                                    preserveNullAndEmptyArrays: true
-                                }
-                            },
-                            {
-                                $unwind: {
-                                    path: '$multipleChoiceResponses',
-                                    preserveNullAndEmptyArrays: true
-                                }
-                            },
-                            {
-                                $group: {
-                                    _id: {
-                                        question: '$multipleChoiceResponses.question'
-                                    },
-                                    questionCount: { $sum: 1 },
-                                    totalMultipleChoiceCount: { $sum: 1 },  // Total count for this specific group
-                                    totalCount: { $first: '$totalCount' },
-                                    yesCount: { $first: '$yesCount' },
-                                    noCount: { $first: '$noCount' },
-                                    agreeCount: { $first: '$agreeCount' },
-                                    disagreeCount: { $first: '$disagreeCount' },
-                                    likeCount: { $first: '$likeCount' },
-                                    dislikeCount: { $first: '$dislikeCount' }
-                                }
-                            },
-                            {
-                                $group: {
-                                    _id: null,
-                                    totalCount: { $first: '$totalCount' },
-                                    yesCount: { $first: '$yesCount' },
-                                    noCount: { $first: '$noCount' },
-                                    agreeCount: { $first: '$agreeCount' },
-                                    disagreeCount: { $first: '$disagreeCount' },
-                                    likeCount: { $first: '$likeCount' },
-                                    dislikeCount: { $first: '$dislikeCount' },
-                                    totalMultipleChoiceCount: { $sum: '$totalMultipleChoiceCount' },  // Sum of all multiple choice counts
-                                    questions: {
-                                        $push: {
-                                            question: '$_id.question',
-                                            count: '$questionCount'
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                $addFields: {
-                                    questions: {
-                                        $map: {
-                                            input: '$questions',
-                                            as: 'question',
-                                            in: {
-                                                question: '$$question.question',
-                                                count: '$$question.count',
-                                                percentage: { $multiply: [{ $divide: ['$$question.count', '$totalMultipleChoiceCount'] }, 100] }  // Calculate percentage correctly
-                                            }
                                         }
                                     }
                                 }
@@ -2463,13 +2452,6 @@ const changeAnswer = async (req, res) => {
                                             },
                                             else: '$$REMOVE'
                                         }
-                                    },
-                                    multipleChoice: {
-                                        $cond: {
-                                            if: { $gt: [{ $size: '$questions' }, 0] },
-                                            then: '$questions',
-                                            else: '$$REMOVE'
-                                        }
                                     }
                                 }
                             }
@@ -2478,7 +2460,6 @@ const changeAnswer = async (req, res) => {
 
                         const isPostChoice = await InfoQuestQuestions.findOne({ _id: new mongoose.Types.ObjectId((post.questForeginKey._id).toString()) })
                         if (isPostChoice.whichTypeQuestion === "ranked choise") {
-                            // continue;
                             const choices = isPostChoice.QuestAnswers.map(answer => answer.question);
 
                             // Initialize a ranks object to store the rank totals for each choice
@@ -2490,14 +2471,36 @@ const changeAnswer = async (req, res) => {
                             });
 
                             // Iterate through each user's response in the responseData array
+                            // postData.responseData.forEach(responseDoc => {
+                            //     const response = responseDoc.response;
+                            //     if (response && Array.isArray(response.selected)) {
+                            //         response.selected.forEach((selectedItem, index) => {
+                            //             const choice = selectedItem.question;
+                            //             if (ranks.hasOwnProperty(choice)) {
+                            //                 // Add the rank (index) to the total rank for this choice
+                            //                 ranks[choice] += index + 1;  // Adding 1 because index is 0-based
+                            //             }
+                            //         });
+                            //     }
+                            // });
+
+                            // Iterate over each document in the responseData array
                             postData.responseData.forEach(responseDoc => {
-                                const response = responseDoc.response;
-                                if (response && Array.isArray(response.selected)) {
-                                    response.selected.forEach((selectedItem, index) => {
-                                        const choice = selectedItem.question;
-                                        if (ranks.hasOwnProperty(choice)) {
-                                            // Add the rank (index) to the total rank for this choice
-                                            ranks[choice] += index + 1;  // Adding 1 because index is 0-based
+                                const responseArray = responseDoc.response;
+                                if (Array.isArray(responseArray)) {
+                                    // Iterate over each response document in the response array
+                                    responseArray.forEach(response => {
+                                        if (response && Array.isArray(response.selected)) {
+                                            // Iterate over each selected item in the selected array
+                                            response.selected.forEach((selectedItem, index) => {
+                                                const choice = selectedItem.question;
+                                                // Initialize the rank for the choice if it does not exist
+                                                if (!ranks.hasOwnProperty(choice)) {
+                                                    ranks[choice] = 0;
+                                                }
+                                                // Add the rank (index) to the total rank for this choice
+                                                ranks[choice] += index + 1;  // Adding 1 because index is 0-based
+                                            });
                                         }
                                     });
                                 }
@@ -2505,10 +2508,14 @@ const changeAnswer = async (req, res) => {
 
                             // Sort ranks by total rank values
                             const sortedRanks = Object.entries(ranks).sort((a, b) => a[1] - b[1]);
-                            const data = {
-                                ...responseDataDoc.response,
+                            // const data = {
+                            //     ...responseDataDoc.response,
+                            //     contended: []
+                            // }
+                            const data = responseDataDoc.response.map(responseDoc => ({
+                                ...responseDoc,
                                 contended: []
-                            }
+                            }));
 
                             // Calculate the total rank sum
                             const totalRanksSum = Object.values(ranks).reduce((sum, rank) => sum + rank, 0);
@@ -2533,7 +2540,7 @@ const changeAnswer = async (req, res) => {
                                 startQuestData: {
                                     uuid: responseDataDoc.responsingUserUuid,
                                     postId: postId,
-                                    data: [data],
+                                    data: data,
                                     questForeignKey: post.questForeginKey._id,
                                     addedAnswer: responseDataDoc.addedAnswer,
                                 },
@@ -2553,6 +2560,79 @@ const changeAnswer = async (req, res) => {
                                 ],
                             };
                         }
+                        else if (isPostChoice.whichTypeQuestion === "multiple choise" || isPostChoice.whichTypeQuestion === "open choice") {
+                            const choices = isPostChoice.QuestAnswers.map(answer => answer.question);
+
+                            // Initialize a counts object to store the count totals for each choice
+                            const counts = {};
+
+                            // Initialize the counts object with each choice
+                            choices.forEach(choice => {
+                                counts[choice] = 0;
+                            });
+
+                            // Iterate over each document in the responseData array
+                            postData.responseData.forEach(responseDoc => {
+                                const responseArray = responseDoc.response;
+                                if (Array.isArray(responseArray)) {
+                                    // Iterate over each response document in the response array
+                                    responseArray.forEach(response => {
+                                        if (response && Array.isArray(response.selected)) {
+                                            // Iterate over each selected item in the selected array
+                                            response.selected.forEach(selectedItem => {
+                                                const choice = selectedItem.question;
+                                                // Initialize the count for the choice if it does not exist
+                                                if (!counts.hasOwnProperty(choice)) {
+                                                    counts[choice] = 0;
+                                                }
+                                                // Increment the count for this choice
+                                                counts[choice] += 1;
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+
+                            // Calculate the total count sum
+                            const totalCountsSum = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+                            // Calculate the percentages
+                            const percentages = {};
+                            choices.forEach(choice => {
+                                const choiceCount = counts[choice];
+                                percentages[choice] = Math.round((choiceCount / totalCountsSum) * 100).toString() + '%';
+                            });
+
+                            const data = responseDataDoc.response.map(responseDoc => ({
+                                ...responseDoc,
+                                contended: []
+                            }));
+
+                            questForeginKeyWithStartQuestData = {
+                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
+                                startQuestData: {
+                                    uuid: responseDataDoc.responsingUserUuid,
+                                    postId: postId,
+                                    data: data,
+                                    questForeignKey: post.questForeginKey._id,
+                                    addedAnswer: responseDataDoc.addedAnswer,
+                                },
+                                startStatus: responseDataDoc.startStatus,
+                                bookmark: bookmark ? true : false,
+                                getUserBadge: {
+                                    _id: user._id,
+                                    badges: user.badges,
+                                },
+                                result: [
+                                    {
+                                        selected: counts
+                                    }
+                                ],
+                                selectedPercentage: [
+                                    percentages
+                                ],
+                            };
+                        }
                         else if (responseDataStats[0].yesNo) {
                             questForeginKeyWithStartQuestData = {
                                 ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
@@ -2560,7 +2640,7 @@ const changeAnswer = async (req, res) => {
                                 startQuestData: {
                                     uuid: responseDataDoc.responsingUserUuid,
                                     postId: postId,
-                                    data: [responseDataDoc.response],
+                                    data: responseDataDoc.response,
                                     addedAnswer: responseDataDoc.addedAnswer,
                                 },
                                 result: [
@@ -2591,7 +2671,7 @@ const changeAnswer = async (req, res) => {
                                 startQuestData: {
                                     uuid: responseDataDoc.responsingUserUuid,
                                     postId: postId,
-                                    data: [responseDataDoc.response],
+                                    data: responseDataDoc.response,
                                     addedAnswer: responseDataDoc.addedAnswer,
                                 },
                                 result: [
@@ -2622,7 +2702,7 @@ const changeAnswer = async (req, res) => {
                                 startQuestData: {
                                     uuid: responseDataDoc.responsingUserUuid,
                                     postId: postId,
-                                    data: [responseDataDoc.response],
+                                    data: responseDataDoc.response,
                                     addedAnswer: responseDataDoc.addedAnswer,
                                 },
                                 result: [
@@ -2646,47 +2726,13 @@ const changeAnswer = async (req, res) => {
                                 },
                             };
                         }
-                        else if (responseDataStats[0].multipleChoice) {
-                            let result = [{
-                                selected: {}
-                            }];
-                            responseDataStats[0].multipleChoice.forEach(item => {
-                                result[0].selected[item.question] = item.count;
-                            });
-                            let selectedPercentage = [{}];
-                            // Iterate over the multipleChoice array and populate the object
-                            responseDataStats[0].multipleChoice.forEach(item => {
-                                selectedPercentage[0][item.question] = (Math.round(item.percentage)).toString() + "%";
-                            });
-                            const data = {
-                                ...responseDataDoc.response,
-                                contended: []
-                            }
-                            questForeginKeyWithStartQuestData = {
-                                ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
-                                startStatus: responseDataDoc.startStatus,
-                                startQuestData: {
-                                    uuid: responseDataDoc.responsingUserUuid,
-                                    postId: postId,
-                                    data: [data],
-                                    addedAnswer: responseDataDoc.addedAnswer,
-                                },
-                                result: result,
-                                selectedPercentage: selectedPercentage,
-                                bookmark: bookmark ? true : false,
-                                getUserBadge: {
-                                    _id: user._id,
-                                    badges: user.badges,
-                                },
-                            };
-                        }
                         else {
                             questForeginKeyWithStartQuestData = {
                                 ...post.questForeginKey.toObject(), // Convert Mongoose document to plain JS object
                                 startQuestData: {
                                     uuid: responseDataDoc.responsingUserUuid,
                                     postId: postId,
-                                    data: [responseDataDoc.response],
+                                    data: responseDataDoc.response,
                                     addedAnswer: responseDataDoc.addedAnswer,
                                 },
                                 startStatus: responseDataDoc.startStatus,
@@ -2706,9 +2752,15 @@ const changeAnswer = async (req, res) => {
                 }
             }
 
+            const foundPost = updatedPosts.find(post => {
+                if (post._id.toString() === postId.toString()) {
+                    return post;
+                }
+            });
+
             const newCategoryDoc = {
                 category: categoryDoc.category,
-                post: updatedPosts,
+                post: foundPost,
                 link: categoryDoc.link,
                 isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
                 clicks: categoryDoc.clicks,
