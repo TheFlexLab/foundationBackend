@@ -4,7 +4,7 @@ const PostSchema = require("../models/UserList");
 // Define the schema for objects within the postData array
 const responseDataSchema = mongoose.Schema({
     responsingUserUuid: { type: String, required: true, },
-    response: { type: Object, required: true, },
+    response: { type: Array, required: true, },
     addedAnswer: { type: String, default: "", },
     startStatus: { type: String, required: true, },
     createdAt: { type: String, default: () => new Date().toISOString(), },
