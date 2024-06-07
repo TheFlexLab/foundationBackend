@@ -144,7 +144,7 @@ const spay = async (req, res) => {
     if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
     const fdxRequired = amount * 2;
-    if (Math.round(checkTreasury.amount.toNumber()) <= fdxRequired || Math.round(checkTreasury.amount.toNumber()) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
+    if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
     const customer = await stripe.customers.create({
       email: email,
