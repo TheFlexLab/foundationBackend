@@ -87,18 +87,24 @@ router.post("/spay",
   FinanceController.spay
 );
 
-router.get("/getStripePaymentIntent",
+router.post("/getStripePaymentIntent",
   /**
    * @swagger
    * /finance/getStripePaymentIntent:
-   *   get:
+   *   post:
    *     tags:
    *       - Finance
-   *     summary: Get Finance
-   *     description: Endpoint to get Finance information
+   *     summary: Pay to Stripe
+   *     description: Endpoint for Stripe Payment
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
    *     responses:
    *       '200':
-   *         description: Successfully retrieved Finance information
+   *         description: Stripe Connected Successfully
    *       '500':
    *         description: Internal server error
    */
