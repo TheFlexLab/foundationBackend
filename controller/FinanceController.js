@@ -142,9 +142,8 @@ const crypto = require("crypto")
 
 const spay = async (req, res) => {
   try {
-    const { amount, email, token } = req.body;
-    const userUuid = "1655474b6a93a7b92f540f"
-
+    const { amount, email, token, userUuid } = req.body;
+    
     const checkTreasury = await Treasury.findOne();
     if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
