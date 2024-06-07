@@ -2,6 +2,10 @@ const { STRIPE_CLIENT_ID, STRIPE_SECRET_KEY, BACKEND_URL } = require("../config/
 const stripe = require("stripe")(STRIPE_SECRET_KEY)
 const Treasury = require("../models/Treasury");
 const { PaymentSchema, ProviderSchema } = require("../models/Payment");
+const { createLedger } = require("../utils/createLedger");
+const { updateTreasury } = require("../utils/treasuryService");
+const { updateUserBalance } = require("../utils/userServices");
+const crypto = require("crypto")
 
 // const checkConnectedAccounts = async (req, res) => {
 //   try {
@@ -138,7 +142,8 @@ const { PaymentSchema, ProviderSchema } = require("../models/Payment");
 
 const spay = async (req, res) => {
   try {
-    const { amount, email, token, userUuid } = req.body;
+    const { amount, email, token } = req.body;
+    const userUuid = "1655474b6a93a7b92f540f"
 
     const checkTreasury = await Treasury.findOne();
     if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
@@ -170,7 +175,7 @@ const spay = async (req, res) => {
         providerName: "Stripe",
         details: charge,
       })
-      createUserPayment.paymentDetails.push(providerDetails);
+      createUserPayment.providerDetails.push(providerDetails);
       await userPaymentExist.save();
     }
     else {
@@ -178,7 +183,7 @@ const spay = async (req, res) => {
         providerName: "Stripe",
         details: charge,
       })
-      createUserPayment.paymentDetails.push(providerDetails);
+      userPaymentExist.providerDetails.push(providerDetails);
       await userPaymentExist.save();
     }
 
@@ -189,22 +194,22 @@ const spay = async (req, res) => {
       txAuth: "DAO",
       txFrom: "DAO Treasury",
       txTo: userUuid,
-      txAmount: parseFloat(fdxRequired.toNumber()),
+      txAmount: parseFloat(fdxRequired),
       // txData : user.badges[0]._id,
       txDescription : "FDX are purchased"
     });
     // Decrement the Treasury
-    await updateTreasury({ amount: parseFloat(fdxRequired.toNumber()), dec: true });
+    await updateTreasury({ amount: parseFloat(fdxRequired), dec: true });
 
     // Increment the UserBalance
     await updateUserBalance({
       uuid: userUuid,
-      amount: parseFloat(fdxRequired.toNumber()),
+      amount: parseFloat(fdxRequired),
       inc: true,
     });
 
     res.status(200).send({
-      message: `${parseFloat(fdxRequired.toNumber())} are transferd to your account please check your balance.`
+      message: `${parseFloat(fdxRequired)} FDX coins are transferd to your account please check your balance.`
     });
   } catch (err) {
     console.error(err);
