@@ -76,6 +76,8 @@ router.post("/spay",
    *       required: true
    *       content:
    *         application/json:
+   *           schema:
+   *             type: object
    *     responses:
    *       '200':
    *         description: Stripe Connected Successfully
@@ -83,6 +85,24 @@ router.post("/spay",
    *         description: Internal server error
    */
   FinanceController.spay
+);
+
+router.get("/getStripePaymentIntent",
+  /**
+   * @swagger
+   * /finance/getStripePaymentIntent:
+   *   get:
+   *     tags:
+   *       - Finance
+   *     summary: Get Finance
+   *     description: Endpoint to get Finance information
+   *     responses:
+   *       '200':
+   *         description: Successfully retrieved Finance information
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.getStripePaymentIntent
 );
 
 // router.patch("/update",

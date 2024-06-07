@@ -140,28 +140,39 @@ const crypto = require("crypto")
 //   }
 // };
 
+const getStripePaymentIntent = async (req, res) => {
+  const { amount, currency } = req.body;
+
+  const checkTreasury = await Treasury.findOne();
+  if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
+
+  const fdxRequired = amount * 2;
+  if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount,
+    currency: currency,
+    // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+
+  res.status(200).json({
+    clientSecret: paymentIntent.client_secret,
+  });
+}
+
 const spay = async (req, res) => {
   try {
-    const { amount, email, token, userUuid } = req.body;
-    
-    const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
+    const { charge, userUuid } = req.body;
 
-    const fdxRequired = amount * 2;
-    if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
+    // const checkTreasury = await Treasury.findOne();
+    // if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
-    const customer = await stripe.customers.create({
-      email: email,
-      source: token.id,
-      name: token.card.name,
-    });
-
-    const charge = await stripe.charges.create({
-      amount: parseFloat(amount) * 100,
-      description: `Payment for USD ${amount}`,
-      currency: "USD",
-      customer: customer.id,
-    });
+    // const fdxRequired = amount * 2;
+    // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
     const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });
     if (!userPaymentExist) {
@@ -247,6 +258,7 @@ const get = async (req, res) => {
 module.exports = {
   // connect,
   // checkConnectedAccounts,
+  getStripePaymentIntent,
   spay,
   update,
   get,
