@@ -1373,7 +1373,7 @@ const getQuestsAll = async (req, res) => {
               header: "Get verified, start growing your FDX balance",
               text: "Have your data be more desirable for brands or research firms to purchase with more verified info- and earn more FDX while you're at it!",
               buttonText: "Add verification badges!",
-              buttonUrl: "/dashboard/profile",
+              buttonUrl: "/dashboard/profile/verification-badges",
               category: "Home",
               position: "Feed",
               priority: priority,

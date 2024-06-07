@@ -2760,7 +2760,7 @@ const changeAnswer = async (req, res) => {
 
             const newCategoryDoc = {
                 category: categoryDoc.category,
-                post: updatedPosts,
+                post: foundPost,
                 link: categoryDoc.link,
                 isLinkUserCustomized: categoryDoc.isLinkUserCustomized,
                 clicks: categoryDoc.clicks,
