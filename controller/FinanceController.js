@@ -15,6 +15,7 @@ paypal.configure({
   'client_id': PAYPAL_CLIENT_ID,
   'client_secret': PAYPAL_SECRET_KEY
 });
+let fdxRequired;
 
 // const checkConnectedAccounts = async (req, res) => {
 //   try {
@@ -155,7 +156,7 @@ const getStripePaymentIntent = async (req, res) => {
   const checkTreasury = await Treasury.findOne();
   if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
-  const fdxRequired = amount * 2;
+  fdxRequired = amount * 2;
   if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
   // Create a PaymentIntent with the order amount and currency
