@@ -302,6 +302,119 @@ const ppayToken = async (req, res) => {
   }
 };
 
+const createOrder = async (ammount) => {
+  // use the ammount information passed from the front-end to calculate the purchase unit details
+  console.log(
+    "shopping ammount information passed from the frontend createOrder() callback:",
+    ammount,
+  );
+
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders`;
+  const payload = {
+    intent: "CAPTURE",
+    purchase_units: [
+      {
+        amount: {
+          currency_code: "USD",
+          value: ammount,
+        },
+      },
+    ],
+  };
+
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      // Uncomment one of these to force an error for negative testing (in sandbox mode only). Documentation:
+      // https://developer.paypal.com/tools/sandbox/negative-testing/request-headers/
+      // "PayPal-Mock-Response": '{"mock_application_codes": "MISSING_REQUIRED_PARAMETER"}'
+      // "PayPal-Mock-Response": '{"mock_application_codes": "PERMISSION_DENIED"}'
+      // "PayPal-Mock-Response": '{"mock_application_codes": "INTERNAL_SERVER_ERROR"}'
+    },
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+const order = async (req, res) => {
+  try {
+    // use the cart information passed from the front-end to calculate the order amount detals
+    const { amount } = req.body;
+    const { jsonResponse, httpStatusCode } = await createOrder(amount);
+    res.status(httpStatusCode).json(jsonResponse);
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    res.status(500).json({ error: "Failed to create order." });
+  }
+}
+
+const ppay = async (req, res) => {
+  try {
+    const { charge, userUuid } = req.body;
+
+    // const checkTreasury = await Treasury.findOne();
+    // if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
+
+    const fdxRequired = charge.amount * 2;
+    // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
+
+    const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });
+    if (!userPaymentExist) {
+      const userPaymentModel = new PaymentSchema({
+        userUuid: userUuid,
+      })
+      const createUserPayment = await userPaymentModel.save();
+      if (!createUserPayment) throw new Error("Something went wrong, this must not be happening.");
+      const providerDetails = new ProviderSchema({
+        providerName: "Stripe",
+        details: charge,
+      })
+      createUserPayment.providerDetails.push(providerDetails);
+      await userPaymentExist.save();
+    }
+    else {
+      const providerDetails = new ProviderSchema({
+        providerName: "Stripe",
+        details: charge,
+      })
+      userPaymentExist.providerDetails.push(providerDetails);
+      await userPaymentExist.save();
+    }
+
+    await createLedger({
+      uuid: userUuid,
+      txUserAction: "fdxPurchased",
+      txID: crypto.randomBytes(11).toString("hex"),
+      txAuth: "DAO",
+      txFrom: "DAO Treasury",
+      txTo: userUuid,
+      txAmount: parseFloat(fdxRequired),
+      // txData : user.badges[0]._id,
+      txDescription : "FDX are purchased"
+    });
+    // Decrement the Treasury
+    await updateTreasury({ amount: parseFloat(fdxRequired), dec: true });
+
+    // Increment the UserBalance
+    await updateUserBalance({
+      uuid: userUuid,
+      amount: parseFloat(fdxRequired),
+      inc: true,
+    });
+
+    res.status(200).send({
+      message: `${parseFloat(fdxRequired)} FDX coins are transferd to your account please check your balance.`
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`Internal Server Error: ${err.message}`);
+  }
+};
+
 const update = async (req, res) => {
   try {
   } catch (error) {
@@ -336,6 +449,7 @@ module.exports = {
   getStripePaymentIntent,
   spay,
   ppayToken,
+  order,
   // ppay,
   update,
   get,
