@@ -159,6 +159,54 @@ router.post("/order",
   FinanceController.order
 );
 
+router.post("/order",
+  /**
+   * @swagger
+   * /finance/order:
+   *   post:
+   *     tags:
+   *       - Finance
+   *     summary: Pay to PPay
+   *     description: Endpoint for PPay Payment
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       '200':
+   *         description: PPay Connected Successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.order
+);
+
+router.post("/:orderID/captureOrderCall",
+  /**
+   * @swagger
+   * /finance/:orderID/captureOrderCall:
+   *   post:
+   *     tags:
+   *       - Finance
+   *     summary: Pay to PPay
+   *     description: Endpoint for PPay Payment
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       '200':
+   *         description: PPay Connected Successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.captureOrderCall
+);
+
 // router.post("/ppay",
 //   /**
 //    * @swagger
