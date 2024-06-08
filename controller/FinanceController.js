@@ -403,7 +403,7 @@ const ppay = async (req, res) => {
     // const checkTreasury = await Treasury.findOne();
     // if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
-    const fdxRequired = charge.amount * 2;
+    const fdxRequired = charge.purchase_units[0].payments.captures[0].amount.value * 2;
     // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
     const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });
@@ -495,7 +495,7 @@ module.exports = {
   ppayToken,
   order,
   captureOrderCall,
-  // ppay,
+  ppay,
   update,
   get,
 };
