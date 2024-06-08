@@ -111,6 +111,30 @@ router.post("/getStripePaymentIntent",
   FinanceController.getStripePaymentIntent
 );
 
+router.post("/ppayToken",
+  /**
+   * @swagger
+   * /finance/ppayToken:
+   *   post:
+   *     tags:
+   *       - Finance
+   *     summary: Pay to PPay
+   *     description: Endpoint for PPay Payment
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       '200':
+   *         description: PPay Connected Successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.ppayToken
+);
+
 // router.post("/ppay",
 //   /**
 //    * @swagger
