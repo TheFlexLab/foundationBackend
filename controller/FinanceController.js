@@ -15,6 +15,7 @@ paypal.configure({
   'client_id': PAYPAL_CLIENT_ID,
   'client_secret': PAYPAL_SECRET_KEY
 });
+const base = "https://api-m.sandbox.paypal.com";
 
 // const checkConnectedAccounts = async (req, res) => {
 //   try {
