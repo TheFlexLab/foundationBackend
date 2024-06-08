@@ -53,6 +53,7 @@
     "passport-linkedin-oauth2": "^2.0.0",
     "passport-local": "^1.0.0",
     "passport-twitter": "^1.0.4",
+    "paypal-rest-sdk": "^1.8.1",
     "shortlink": "^1.1.0",
     "stripe": "^15.8.0",
     "swagger": "^0.7.5",

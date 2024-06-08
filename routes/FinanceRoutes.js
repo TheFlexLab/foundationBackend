@@ -111,6 +111,30 @@ router.post("/getStripePaymentIntent",
   FinanceController.getStripePaymentIntent
 );
 
+// router.post("/ppay",
+//   /**
+//    * @swagger
+//    * /finance/ppay:
+//    *   post:
+//    *     tags:
+//    *       - Finance
+//    *     summary: Pay to Stripe
+//    *     description: Endpoint for Stripe Payment
+//    *     requestBody:
+//    *       required: true
+//    *       content:
+//    *         application/json:
+//    *           schema:
+//    *             type: object
+//    *     responses:
+//    *       '200':
+//    *         description: Stripe Connected Successfully
+//    *       '500':
+//    *         description: Internal server error
+//    */
+//   FinanceController.ppay
+// );
+
 // router.patch("/update",
 //   /**
 //    * @swagger

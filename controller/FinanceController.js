@@ -1,11 +1,20 @@
-const { STRIPE_CLIENT_ID, STRIPE_SECRET_KEY, BACKEND_URL } = require("../config/env");
-const stripe = require("stripe")(STRIPE_SECRET_KEY)
+const { STRIPE_CLIENT_ID, STRIPE_SECRET_KEY, BACKEND_URL, PAYPAL_CLIENT_ID, PAYPAL_SECRET_KEY } = require("../config/env");
 const Treasury = require("../models/Treasury");
 const { PaymentSchema, ProviderSchema } = require("../models/Payment");
 const { createLedger } = require("../utils/createLedger");
 const { updateTreasury } = require("../utils/treasuryService");
 const { updateUserBalance } = require("../utils/userServices");
-const crypto = require("crypto")
+const crypto = require("crypto");
+
+// Finance
+const stripe = require("stripe")(STRIPE_SECRET_KEY)
+const paypal = require('paypal-rest-sdk');
+// PayPal configuration
+paypal.configure({
+  'mode': 'sandbox', //sandbox or live
+  'client_id': PAYPAL_CLIENT_ID,
+  'client_secret': PAYPAL_SECRET_KEY
+});
 
 // const checkConnectedAccounts = async (req, res) => {
 //   try {
@@ -227,6 +236,8 @@ const spay = async (req, res) => {
   }
 };
 
+
+
 const update = async (req, res) => {
   try {
   } catch (error) {
@@ -260,6 +271,7 @@ module.exports = {
   // checkConnectedAccounts,
   getStripePaymentIntent,
   spay,
+  // ppay,
   update,
   get,
 };
