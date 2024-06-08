@@ -302,12 +302,13 @@ const ppayToken = async (req, res) => {
   }
 };
 
-const createOrder = async (ammount) => {
-  // use the ammount information passed from the front-end to calculate the purchase unit details
-  console.log(
-    "shopping ammount information passed from the frontend createOrder() callback:",
-    ammount,
-  );
+const createOrder = async (amount) => {
+
+  const checkTreasury = await Treasury.findOne();
+  if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
+
+  const fdxRequired = amount * 2;
+  if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders`;
