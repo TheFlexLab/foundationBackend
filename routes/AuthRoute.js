@@ -815,4 +815,6 @@ router.post(
   AuthController.getFacebookUserInfo
 );
 
+router.get("/getConstants", AuthController.getVariables)
+
 module.exports = router;

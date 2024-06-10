@@ -8,7 +8,10 @@ const crypto = require("crypto");
 const { getTreasury, updateTreasury } = require("../utils/treasuryService");
 const { getUserBalance, updateUserBalance } = require("../utils/userServices");
 const BookmarkQuests = require("../models/BookmarkQuests");
-const { getPercentage, getPercentageQuestForeignKey} = require("../utils/getPercentage");
+const {
+  getPercentage,
+  getPercentageQuestForeignKey,
+} = require("../utils/getPercentage");
 const shortLink = require("shortlink");
 const { execSync } = require("child_process");
 const UserQuestSetting = require("../models/UserQuestSetting");
@@ -1385,8 +1388,8 @@ const getQuestsAll = async (req, res) => {
               id: "system_notification",
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Not sure what to post?",
-              text: "You can post whatever your heart desires - but keep in mind not everyone may engage with it. The more people engage with your posts, the more FDX you earn!",
-              buttonText: "Create a post",
+              text: "You can post whatever your heart desires - but keep in mind not everyone may engage with it. The more people that engage with your posts, the more FDX you earn!",
+              buttonText: "Create a post!",
               buttonUrl: "/dashboard/quest",
               category: "Home",
               position: "Feed",
@@ -1598,25 +1601,35 @@ const getQuestById = async (req, res) => {
   }
 };
 
-async function getQuestByIdQuestForeignKey (questForeignKey) {
+async function getQuestByIdQuestForeignKey(questForeignKey) {
   try {
     const infoQuest = await InfoQuestQuestions.find({
       _id: new mongoose.Types.ObjectId(questForeignKey.toString()),
     }).populate("getUserBadge", "badges");
     if (!infoQuest) throw new Error("No Quest Exist!");
 
-    const result = await getQuestionsWithStatusQuestForeignKey(infoQuest, questForeignKey);
+    const result = await getQuestionsWithStatusQuestForeignKey(
+      infoQuest,
+      questForeignKey
+    );
     // getQuestionsWithUserSettings
-    const result1 = await getQuestionsWithUserSettingsQuestForeignKey(result, questForeignKey);
+    const result1 = await getQuestionsWithUserSettingsQuestForeignKey(
+      result,
+      questForeignKey
+    );
 
     let quest;
 
     // if (page === "SharedLink") {
-      quest = await UserQuestSetting.findOne({ questForeignKey: questForeignKey });
+    quest = await UserQuestSetting.findOne({
+      questForeignKey: questForeignKey,
+    });
     // }
     // //console.log("questSharedLink", quest);
 
-    const resultArray = result1.map((item) => getPercentageQuestForeignKey(item, quest));
+    const resultArray = result1.map((item) =>
+      getPercentageQuestForeignKey(item, quest)
+    );
 
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
@@ -1632,7 +1645,7 @@ async function getQuestByIdQuestForeignKey (questForeignKey) {
       message: `An error occurred while getQuestById InfoQuest: ${error.message}`,
     });
   }
-};
+}
 
 const getQuestByUniqueShareLink = async (req, res) => {
   try {
@@ -1689,7 +1702,7 @@ const getQuestByUniqueShareLink = async (req, res) => {
 
 const getQuestByUniqueId = async (req, res) => {
   try {
-    const {postId, uuid} = req.params;
+    const { postId, uuid } = req.params;
 
     const infoQuest = await InfoQuestQuestions.find({
       _id: postId,
@@ -2155,7 +2168,10 @@ async function getQuestionsWithUserSettings(allQuestions, uuid) {
   }
 }
 
-async function getQuestionsWithStatusQuestForeignKey(allQuestions, questForeignKey) {
+async function getQuestionsWithStatusQuestForeignKey(
+  allQuestions,
+  questForeignKey
+) {
   try {
     if (questForeignKey === "" || questForeignKey === undefined) {
       return allQuestions;
@@ -2191,7 +2207,10 @@ async function getQuestionsWithStatusQuestForeignKey(allQuestions, questForeignK
   }
 }
 
-async function getQuestionsWithUserSettingsQuestForeignKey(allQuestions, questForeignKey) {
+async function getQuestionsWithUserSettingsQuestForeignKey(
+  allQuestions,
+  questForeignKey
+) {
   try {
     if (questForeignKey === "" || questForeignKey === undefined) {
       return allQuestions;
@@ -2343,5 +2362,5 @@ module.exports = {
   suppressPost,
   getQuestByIdQuestForeignKey,
   getQuestionsWithStatusQuestForeignKey,
-  getQuestionsWithUserSettingsQuestForeignKey
+  getQuestionsWithUserSettingsQuestForeignKey,
 };

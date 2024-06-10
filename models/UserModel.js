@@ -248,7 +248,7 @@ const userSchema = mongoose.Schema(
     notificationSettings: {
       emailNotifications: {
         type: Boolean,
-        default: false,
+        default: true,
       },
       systemNotifications: {
         type: Boolean,
