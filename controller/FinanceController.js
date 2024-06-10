@@ -318,7 +318,7 @@ const createOrder = async (amount) => {
       {
         amount: {
           currency_code: "USD",
-          value: ammount,
+          value: amount,
         },
       },
     ],
