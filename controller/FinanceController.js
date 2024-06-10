@@ -415,7 +415,7 @@ const ppay = async (req, res) => {
       const createUserPayment = await userPaymentModel.save();
       if (!createUserPayment) throw new Error("Something went wrong, this must not be happening.");
       const providerDetails = new ProviderSchema({
-        providerName: "Stripe",
+        providerName: "PayPal",
         details: charge,
       })
       createUserPayment.providerDetails.push(providerDetails);
@@ -423,7 +423,7 @@ const ppay = async (req, res) => {
     }
     else {
       const providerDetails = new ProviderSchema({
-        providerName: "Stripe",
+        providerName: "PayPal",
         details: charge,
       })
       userPaymentExist.providerDetails.push(providerDetails);
