@@ -8,6 +8,7 @@ const crypto = require("crypto");
 
 // Finance
 const stripe = require("stripe")(STRIPE_SECRET_KEY)
+const { TWO_POINT_FIVE_DOLLARS_EQUALS_TO_ONE_FDX } = require("../constants");
 const paypal = require('paypal-rest-sdk');
 // PayPal configuration
 paypal.configure({
@@ -181,7 +182,8 @@ const spay = async (req, res) => {
     // const checkTreasury = await Treasury.findOne();
     // if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
-    const fdxRequired = charge.amount * 2;
+    const dollars = (charge.amount / 100);
+    const fdxRequired = dollars / TWO_POINT_FIVE_DOLLARS_EQUALS_TO_ONE_FDX;
     // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
     const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });
@@ -404,7 +406,8 @@ const ppay = async (req, res) => {
     // const checkTreasury = await Treasury.findOne();
     // if (!checkTreasury) throw new Error(`Treasury is not found, FDX can't be purchased.`);
 
-    const fdxRequired = charge.purchase_units[0].payments.captures[0].amount.value * 2;
+    const dollars = charge.purchase_units[0].payments.captures[0].amount.value;
+    const fdxRequired = dollars / TWO_POINT_FIVE_DOLLARS_EQUALS_TO_ONE_FDX;
     // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
 
     const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });

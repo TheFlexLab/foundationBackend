@@ -51,5 +51,6 @@ module.exports = {
   QUEST_OPTION_CONTENTION_GIVEN_AMOUNT: 0.10,
   QUEST_OPTION_CONTENTION_REMOVED_AMOUNT: 0.10,
   USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT: 2.500,
+  TWO_POINT_FIVE_DOLLARS_EQUALS_TO_ONE_FDX: 2.5,
   MASTER_ARRAY_TOPICS: ["Architecture", "Arts", "Business", "Culture", "Economics", "Education", "Entertainment", "Environment", "Ethics", "Finance", "Fitness", "Food", "Geography", "Health", "History", "Hobbies", "Home", "Law", "Media", "Music", "Parenting", "Pets", "Philosophy", "Personal", "Politics", "Preferences", "Psychology", "Religion", "Science", "Society", "Sports", "Technology"]
 };
