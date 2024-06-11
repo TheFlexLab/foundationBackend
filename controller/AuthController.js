@@ -340,6 +340,7 @@ const signUpUserBySocialLogin = async (req, res) => {
     });
 
     user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await user.save();
 
     // Generate a JWT token
@@ -516,6 +517,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     });
 
     user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await user.save();
 
     // Generate a JWT token
@@ -887,6 +889,7 @@ const signUpSocialGuestMode = async (req, res) => {
     });
 
     updatedUser.fdxEarned = updatedUser.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    updatedUser.rewardSchedual.addingBadgeFdx = updatedUser.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await updatedUser.save();
 
     // Generate a JWT token
@@ -1079,6 +1082,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
     });
 
     user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await user.save();
 
     // Generate a JWT token
@@ -2398,6 +2402,7 @@ const verify = async (req, res) => {
     });
 
     user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     // return res.status(200).send({
     //   message: "Gmail Account verified",
     //   uuid: req.user.uuid,

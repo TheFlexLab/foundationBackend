@@ -321,6 +321,7 @@ const generateCategoryShareLink = async (req, res) => {
                 });
                 const userSpent = await User.findOne({uuid: userUuid});
                 userSpent.fdxSpent = userSpent.fdxSpent + 2.5;
+                userSpent.feeSchedual.creatingListCustomLinkFdx = userSpent.feeSchedual.creatingListCustomLinkFdx + 2.5;
                 await userSpent.save();
             }
             else {

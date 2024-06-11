@@ -156,6 +156,7 @@ const addBadgeSocial = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.clearCookie("social");
@@ -339,6 +340,7 @@ const addContactBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     // res.clearCookie("social");
@@ -435,6 +437,7 @@ const addBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -604,6 +607,7 @@ const addPersonalBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -1198,6 +1202,7 @@ const addWorkEducationBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ data, message: "Successful" });
@@ -1271,6 +1276,7 @@ const addWeb3Badge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -1797,6 +1803,7 @@ const addPasskeyBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -1901,6 +1908,7 @@ const addFarCasterBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -2179,6 +2187,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
       });
       
     user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await user.save();
 
       res.status(200).json({

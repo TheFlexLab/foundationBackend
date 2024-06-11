@@ -224,6 +224,7 @@ const customLink = async (req, res) => {
     await ledgerDeductionPostLinkCustomized(payload.uuid);
 
     user.fdxSpent = user.fdxSpent + USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT;
+    user.feeSchedual.creatingPostCustomLinkFdx = user.feeSchedual.creatingPostCustomLinkFdx + USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT;
     await user.save();
 
     const userQuestSettingExist = await UserQuestSetting.findOne({

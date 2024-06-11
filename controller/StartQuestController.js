@@ -349,6 +349,7 @@ const createStartQuest = async (req, res) => {
       });
       const userEarned = await User.findOne({uuid: req.body.uuid});
       userEarned.fdxEarned = userEarned.fdxEarned + QUEST_OPTION_ADDED_AMOUNT;
+      userEarned.rewardSchedual.postParticipationFdx = userEarned.rewardSchedual.postParticipationFdx + QUEST_OPTION_ADDED_AMOUNT;
       await userEarned.save();
     }
     // Correct Answer or Wrong Answer
@@ -438,6 +439,7 @@ const createStartQuest = async (req, res) => {
 
     const responsingUserEarnedFDX =  await User.findOne({uuid: req.body.uuid});
     responsingUserEarnedFDX.fdxEarned = responsingUserEarnedFDX.fdxEarned + QUEST_COMPLETED_AMOUNT;
+    responsingUserEarnedFDX.rewardSchedual.myEngagementInPostFdx = responsingUserEarnedFDX.rewardSchedual.myEngagementInPostFdx + QUEST_COMPLETED_AMOUNT;
     await responsingUserEarnedFDX.save();
 
     // Create Ledger
@@ -462,6 +464,7 @@ const createStartQuest = async (req, res) => {
     });
     const ownerEarnedFDX =  await User.findOne({uuid: getInfoQuestQuestion.uuid});
     ownerEarnedFDX.fdxEarned = ownerEarnedFDX.fdxEarned + QUEST_OWNER_ACCOUNT;
+    ownerEarnedFDX.rewardSchedual.postParticipationFdx = ownerEarnedFDX.rewardSchedual.postParticipationFdx + QUEST_OWNER_ACCOUNT;
     await ownerEarnedFDX.save();
 
     const bookmarkExist = await BookmarkQuests.findOne({

@@ -172,6 +172,38 @@ const userSchema = mongoose.Schema(
         default: 0.0,
       },
     },
+    feeSchedual: {
+      creatingPostFdx: {
+        type: Number,
+        default: 0.0,
+      },
+      creatingPostCustomLinkFdx: {
+        type: Number,
+        default: 0.0,
+      },
+      creatingListFdx: {
+        type: Number,
+        default: 0.0,
+      },
+      creatingListCustomLinkFdx: {
+        type: Number,
+        default: 0.0,
+      },
+    },
+    rewardSchedual: {
+      postParticipationFdx: {
+        type: Number,
+        default: 0.0,
+      },
+      myEngagementInPostFdx: {
+        type: Number,
+        default: 0.0,
+      },
+      addingBadgeFdx: {
+        type: Number,
+        default: 0.0,
+      },
+    },
     walletAddr: {
       type: String,
     },

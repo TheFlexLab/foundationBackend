@@ -69,7 +69,6 @@ const createInfoQuestQuest = async (req, res) => {
     //   }
     // );
 
-    user.fdxSpent = user.fdxSpent + QUEST_CREATED_AMOUNT;
     // Save the updated user object
     await user.save();
 
@@ -105,6 +104,10 @@ const createInfoQuestQuest = async (req, res) => {
       amount: QUEST_CREATED_AMOUNT,
       dec: true,
     });
+
+    user.fdxSpent = user.fdxSpent + QUEST_CREATED_AMOUNT;
+    user.feeSchedual.creatingPostFdx = user.feeSchedual.creatingPostFdx + QUEST_CREATED_AMOUNT;
+    await user.save()
 
     res.status(201).json({
       message: "Quest has been Created",
