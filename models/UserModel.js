@@ -158,6 +158,20 @@ const userSchema = mongoose.Schema(
       type: Number,
       default: 0.0,
     },
+    redemptionStatistics: {
+      myTotalRedemptionCodeCreationCount: {
+        type: Number,
+        default: 0,
+      },
+      createCodeFdxSpent: {
+        type: Number,
+        default: 0.0,
+      },
+      codeRedeemedFdxEarned: {
+        type: Number,
+        default: 0.0,
+      },
+    },
     walletAddr: {
       type: String,
     },

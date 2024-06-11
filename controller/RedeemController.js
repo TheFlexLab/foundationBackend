@@ -39,6 +39,8 @@ const create = async (req, res) => {
       dec: true,
     });
     User.fdxSpent = User.fdxSpent + amount;
+    User.redemptionStatistics.myTotalRedemptionCodeCreationCount = User.redemptionStatistics.myTotalRedemptionCodeCreationCount + 1;
+    User.redemptionStatistics.createCodeFdxSpent = User.redemptionStatistics.createCodeFdxSpent + amount;
     await User.save();
     //   Generate unique code
     req.body.code = shortlink.generate(10);
@@ -111,6 +113,7 @@ const transfer = async (req, res) => {
     });
     const receiverEarned = await UserModel.findOne({uuid: req.body.uuid});
     receiverEarned.fdxEarned = receiverEarned.fdxEarned + getRedeem.amount;
+    receiverEarned.redemptionStatistics.codeRedeemedFdxEarned = receiverEarned.redemptionStatistics.codeRedeemedFdxEarned + getRedeem.amount;
     await receiverEarned.save();
     // Update the Redeem
     // getRedeem.code = shortlink.generate(10),

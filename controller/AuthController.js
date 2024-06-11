@@ -58,6 +58,8 @@ const InfoQuestQuestions = require("../models/InfoQuestQuestions");
 const StartQuests = require("../models/StartQuests");
 const Email = require("../models/Email");
 const guestUserEmailRegex = /^user-\d+@guest\.com$/;
+const Redeem = require("../models/Redeem");
+const mongoose = require("mongoose");
 
 // Encryption/Decryption Security Purposes.
 const {
