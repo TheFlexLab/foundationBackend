@@ -69,6 +69,7 @@ const createInfoQuestQuest = async (req, res) => {
     //   }
     // );
 
+    user.fdxSpent = user.fdxSpent + QUEST_CREATED_AMOUNT;
     // Save the updated user object
     await user.save();
 
@@ -177,6 +178,9 @@ const deleteInfoQuestQuest = async (req, res) => {
       amount: QUEST_CREATED_AMOUNT,
       inc: true,
     });
+
+    user.fdxEarned = user.fdxEarned + QUEST_CREATED_AMOUNT;
+    await user.save();
 
     res
       .status(200)

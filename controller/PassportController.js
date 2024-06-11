@@ -94,6 +94,9 @@ const googleHandler = async (req, res) => {
         inc: true,
       });
 
+      newUser.fdxEarned = newUser.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+      await newUser.save();
+
       // Generate a JWT token
       const token = createToken({ uuid: newUser.uuid });
       // //console.log(req.get('host'));
@@ -182,6 +185,9 @@ const addBadge = async (req, res) => {
       amount: ACCOUNT_BADGE_ADDED_AMOUNT,
       inc: true,
     });
+
+    User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+    await User.save();
 
     res.redirect(`${FRONTEND_URL}/profile/verification-badges`);
   } catch (error) {

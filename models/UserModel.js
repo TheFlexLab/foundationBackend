@@ -150,6 +150,14 @@ const userSchema = mongoose.Schema(
       type: Number,
       default: 0.0,
     },
+    fdxEarned: {
+      type: Number,
+      default: 0.0,
+    },
+    fdxSpent: {
+      type: Number,
+      default: 0.0,
+    },
     walletAddr: {
       type: String,
     },

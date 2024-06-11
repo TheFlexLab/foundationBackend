@@ -5,6 +5,7 @@ const { createLedger } = require("../utils/createLedger");
 const { updateTreasury } = require("../utils/treasuryService");
 const { updateUserBalance } = require("../utils/userServices");
 const crypto = require("crypto");
+const User = require("../models/UserModel");
 
 // Finance
 const stripe = require("stripe")(STRIPE_SECRET_KEY)
@@ -230,6 +231,10 @@ const spay = async (req, res) => {
       inc: true,
     });
 
+    const user = await User.findOne({uuid: userUuid});
+    user.fdxEarned = user.fdxEarned + parseFloat(fdxRequired);
+    await user.save();
+
     res.status(200).send({
       message: `${parseFloat(fdxRequired)} FDX coins are transferd to your account please check your balance.`
     });
@@ -453,6 +458,10 @@ const ppay = async (req, res) => {
       amount: parseFloat(fdxRequired),
       inc: true,
     });
+
+    const user = await User.findOne({uuid: userUuid});
+    user.fdxEarned = user.fdxEarned + parseFloat(fdxRequired);
+    await user.save();
 
     res.status(200).send({
       message: `${parseFloat(fdxRequired)} FDX coins are transferd to your account please check your balance.`

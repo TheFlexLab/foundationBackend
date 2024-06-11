@@ -223,6 +223,9 @@ const customLink = async (req, res) => {
     // As link is unique Create Ledger and Proceed Normally like before with custom link.
     await ledgerDeductionPostLinkCustomized(payload.uuid);
 
+    user.fdxSpent = user.fdxSpent + USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT;
+    await user.save();
+
     const userQuestSettingExist = await UserQuestSetting.findOne({
       uuid: payload.uuid,
       questForeignKey: payload.questForeignKey,
@@ -716,6 +719,9 @@ const ledgerDeductionPostLinkCustomized = async (uuid, userQuestSetting_id) => {
       amount: USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT,
       dec: true,
     });
+    const userSpent = await UserModel.findOne({uuid: uuid});
+    userSpent.fdxSpent = userSpent.fdxSpent + USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT;
+    await userSpent.save();
   } catch (error) {
     console.error(error);
   }

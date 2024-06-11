@@ -319,6 +319,9 @@ const generateCategoryShareLink = async (req, res) => {
                     amount: 2.5,
                     dec: true,
                 });
+                const userSpent = await User.findOne({uuid: userUuid});
+                userSpent.fdxSpent = userSpent.fdxSpent + 2.5;
+                await userSpent.save();
             }
             else {
                 categoryDoc.link = shortLink.generate(8);
