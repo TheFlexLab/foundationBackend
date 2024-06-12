@@ -177,11 +177,19 @@ const userSchema = mongoose.Schema(
         type: Number,
         default: 0.0,
       },
+      creatingPostLinkFdx: {
+        type: Number,
+        default: 0.0,
+      },
       creatingPostCustomLinkFdx: {
         type: Number,
         default: 0.0,
       },
       creatingListFdx: {
+        type: Number,
+        default: 0.0,
+      },
+      creatingListLinkFdx: {
         type: Number,
         default: 0.0,
       },

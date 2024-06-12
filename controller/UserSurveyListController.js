@@ -337,6 +337,9 @@ const generateCategoryShareLink = async (req, res) => {
                     txData: userUuid,
                     // txDescription : "User changes password"
                 });
+                const userSpent = await User.findOne({uuid: userUuid});
+                userSpent.feeSchedual.creatingListLinkFdx = userSpent.feeSchedual.creatingListLinkFdx + 0;
+                await userSpent.save();
             }
 
             categoryDoc.updatedAt = new Date().toISOString();

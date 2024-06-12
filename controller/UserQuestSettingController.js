@@ -116,6 +116,10 @@ const link = async (req, res) => {
       });
     }
 
+  const userSpent = await User.findOne({uuid: payload.uuid});
+  userSpent.feeSchedual.creatingPostLinkFdx = userSpent.feeSchedual.creatingPostLinkFdx + 0;
+  await userSpent.save();
+
     return res.status(201).json({
       message: "UserQuestSetting link Created Successfully!",
       data: savedOrUpdatedUserQuestSetting,
