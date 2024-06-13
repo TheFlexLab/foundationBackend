@@ -489,19 +489,19 @@ const ppay = async (req, res) => {
 const purchasedFdxHistory = async (req, res) => {
   try {
     const purchasedFdxHistory = await PaymentSchema.findOne(
-      { userUuid: req.body.userUuid },
+      { userUuid: req.params.userUuid },
       { 'providerDetails.details': 0 } // This will exclude the 'details' field from each document in the 'providerDetails' array
     );
     
     if(!purchasedFdxHistory) {
       res.status(200).json({
-        message: `User ${req.body.userUuid} puchased history.`,
+        message: `User ${req.params.userUuid} puchased history.`,
         history: []
       });
     }
     else {
       res.status(200).json({
-        message: `User ${req.body.userUuid} puchased history.`,
+        message: `User ${req.params.userUuid} puchased history.`,
         history: purchasedFdxHistory.providerDetails
       });
     }
