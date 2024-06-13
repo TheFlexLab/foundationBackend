@@ -207,6 +207,31 @@ router.post("/ppay",
   FinanceController.ppay
 );
 
+router.get("/purchasedFdxHistory/:userUuid",
+  /**
+   * @swagger
+   * /finance/purchasedFdxHistory/{userUuid}:
+   *   get:
+   *     tags:
+   *       - Finance
+   *     summary: Get Finance
+   *     description: Endpoint for getting User's Purchased FDX History.
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: UUID of the user
+   *     responses:
+   *       '200':
+   *         description: Stripe Connected Successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  FinanceController.purchasedFdxHistory
+);
+
 // router.patch("/update",
 //   /**
 //    * @swagger

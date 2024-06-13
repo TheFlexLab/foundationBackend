@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 // Define the schema for objects within the post array
 const ProviderSchema = mongoose.Schema({
+  ledgerCode: { type: String, required: true, },
   providerName: { type: String, required: true, },
+  dollarSpent: { type: Number, required: true, },
+  fdxPurchased: { type: Number, required: true, },
+  description: { type: String, default: null, },
   details: { type: Object, required: true, },
   createdAt: { type: String, default: () => new Date().toISOString(), },
   updatedAt: { type: String, default: () => new Date().toISOString(), },

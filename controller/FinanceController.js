@@ -186,6 +186,7 @@ const spay = async (req, res) => {
     const dollars = (charge.amount / 100);
     const fdxRequired = dollars / TWO_POINT_FIVE_DOLLARS_EQUALS_TO_ONE_FDX;
     // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
+    const ledgerCode = crypto.randomBytes(11).toString("hex");
 
     const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });
     if (!userPaymentExist) {
@@ -195,7 +196,10 @@ const spay = async (req, res) => {
       const createUserPayment = await userPaymentModel.save();
       if (!createUserPayment) throw new Error("Something went wrong, this must not be happening.");
       const providerDetails = new ProviderSchema({
+        ledgerCode: ledgerCode,
         providerName: "Stripe",
+        dollarSpent: dollars,
+        fdxPurchased: fdxRequired,
         details: charge,
       })
       createUserPayment.providerDetails.push(providerDetails);
@@ -203,7 +207,10 @@ const spay = async (req, res) => {
     }
     else {
       const providerDetails = new ProviderSchema({
+        ledgerCode: ledgerCode,
         providerName: "Stripe",
+        dollarSpent: dollars,
+        fdxPurchased: fdxRequired,
         details: charge,
       })
       userPaymentExist.providerDetails.push(providerDetails);
@@ -213,7 +220,7 @@ const spay = async (req, res) => {
     await createLedger({
       uuid: userUuid,
       txUserAction: "fdxPurchased",
-      txID: crypto.randomBytes(11).toString("hex"),
+      txID: ledgerCode,
       txAuth: "DAO",
       txFrom: "DAO Treasury",
       txTo: userUuid,
@@ -414,6 +421,7 @@ const ppay = async (req, res) => {
     const dollars = charge.purchase_units[0].payments.captures[0].amount.value;
     const fdxRequired = dollars / TWO_POINT_FIVE_DOLLARS_EQUALS_TO_ONE_FDX;
     // if (Math.round(checkTreasury.amount) <= fdxRequired || Math.round(checkTreasury.amount) <= 0) throw new Error(`Treasury is not enough, FDX can't be purchased.`)
+    const ledgerCode = crypto.randomBytes(11).toString("hex");
 
     const userPaymentExist = await PaymentSchema.findOne({ userUuid: userUuid });
     if (!userPaymentExist) {
@@ -423,7 +431,10 @@ const ppay = async (req, res) => {
       const createUserPayment = await userPaymentModel.save();
       if (!createUserPayment) throw new Error("Something went wrong, this must not be happening.");
       const providerDetails = new ProviderSchema({
+        ledgerCode: ledgerCode,
         providerName: "PayPal",
+        dollarSpent: dollars,
+        fdxPurchased: fdxRequired,
         details: charge,
       })
       createUserPayment.providerDetails.push(providerDetails);
@@ -431,7 +442,10 @@ const ppay = async (req, res) => {
     }
     else {
       const providerDetails = new ProviderSchema({
+        ledgerCode: ledgerCode,
         providerName: "PayPal",
+        dollarSpent: dollars,
+        fdxPurchased: fdxRequired,
         details: charge,
       })
       userPaymentExist.providerDetails.push(providerDetails);
@@ -441,7 +455,7 @@ const ppay = async (req, res) => {
     await createLedger({
       uuid: userUuid,
       txUserAction: "fdxPurchased",
-      txID: crypto.randomBytes(11).toString("hex"),
+      txID: ledgerCode,
       txAuth: "DAO",
       txFrom: "DAO Treasury",
       txTo: userUuid,
@@ -469,6 +483,32 @@ const ppay = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send(`Internal Server Error: ${err.message}`);
+  }
+};
+
+const purchasedFdxHistory = async (req, res) => {
+  try {
+    const purchasedFdxHistory = await PaymentSchema.findOne(
+      { userUuid: req.body.userUuid },
+      { 'providerDetails.details': 0 } // This will exclude the 'details' field from each document in the 'providerDetails' array
+    );
+    
+    if(!purchasedFdxHistory) {
+      res.status(200).json({
+        message: `User ${req.body.userUuid} puchased history.`,
+        history: []
+      });
+    }
+    else {
+      res.status(200).json({
+        message: `User ${req.body.userUuid} puchased history.`,
+        history: purchasedFdxHistory.providerDetails
+      });
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({message: ` An error occurred while getting the history: ${error.message}`,});
   }
 };
 
@@ -511,4 +551,5 @@ module.exports = {
   ppay,
   update,
   get,
+  purchasedFdxHistory,
 };
