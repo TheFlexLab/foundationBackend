@@ -495,13 +495,13 @@ const purchasedFdxHistory = async (req, res) => {
     
     if(!purchasedFdxHistory) {
       res.status(200).json({
-        message: `User ${req.params.userUuid} purchased history.`,
+        message: `User ${req.params.userUuid} purchase history.`,
         history: []
       });
     }
     else {
       res.status(200).json({
-        message: `User ${req.params.userUuid} purchased history.`,
+        message: `User ${req.params.userUuid} purchase history.`,
         history: purchasedFdxHistory.providerDetails
       });
     }
