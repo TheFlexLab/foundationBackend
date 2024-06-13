@@ -203,7 +203,7 @@ const spay = async (req, res) => {
         details: charge,
       })
       createUserPayment.providerDetails.push(providerDetails);
-      await userPaymentExist.save();
+      await createUserPayment.save();
     }
     else {
       const providerDetails = new ProviderSchema({
@@ -438,7 +438,7 @@ const ppay = async (req, res) => {
         details: charge,
       })
       createUserPayment.providerDetails.push(providerDetails);
-      await userPaymentExist.save();
+      await createUserPayment.save();
     }
     else {
       const providerDetails = new ProviderSchema({
@@ -495,13 +495,13 @@ const purchasedFdxHistory = async (req, res) => {
     
     if(!purchasedFdxHistory) {
       res.status(200).json({
-        message: `User ${req.params.userUuid} puchased history.`,
+        message: `User ${req.params.userUuid} purchased history.`,
         history: []
       });
     }
     else {
       res.status(200).json({
-        message: `User ${req.params.userUuid} puchased history.`,
+        message: `User ${req.params.userUuid} purchased history.`,
         history: purchasedFdxHistory.providerDetails
       });
     }
