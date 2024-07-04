@@ -17,7 +17,11 @@ const { execSync } = require("child_process");
 const UserQuestSetting = require("../models/UserQuestSetting");
 const axios = require("axios");
 const mongoose = require("mongoose");
-const { UserListSchema, CategorySchema, PostSchema, } = require("../models/UserList");
+const {
+  UserListSchema,
+  CategorySchema,
+  PostSchema,
+} = require("../models/UserList");
 
 const createInfoQuestQuest = async (req, res) => {
   try {
@@ -143,7 +147,7 @@ const deleteInfoQuestQuest = async (req, res) => {
     await InfoQuestQuestions.deleteOne({
       _id: req.params.questId,
       uuid: req.params.userUuid,
-    }).exec()
+    }).exec();
 
     // Delete and Save Info Quest
     // infoQuest.isActive = false;
@@ -151,39 +155,55 @@ const deleteInfoQuestQuest = async (req, res) => {
 
     // Remove from hiddens and shared
     await UserQuestSetting.deleteMany({
-      questForeignKey: req.params.questId
-    }).exec()
+      questForeignKey: req.params.questId,
+    }).exec();
 
     // Remove Relative Bookmarks
     await BookmarkQuests.deleteMany({
-      questForeignKey: req.params.questId
-    }).exec()
+      questForeignKey: req.params.questId,
+    }).exec();
 
     // Remove Posts from Relative Lists
-        const userLists = await UserListSchema.aggregate([
-          { $unwind: "$list" },
-          { $unwind: "$list.post" },
-          { $match: { "list.post.questForeginKey": new mongoose.Types.ObjectId(req.params.questId) } },
-          { $group: { _id: "$_id", count: { $sum: 1 } } }
-      ]);
+    const userLists = await UserListSchema.aggregate([
+      { $unwind: "$list" },
+      { $unwind: "$list.post" },
+      {
+        $match: {
+          "list.post.questForeginKey": new mongoose.Types.ObjectId(
+            req.params.questId
+          ),
+        },
+      },
+      { $group: { _id: "$_id", count: { $sum: 1 } } },
+    ]);
 
-      // Step 2: Remove the posts
-      await UserListSchema.updateMany(
-          { "list.post.questForeginKey": new mongoose.Types.ObjectId(req.params.questId) },
-          { $pull: { "list.$[].post": { questForeginKey: new mongoose.Types.ObjectId(req.params.questId) } } }
-      );
-
-      // Step 3: Decrement the postCounter
-      for (const userList of userLists) {
-          await UserListSchema.updateOne(
-              { _id: userList._id },
-              {
-                  $inc: {
-                      "list.$[].postCounter": -1
-                  }
-              }
-          );
+    // Step 2: Remove the posts
+    await UserListSchema.updateMany(
+      {
+        "list.post.questForeginKey": new mongoose.Types.ObjectId(
+          req.params.questId
+        ),
+      },
+      {
+        $pull: {
+          "list.$[].post": {
+            questForeginKey: new mongoose.Types.ObjectId(req.params.questId),
+          },
+        },
       }
+    );
+
+    // Step 3: Decrement the postCounter
+    for (const userList of userLists) {
+      await UserListSchema.updateOne(
+        { _id: userList._id },
+        {
+          $inc: {
+            "list.$[].postCounter": -1,
+          },
+        }
+      );
+    }
 
     // Set Up User's Details
     const user = await User.findOne({ uuid: req.params.userUuid });
@@ -1168,10 +1188,10 @@ const getQuestsAll = async (req, res) => {
       sort === "Newest First"
         ? { createdAt: -1, _id: 1 }
         : sort === "Last Updated"
-          ? { lastInteractedAt: -1, _id: 1 }
-          : sort === "Most Popular"
-            ? { interactingCounter: -1, _id: 1 }
-            : { createdAt: -1, _id: 1 }
+        ? { lastInteractedAt: -1, _id: 1 }
+        : sort === "Most Popular"
+        ? { interactingCounter: -1, _id: 1 }
+        : { createdAt: -1, _id: 1 }
     );
     // query = query.sort(
     //   sort === "Newest First"
@@ -1363,21 +1383,21 @@ const getQuestsAll = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.selectedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.selectedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.contendedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.contendedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1394,19 +1414,20 @@ const getQuestsAll = async (req, res) => {
     if (!terms) {
       if (user?.notificationSettings?.systemNotifications) {
         // Check if it's not the "Hidden" or "SharedLink" page and if it's the first page
-        if (
-          Page !== "Hidden" &&
-          Page !== "SharedLink" &&
-          Page !== "Feedback" &&
-          page === 1
-        ) {
-
+        if (Page !== "Hidden" && Page !== "SharedLink" && Page !== "Feedback") {
           const user = await UserModel.findOne({
             uuid: uuid,
           });
           if (!user) throw new Error(`No user found against ${uuid}`);
           let mode = user.isGuestMode;
-          let notification1, notification2, notification3, notification4, notification5, notification6, notification7, notification8;
+          let notification1,
+            notification2,
+            notification3,
+            notification4,
+            notification5,
+            notification6,
+            notification7,
+            notification8;
 
           if (mode) {
             // Define Guest's notification1 properties
@@ -1447,7 +1468,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "How it works",
               text: [
-                "On Foundation, you can post content, participate in posts and earn badges. These activities add value to your data, making you more desirable for companies looking to advertise to people like you."
+                "On Foundation, you can post content, participate in posts and earn badges. These activities add value to your data, making you more desirable for companies looking to advertise to people like you.",
               ],
               buttonText: "",
               buttonUrl: "",
@@ -1463,7 +1484,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "How to use Foundation",
               text: [
-                "Start by participating in posts and adding badges to your profile. Each interaction enhances the value of your data and the network, increasing your earning potential."
+                "Start by participating in posts and adding badges to your profile. Each interaction enhances the value of your data and the network, increasing your earning potential.",
               ],
               buttonText: "",
               buttonUrl: "",
@@ -1479,7 +1500,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Engage with posts, earn FDX",
               text: [
-                "Start participating in posts to earn FDX tokens. Keep scrolling or sort by category up top to participate in posts you care about."
+                "Start participating in posts to earn FDX tokens. Keep scrolling or sort by category up top to participate in posts you care about.",
               ],
               buttonText: "",
               buttonUrl: "",
@@ -1495,7 +1516,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "What is FDX?",
               text: [
-                "FDX (Foundation Data Exchange Tokens) represent the value of data on the Foundation network. Every interaction on Foundation earns FDX, which can be used on the platform or sold for dollars once enough data demand is established."
+                "FDX (Foundation Data Exchange Tokens) represent the value of data on the Foundation network. Every interaction on Foundation earns FDX, which can be used on the platform or sold for dollars once enough data demand is established.",
               ],
               buttonText: "My FDX",
               buttonUrl: "/treasury",
@@ -1511,7 +1532,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Want to create your own post?",
               text: [
-                "It costs FDX tokens to create a post but every time someone else engages with it, you earn FDX tokens. If 1 million people engage with your post, you will have a lot of tokens!"
+                "It costs FDX tokens to create a post but every time someone else engages with it, you earn FDX tokens. If 1 million people engage with your post, you will have a lot of tokens!",
               ],
               buttonText: "Create a Post",
               buttonUrl: "/post",
@@ -1527,7 +1548,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Anonymity is key",
               text: [
-                "Share your views, insights and data anonymously on Foundation. You control who can link your data to you, ensuring both privacy and proper compensation."
+                "Share your views, insights and data anonymously on Foundation. You control who can link your data to you, ensuring both privacy and proper compensation.",
               ],
               buttonText: "",
               buttonUrl: "",
@@ -1543,7 +1564,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Build your data portfolio",
               text: [
-                "By consistently adding data to your Foundation profile, you're creating a valuable asset. Companies are willing to pay for authentic data with no middle man, and you earn tokens for your contributions."
+                "By consistently adding data to your Foundation profile, you're creating a valuable asset. Companies are willing to pay for authentic data with no middle man, and you earn tokens for your contributions.",
               ],
               buttonText: "",
               buttonUrl: "",
@@ -1559,7 +1580,7 @@ const getQuestsAll = async (req, res) => {
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Integrity matters",
               text: [
-                "Foundation values integrity and transparency. If users attempt to manipulate the system by adding misleading options or unfairly objecting to good answers, they risk damaging their reputation. This can lead to reduced visibility of their posts and answers, as well as lower earnings of tokens."
+                "Foundation values integrity and transparency. If users attempt to manipulate the system by adding misleading options or unfairly objecting to good answers, they risk damaging their reputation. This can lead to reduced visibility of their posts and answers, as well as lower earnings of tokens.",
               ],
               buttonText: "",
               buttonUrl: "",
@@ -1573,14 +1594,12 @@ const getQuestsAll = async (req, res) => {
 
           // Page 1
           if (page === 1 && nextPage === false) {
-            if (result1.length < 2 ) {
+            if (result1.length < 2) {
               result1.splice(0, 0, notification1);
-            }
-            else if (result1.length < 5) {
+            } else if (result1.length < 5) {
               result1.splice(0, 0, notification1);
               result1.splice(3, 0, notification2);
-            }
-            else {
+            } else {
               result1.splice(0, 0, notification1);
               result1.splice(3, 0, notification2);
               result1.splice(7, 0, notification3);
@@ -1606,9 +1625,8 @@ const getQuestsAll = async (req, res) => {
           if (page === 3 && nextPage === false) {
             if (result1.length < 2) {
               result1.splice(1, 0, notification5);
-            }
-            else if(result1.length === 5){
-            result1.splice(5, 0, notification6);
+            } else if (result1.length === 5) {
+              result1.splice(5, 0, notification6);
             }
           }
           if (page === 3 && nextPage === true) {
