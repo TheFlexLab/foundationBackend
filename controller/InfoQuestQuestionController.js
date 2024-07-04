@@ -1573,14 +1573,14 @@ const getQuestsAll = async (req, res) => {
 
           // Page 1
           if (page === 1 && nextPage === false) {
-            if (result1.length === 1) {
+            if (result1.length < 2 ) {
               result1.splice(0, 0, notification1);
             }
-            else if (result1.length === 2) {
+            else if (result1.length < 5) {
               result1.splice(0, 0, notification1);
               result1.splice(3, 0, notification2);
             }
-            else if (result1.length === 5) {
+            else {
               result1.splice(0, 0, notification1);
               result1.splice(3, 0, notification2);
               result1.splice(7, 0, notification3);
@@ -1594,53 +1594,46 @@ const getQuestsAll = async (req, res) => {
 
           // Page 2
           if (page === 2 && nextPage === false) {
-            if (result1.length >= 2 && result1.length < 5) {
-              result1.splice(2, 0, notification4);
-            }
-            else if (result1.length === 5) {
-              result1.splice(2, 0, notification4);
-              result1.splice(6, 0, notification5);
+            if (result1.length >= 3) {
+              result1.splice(3, 0, notification4);
             }
           }
           if (page === 2 && nextPage === true) {
-            result1.splice(2, 0, notification4);
-            result1.splice(6, 0, notification5);
+            result1.splice(3, 0, notification4);
           }
 
           // Page 3
           if (page === 3 && nextPage === false) {
-            if (result1.length >= 3) {
-              result1.splice(3, 0, notification6);
+            if (result1.length < 2) {
+              result1.splice(1, 0, notification5);
+            }
+            else if(result1.length === 5){
+            result1.splice(5, 0, notification6);
             }
           }
           if (page === 3 && nextPage === true) {
-            result1.splice(3, 0, notification6);
+            result1.splice(1, 0, notification5);
+            result1.splice(5, 0, notification6);
           }
 
           // Page 4
           if (page === 4 && nextPage === false) {
             if (result1.length >= 3) {
-              result1.splice(3, 0, notification6);
+              result1.splice(3, 0, notification7);
             }
           }
           if (page === 4 && nextPage === true) {
-            result1.splice(1, 0, notification7);
+            result1.splice(3, 0, notification7);
           }
 
           // Page 5
           if (page === 5 && nextPage === false) {
-            if (result1.length === 2) {
-              result1.splice(2, 0, notification7);
-            }
-            if (result1.length > 2 && result1.length <= 5) {
-              result1.splice(2, 0, notification7);
-              result1.splice(6, 0, notification8);
+            if (result1.length >= 2) {
+              result1.splice(2, 0, notification8);
             }
           }
           if (page === 5 && nextPage === true) {
-            result1.splice(0, 0, notification8);
-            // result1.splice(3, 0, notification2);
-            // result1.splice(7, 0, notification3);
+            result1.splice(2, 0, notification8);
           }
         }
       }
