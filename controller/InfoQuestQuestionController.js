@@ -1168,10 +1168,10 @@ const getQuestsAll = async (req, res) => {
       sort === "Newest First"
         ? { createdAt: -1, _id: 1 }
         : sort === "Last Updated"
-        ? { lastInteractedAt: -1, _id: 1 }
-        : sort === "Most Popular"
-        ? { interactingCounter: -1, _id: 1 }
-        : { createdAt: -1, _id: 1 }
+          ? { lastInteractedAt: -1, _id: 1 }
+          : sort === "Most Popular"
+            ? { interactingCounter: -1, _id: 1 }
+            : { createdAt: -1, _id: 1 }
     );
     // query = query.sort(
     //   sort === "Newest First"
@@ -1363,21 +1363,21 @@ const getQuestsAll = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.selectedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.selectedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.contendedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.contendedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1400,14 +1400,13 @@ const getQuestsAll = async (req, res) => {
           Page !== "Feedback" &&
           page === 1
         ) {
-          let priority = Math.floor(Math.random() * 2) + 1; // Generate random priority from 1 to 2
 
           const user = await UserModel.findOne({
             uuid: uuid,
           });
           if (!user) throw new Error(`No user found against ${uuid}`);
           let mode = user.isGuestMode;
-          let notification1, notification2;
+          let notification1, notification2, notification3, notification4, notification5, notification6, notification7, notification8;
 
           if (mode) {
             // Define Guest's notification1 properties
@@ -1422,7 +1421,7 @@ const getQuestsAll = async (req, res) => {
               buttonUrl: "/guest-signup",
               category: "Home",
               position: "Feed",
-              priority: priority,
+              priority: 1,
               mode: "Guest",
               timestamp: new Date().toISOString(),
             };
@@ -1438,54 +1437,210 @@ const getQuestsAll = async (req, res) => {
               buttonUrl: "/welcome",
               category: "Home",
               position: "Feed",
-              priority: priority,
+              priority: 2,
               mode: "Guest",
               timestamp: new Date().toISOString(),
             };
           } else {
-            // Define User's notification1 properties
             notification1 = {
               id: "system_notification",
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Get verified, start growing your FDX balance",
+              header: "How it works",
               text: [
-                "Have your data be more desirable for brands or research firms to purchase with more verified info- and earn more FDX while you're at it!",
+                "On Foundation, you can post content, participate in posts and earn badges. These activities add value to your data, making you more desirable for companies looking to advertise to people like you."
               ],
-              buttonText: "Add verification badges!",
-              buttonUrl: "/profile/verification-badges",
+              buttonText: "",
+              buttonUrl: "",
               category: "Home",
               position: "Feed",
-              priority: priority,
+              priority: 1,
               mode: "User",
               timestamp: new Date().toISOString(),
             };
-            // Define User's notification2 properties
+
             notification2 = {
               id: "system_notification",
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Not sure what to post?",
+              header: "How to use Foundation",
               text: [
-                "You can post whatever your heart desires - but keep in mind not everyone may engage with it. The more people that engage with your posts, the more FDX you earn!",
+                "Start by participating in posts and adding badges to your profile. Each interaction enhances the value of your data and the network, increasing your earning potential."
               ],
-              buttonText: "Create a post!",
+              buttonText: "",
+              buttonUrl: "",
+              category: "Home",
+              position: "Feed",
+              priority: 4,
+              mode: "User",
+              timestamp: new Date().toISOString(),
+            };
+
+            notification3 = {
+              id: "system_notification",
+              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
+              header: "Engage with posts, earn FDX",
+              text: [
+                "Start participating in posts to earn FDX tokens. Keep scrolling or sort by category up top to participate in posts you care about."
+              ],
+              buttonText: "",
+              buttonUrl: "",
+              category: "Home",
+              position: "Feed",
+              priority: 8,
+              mode: "User",
+              timestamp: new Date().toISOString(),
+            };
+
+            notification4 = {
+              id: "system_notification",
+              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
+              header: "What is FDX?",
+              text: [
+                "FDX (Foundation Data Exchange Tokens) represent the value of data on the Foundation network. Every interaction on Foundation earns FDX, which can be used on the platform or sold for dollars once enough data demand is established."
+              ],
+              buttonText: "My FDX",
+              buttonUrl: "/treasury",
+              category: "Home",
+              position: "Feed",
+              priority: 12,
+              mode: "User",
+              timestamp: new Date().toISOString(),
+            };
+
+            notification5 = {
+              id: "system_notification",
+              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
+              header: "Want to create your own post?",
+              text: [
+                "It costs FDX tokens to create a post but every time someone else engages with it, you earn FDX tokens. If 1 million people engage with your post, you will have a lot of tokens!"
+              ],
+              buttonText: "Create a Post",
               buttonUrl: "/post",
               category: "Home",
               position: "Feed",
-              priority: priority,
+              priority: 16,
+              mode: "User",
+              timestamp: new Date().toISOString(),
+            };
+
+            notification6 = {
+              id: "system_notification",
+              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
+              header: "Anonymity is key",
+              text: [
+                "Share your views, insights and data anonymously on Foundation. You control who can link your data to you, ensuring both privacy and proper compensation."
+              ],
+              buttonText: "",
+              buttonUrl: "",
+              category: "Home",
+              position: "Feed",
+              priority: 20,
+              mode: "User",
+              timestamp: new Date().toISOString(),
+            };
+
+            notification7 = {
+              id: "system_notification",
+              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
+              header: "Build your data portfolio",
+              text: [
+                "By consistently adding data to your Foundation profile, you're creating a valuable asset. Companies are willing to pay for authentic data with no middle man, and you earn tokens for your contributions."
+              ],
+              buttonText: "",
+              buttonUrl: "",
+              category: "Home",
+              position: "Feed",
+              priority: 24,
+              mode: "User",
+              timestamp: new Date().toISOString(),
+            };
+
+            notification8 = {
+              id: "system_notification",
+              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
+              header: "Integrity matters",
+              text: [
+                "Foundation values integrity and transparency. If users attempt to manipulate the system by adding misleading options or unfairly objecting to good answers, they risk damaging their reputation. This can lead to reduced visibility of their posts and answers, as well as lower earnings of tokens."
+              ],
+              buttonText: "",
+              buttonUrl: "",
+              category: "Home",
+              position: "Feed",
+              priority: 28,
               mode: "User",
               timestamp: new Date().toISOString(),
             };
           }
 
-          // Check if result1 is empty
-          if (result1.length === 0) {
-            // If result1 is empty, insert notifications directly into result1
-            result1.push(notification1);
-            result1.push(notification2);
-          } else {
-            // Insert notification1 at index 0 and notification2 at index 3 of result1
+          // Page 1
+          if (page === 1 && nextPage === false) {
+            if (result1.length === 1) {
+              result1.splice(0, 0, notification1);
+            }
+            else if (result1.length === 2) {
+              result1.splice(0, 0, notification1);
+              result1.splice(3, 0, notification2);
+            }
+            else if (result1.length === 5) {
+              result1.splice(0, 0, notification1);
+              result1.splice(3, 0, notification2);
+              result1.splice(7, 0, notification3);
+            }
+          }
+          if (page === 1 && nextPage === true) {
             result1.splice(0, 0, notification1);
-            result1.splice(2, 0, notification2);
+            result1.splice(3, 0, notification2);
+            result1.splice(7, 0, notification3);
+          }
+
+          // Page 2
+          if (page === 2 && nextPage === false) {
+            if (result1.length >= 2 && result1.length < 5) {
+              result1.splice(2, 0, notification4);
+            }
+            else if (result1.length === 5) {
+              result1.splice(2, 0, notification4);
+              result1.splice(6, 0, notification5);
+            }
+          }
+          if (page === 2 && nextPage === true) {
+            result1.splice(2, 0, notification4);
+            result1.splice(6, 0, notification5);
+          }
+
+          // Page 3
+          if (page === 3 && nextPage === false) {
+            if (result1.length >= 3) {
+              result1.splice(3, 0, notification6);
+            }
+          }
+          if (page === 3 && nextPage === true) {
+            result1.splice(3, 0, notification6);
+          }
+
+          // Page 4
+          if (page === 4 && nextPage === false) {
+            if (result1.length >= 3) {
+              result1.splice(3, 0, notification6);
+            }
+          }
+          if (page === 4 && nextPage === true) {
+            result1.splice(1, 0, notification7);
+          }
+
+          // Page 5
+          if (page === 5 && nextPage === false) {
+            if (result1.length === 2) {
+              result1.splice(2, 0, notification7);
+            }
+            if (result1.length > 2 && result1.length <= 5) {
+              result1.splice(2, 0, notification7);
+              result1.splice(6, 0, notification8);
+            }
+          }
+          if (page === 5 && nextPage === true) {
+            result1.splice(0, 0, notification8);
+            // result1.splice(3, 0, notification2);
+            // result1.splice(7, 0, notification3);
           }
         }
       }
