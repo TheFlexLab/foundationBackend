@@ -695,6 +695,21 @@ const removeAWorkEducationBadge = async (req, res) => {
       throw new Error("Badges Not Found");
     }
     User.badges = userBadges;
+    
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+
     User.markModified("badges");
     // Save the updated user document
     const data = await User.save();
@@ -1380,6 +1395,21 @@ const removePersonalBadge = async (req, res) => {
     });
 
     User.badges = updatedUserBadges;
+
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+
     // Update the action
     await User.save();
     res.status(200).json({ message: "Successful" });
@@ -1416,6 +1446,21 @@ const removeWeb3Badge = async (req, res) => {
     });
 
     User.badges = updatedUserBadges;
+
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+
     // Update the action
     await User.save();
 
@@ -2047,6 +2092,21 @@ const removePasskeyBadge = async (req, res) => {
     );
     // Update the user badges
     User.badges = updatedUserBadges;
+
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+    
     // Update the action
     await User.save();
 
@@ -2084,6 +2144,21 @@ const removeFarCasterBadge = async (req, res) => {
     );
     // Update the user badges
     User.badges = updatedUserBadges;
+
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+
     // Update the action
     await User.save();
 
