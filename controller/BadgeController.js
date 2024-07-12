@@ -1501,6 +1501,21 @@ const removeBadge = async (req, res) => {
     });
     // Update the user badges
     User.badges = updatedUserBadges;
+
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+
     // Update the action
     await User.save();
 
@@ -1577,6 +1592,21 @@ const removeContactBadge = async (req, res) => {
     });
     // Update the user badges
     User.badges = updatedUserBadges;
+
+    // Find if badgeName already exists in badgeRemoved array
+    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+    if (badgeIndex !== -1) {
+      // If badgeName exists, update the deletedAt
+      User.badgeRemoved[badgeIndex].deletedAt = new Date();
+    } else {
+      // If badgeName does not exist, create a new entry
+      User.badgeRemoved.push({
+        badgeName: req.body.badgeName,
+        deletedAt: new Date(),
+      });
+    }
+
     // Update the action
     await User.save();
 
@@ -2152,6 +2182,20 @@ const addPasswordBadgesUpdate = async (req, res) => {
         user.badges.splice(index, 1);
       }
       user.isPasswordEncryption = false;
+
+      // Find if badgeName already exists in badgeRemoved array
+      const badgeIndex = user.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+
+      if (badgeIndex !== -1) {
+        // If badgeName exists, update the deletedAt
+        user.badgeRemoved[badgeIndex].deletedAt = new Date();
+      } else {
+        // If badgeName does not exist, create a new entry
+        user.badgeRemoved.push({
+          badgeName: req.body.badgeName,
+          deletedAt: new Date(),
+        });
+      }
       await user.save();
 
       // Create Ledger

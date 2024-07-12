@@ -292,6 +292,12 @@ const userSchema = mongoose.Schema(
         data: { type: Object },
       },
     ],
+    badgeRemoved: [
+      {
+        badgeName: { type: String },
+        deletedAt: { type: Date },
+      }
+    ],
     role: {
       type: String,
       enum: ["guest", "user"],
