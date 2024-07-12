@@ -295,8 +295,9 @@ const userSchema = mongoose.Schema(
     badgeRemoved: [
       {
         badgeName: { type: String },
+        type: { type: String },
         deletedAt: { type: Date },
-      }
+      },
     ],
     role: {
       type: String,
@@ -326,12 +327,15 @@ const userSchema = mongoose.Schema(
     isPasswordEncryption: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   { timestamps: true }
 );
 
 // Create a partial index to enforce uniqueness only on non-null emails
-userSchema.index({ email: 1 }, { unique: true, partialFilterExpression: { email: { $type: "string" } } });
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: "string" } } }
+);
 
 module.exports = mongoose.model("user", userSchema);
