@@ -15,11 +15,7 @@ const JobTitle = require("../models/JobTitle");
 const DegreeAndFieldOfStudy = require("../models/DegreeAndFieldOfStudy");
 const mongoose = require("mongoose");
 const User = require("../models/UserModel");
-const personalKeys = [
-  "firstName",
-  "lastName",
-  "security-question",
-];
+const personalKeys = ["firstName", "lastName", "security-question"];
 const noEncDecPersonalKeys = [
   "geolocation",
   "dateOfBirth",
@@ -37,6 +33,7 @@ const {
 } = require("../utils/security");
 
 const Treasury = require("../models/Treasury");
+const { type } = require("os");
 
 const update = async (req, res) => {
   try {
@@ -103,8 +100,13 @@ const addBadgeSocial = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.cookies.uuid });
     if (!User) throw new Error("No such User!");
@@ -129,7 +131,7 @@ const addBadgeSocial = async (req, res) => {
     // Update the action
     await User.save();
 
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
     // Create Ledger
     await createLedger({
       uuid: User.uuid,
@@ -164,7 +166,8 @@ const addBadgeSocial = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.clearCookie("social");
@@ -178,11 +181,15 @@ const addBadgeSocial = async (req, res) => {
 
 const addContactBadge = async (req, res) => {
   try {
-
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -190,11 +197,10 @@ const addContactBadge = async (req, res) => {
     // Check education Email
     if (req.body.type === "education") {
       let emailStatus;
-      if(req.body.provider){
+      if (req.body.provider) {
         // Check Email Category
         emailStatus = await eduEmailCheck(req, res, req.body._json.email);
-      }
-      else {
+      } else {
         // Check Email Category
         emailStatus = await eduEmailCheck(req, res, req.body.email);
       }
@@ -327,7 +333,7 @@ const addContactBadge = async (req, res) => {
     // Update the action
     await User.save();
 
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
     // Create Ledger
     await createLedger({
       uuid: User.uuid,
@@ -362,7 +368,8 @@ const addContactBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     // res.clearCookie("social");
@@ -378,8 +385,13 @@ const addBadge = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -430,8 +442,7 @@ const addBadge = async (req, res) => {
     // Update the action
     await User.save();
 
-
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
     // Create Ledger
     await createLedger({
       uuid: User.uuid,
@@ -466,7 +477,8 @@ const addBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -530,8 +542,13 @@ const addPersonalBadge = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -607,7 +624,7 @@ const addPersonalBadge = async (req, res) => {
     // Update the action
     await User.save();
 
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
 
     // Create Ledger
     await createLedger({
@@ -643,7 +660,8 @@ const addPersonalBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -695,9 +713,11 @@ const removeAWorkEducationBadge = async (req, res) => {
       throw new Error("Badges Not Found");
     }
     User.badges = userBadges;
-    
+
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -707,6 +727,7 @@ const removeAWorkEducationBadge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "personal",
       });
     }
 
@@ -996,9 +1017,8 @@ const getPersonalBadge = async (req, res) => {
               eyk
             )
           );
-        }
-        else {
-          obj = userBadges[index].personal[req.body.type]
+        } else {
+          obj = userBadges[index].personal[req.body.type];
         }
       } else {
         throw new Error("Badges Not Found");
@@ -1008,9 +1028,8 @@ const getPersonalBadge = async (req, res) => {
         // Find the index of the education object within the found badge
         if (personalKeys.includes(req.body.type)) {
           obj = decryptData(userBadges[index].personal[req.body.type]);
-        }
-        else {
-          obj = userBadges[index].personal[req.body.type]
+        } else {
+          obj = userBadges[index].personal[req.body.type];
         }
       } else {
         throw new Error("Badges Not Found");
@@ -1188,11 +1207,15 @@ const updateWorkAndEducationBadge = async (req, res) => {
 
 const addWorkEducationBadge = async (req, res) => {
   try {
-
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -1209,24 +1232,18 @@ const addWorkEducationBadge = async (req, res) => {
           "No eyk Provided in request body, Request can't be proceeded."
         );
       if (personalBadgeIndex !== -1) {
-        User.badges[personalBadgeIndex].personal[req.body.type].push(
-          newData,
-        );
+        User.badges[personalBadgeIndex].personal[req.body.type].push(newData);
         User.markModified("badges");
       } else {
         User.badges.push({
           personal: {
-            [req.body.type]: [
-              newData,
-            ],
+            [req.body.type]: [newData],
           },
         });
       }
     } else {
       if (personalBadgeIndex !== -1) {
-        User.badges[personalBadgeIndex].personal[req.body.type].push(
-          newData
-        );
+        User.badges[personalBadgeIndex].personal[req.body.type].push(newData);
         User.markModified("badges");
       } else {
         User.badges.push({
@@ -1236,8 +1253,7 @@ const addWorkEducationBadge = async (req, res) => {
     }
     const data = await User.save();
 
-
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
     // Update the action
 
     // Create Ledger
@@ -1274,7 +1290,8 @@ const addWorkEducationBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ data, message: "Successful" });
@@ -1286,11 +1303,15 @@ const addWorkEducationBadge = async (req, res) => {
 };
 const addWeb3Badge = async (req, res) => {
   try {
-
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -1323,8 +1344,7 @@ const addWeb3Badge = async (req, res) => {
     // Update the action
     await User.save();
 
-
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
 
     // Create Ledger
     await createLedger({
@@ -1335,7 +1355,7 @@ const addWeb3Badge = async (req, res) => {
       txFrom: User.uuid,
       txTo: "dao",
       txAmount: "0",
-      txData: 'ethereum-wallet',
+      txData: "ethereum-wallet",
     });
     await createLedger({
       uuid: User.uuid,
@@ -1345,8 +1365,7 @@ const addWeb3Badge = async (req, res) => {
       txFrom: "DAO Treasury",
       txTo: User.uuid,
       txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
-      txData: 'ethereum-wallet',
-
+      txData: "ethereum-wallet",
     });
     // Decrement the Treasury
     await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
@@ -1359,7 +1378,8 @@ const addWeb3Badge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -1397,7 +1417,9 @@ const removePersonalBadge = async (req, res) => {
     User.badges = updatedUserBadges;
 
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -1407,6 +1429,7 @@ const removePersonalBadge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "personal",
       });
     }
 
@@ -1448,7 +1471,9 @@ const removeWeb3Badge = async (req, res) => {
     User.badges = updatedUserBadges;
 
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -1458,6 +1483,7 @@ const removeWeb3Badge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "web3",
       });
     }
 
@@ -1487,15 +1513,23 @@ const updatePersonalBadge = async (req, res) => {
 
     if (index !== -1) {
       if (User.isPasswordEncryption) {
-        if (!eyk) throw new Error("No eyk Provided in request body, Request can't be proceeded.");
+        if (!eyk)
+          throw new Error(
+            "No eyk Provided in request body, Request can't be proceeded."
+          );
         if (personalKeys.includes(req.body.type)) {
-          userBadges[index].personal[req.body.type] = userCustomizedEncryptData(encryptData(req.body.newData), eyk);
+          userBadges[index].personal[req.body.type] = userCustomizedEncryptData(
+            encryptData(req.body.newData),
+            eyk
+          );
         } else {
           userBadges[index].personal[req.body.type] = req.body.newData;
         }
       } else {
         if (personalKeys.includes(req.body.type)) {
-          userBadges[index].personal[req.body.type] = encryptData(req.body.newData);
+          userBadges[index].personal[req.body.type] = encryptData(
+            req.body.newData
+          );
         } else {
           userBadges[index].personal[req.body.type] = req.body.newData;
         }
@@ -1548,7 +1582,9 @@ const removeBadge = async (req, res) => {
     User.badges = updatedUserBadges;
 
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -1558,6 +1594,7 @@ const removeBadge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "social",
       });
     }
 
@@ -1639,7 +1676,9 @@ const removeContactBadge = async (req, res) => {
     User.badges = updatedUserBadges;
 
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -1649,6 +1688,7 @@ const removeContactBadge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "contact",
       });
     }
 
@@ -1855,11 +1895,15 @@ const addContactBadgeAdd = async (req, res) => {
 
 const addPasskeyBadge = async (req, res) => {
   try {
-
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -1921,7 +1965,7 @@ const addPasskeyBadge = async (req, res) => {
     // // Update the action
     // await User.save();
 
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
 
     // Create Ledger
     await createLedger({
@@ -1954,7 +1998,8 @@ const addPasskeyBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -1967,11 +2012,15 @@ const addPasskeyBadge = async (req, res) => {
 
 const addFarCasterBadge = async (req, res) => {
   try {
-
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
@@ -2002,7 +2051,10 @@ const addFarCasterBadge = async (req, res) => {
           accountName: req.body.accountName,
           isVerified: req.body.isVerified,
           type: req.body.type,
-          data: userCustomizedEncryptData(encryptData(req.body.data), req.body.eyk),
+          data: userCustomizedEncryptData(
+            encryptData(req.body.data),
+            req.body.eyk
+          ),
         },
       ];
     } else {
@@ -2034,7 +2086,7 @@ const addFarCasterBadge = async (req, res) => {
     // // Update the action
     // await User.save();
 
-    const txID = crypto.randomBytes(11).toString("hex")
+    const txID = crypto.randomBytes(11).toString("hex");
     // Create Ledger
     await createLedger({
       uuid: User.uuid,
@@ -2055,7 +2107,6 @@ const addFarCasterBadge = async (req, res) => {
       txTo: User.uuid,
       txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
       txData: req.body.type,
-
     });
     // Decrement the Treasury
     await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
@@ -2068,7 +2119,8 @@ const addFarCasterBadge = async (req, res) => {
     });
 
     User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    User.rewardSchedual.addingBadgeFdx = User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+    User.rewardSchedual.addingBadgeFdx =
+      User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
     await User.save();
 
     res.status(200).json({ message: "Successful" });
@@ -2094,7 +2146,9 @@ const removePasskeyBadge = async (req, res) => {
     User.badges = updatedUserBadges;
 
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -2104,9 +2158,10 @@ const removePasskeyBadge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "web3",
       });
     }
-    
+
     // Update the action
     await User.save();
 
@@ -2146,7 +2201,9 @@ const removeFarCasterBadge = async (req, res) => {
     User.badges = updatedUserBadges;
 
     // Find if badgeName already exists in badgeRemoved array
-    const badgeIndex = User.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+    const badgeIndex = User.badgeRemoved.findIndex(
+      (b) => b.badgeName === req.body.badgeName
+    );
 
     if (badgeIndex !== -1) {
       // If badgeName exists, update the deletedAt
@@ -2156,6 +2213,7 @@ const removeFarCasterBadge = async (req, res) => {
       User.badgeRemoved.push({
         badgeName: req.body.badgeName,
         deletedAt: new Date(),
+        type: "social",
       });
     }
 
@@ -2200,7 +2258,12 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
       // As Legacy Password is added so we need to Remove it.
       user.badges.forEach((badge) => {
-        if (badge.legacy || badge.accountName === "Email" || (badge.type === "work" && !badge.details) || (badge.type === "education" && !badge.details)) {
+        if (
+          badge.legacy ||
+          badge.accountName === "Email" ||
+          (badge.type === "work" && !badge.details) ||
+          (badge.type === "education" && !badge.details)
+        ) {
           return;
         } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedDecryptData(badge.details, eyk);
@@ -2229,12 +2292,15 @@ const addPasswordBadgesUpdate = async (req, res) => {
         //   badge.personal.work = badge.personal.work.map((item) =>
         //     userCustomizedDecryptData(item, eyk)
         //   );
-        // } 
+        // }
         else if (badge.personal) {
           const decryptedPersonal = badge.personal;
           for (const key of personalKeys) {
             if (badge.personal.hasOwnProperty(key)) {
-              decryptedPersonal[key] = userCustomizedDecryptData(badge.personal[key], eyk);
+              decryptedPersonal[key] = userCustomizedDecryptData(
+                badge.personal[key],
+                eyk
+              );
             }
           }
           badge.personal = decryptedPersonal;
@@ -2259,7 +2325,9 @@ const addPasswordBadgesUpdate = async (req, res) => {
       user.isPasswordEncryption = false;
 
       // Find if badgeName already exists in badgeRemoved array
-      const badgeIndex = user.badgeRemoved.findIndex(b => b.badgeName === req.body.badgeName);
+      const badgeIndex = user.badgeRemoved.findIndex(
+        (b) => b.badgeName === req.body.badgeName
+      );
 
       if (badgeIndex !== -1) {
         // If badgeName exists, update the deletedAt
@@ -2282,7 +2350,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
         txFrom: user.uuid,
         txTo: "dao",
         txAmount: "0",
-        txData: 'legacy',
+        txData: "legacy",
         // txDescription : "User adds a verification badge"
       });
       res.status(200).json({
@@ -2294,12 +2362,22 @@ const addPasswordBadgesUpdate = async (req, res) => {
 
       // Treasury Check
       const checkTreasury = await Treasury.findOne();
-      if (!checkTreasury) return res.status(404).json({message: "Treasury is not found."});
-      if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({message: "Treasury is not enough."})
+      if (!checkTreasury)
+        return res.status(404).json({ message: "Treasury is not found." });
+      if (
+        Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+        Math.round(checkTreasury.amount) <= 0
+      )
+        return res.status(404).json({ message: "Treasury is not enough." });
 
       // As Legacy Password is removed so we need to Add it.
       user.badges.forEach((badge) => {
-        if (badge.legacy || badge.accountName === "Email" || (badge.type === "work" && !badge.details) || (badge.type === "education" && !badge.details)) {
+        if (
+          badge.legacy ||
+          badge.accountName === "Email" ||
+          (badge.type === "work" && !badge.details) ||
+          (badge.type === "education" && !badge.details)
+        ) {
           return;
         } else if (badge.type && badge.type === "cell-phone") {
           badge.details = userCustomizedEncryptData(badge.details, eyk);
@@ -2333,7 +2411,10 @@ const addPasswordBadgesUpdate = async (req, res) => {
           const encryptedPersonal = badge.personal;
           for (const key of personalKeys) {
             if (badge.personal.hasOwnProperty(key)) {
-              encryptedPersonal[key] = userCustomizedEncryptData(badge.personal[key], eyk);
+              encryptedPersonal[key] = userCustomizedEncryptData(
+                badge.personal[key],
+                eyk
+              );
             }
           }
           badge.personal = encryptedPersonal;
@@ -2371,7 +2452,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
         txFrom: user.uuid,
         txTo: "dao",
         txAmount: "0",
-        txData: 'legacy',
+        txData: "legacy",
         // txDescription : "User adds a verification badge"
       });
       await createLedger({
@@ -2382,7 +2463,7 @@ const addPasswordBadgesUpdate = async (req, res) => {
         txFrom: "DAO Treasury",
         txTo: user.uuid,
         txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
-        txData: 'legacy',
+        txData: "legacy",
         // txDescription : "Incentive for adding badges"
       });
       // Decrement the Treasury
@@ -2396,7 +2477,8 @@ const addPasswordBadgesUpdate = async (req, res) => {
       });
 
       user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-      user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+      user.rewardSchedual.addingBadgeFdx =
+        user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
       await user.save();
 
       res.status(200).json({
