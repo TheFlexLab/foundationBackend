@@ -1697,7 +1697,7 @@ const getQuestsAll = async (req, res) => {
 
             // Page 4
             if (page === 4 && nextPage === false) {
-              if (result1.length > 2 && result1.length < 5) {
+              if (result1.length >= 2 && result1.length < 5) {
                 result1.splice(2, 0, notification7);
               } else if (result1.length === 5) {
                 result1.splice(2, 0, notification7);
@@ -1707,6 +1707,31 @@ const getQuestsAll = async (req, res) => {
             if (page === 4 && nextPage === true) {
               result1.splice(2, 0, notification7);
               result1.splice(6, 0, notification8);
+            }
+
+            // Page 5
+            if (page === 5 && nextPage === false) {
+              if (result1.length >= 3) {
+                result1.splice(3, 0, notification9);
+              }
+            }
+            if (page === 5 && nextPage === true) {
+              result1.splice(3, 0, notification9);
+            }
+
+            // Page 6
+            if (page === 6 && nextPage === false) {
+              if (result1.length >= 1 && result1.length < 4) {
+                result1.splice(1, 0, notification10);
+              }
+              else if(result1.length >= 4){
+                result1.splice(1, 0, notification10);
+                result1.splice(5, 0, notification11);
+              }
+            }
+            if (page === 6 && nextPage === true) {
+              result1.splice(1, 0, notification10);
+              result1.splice(5, 0, notification11);
             }
           }
         }
