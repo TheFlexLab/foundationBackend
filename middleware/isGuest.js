@@ -21,7 +21,7 @@ const isGuest = async (req, res, next) => {
 
             const isUserGuest = await UserModel.findOne({
                 uuid: uuid,
-                isGuestMode: true
+                role: "guest"
             })
 
             if (isUserGuest) {
