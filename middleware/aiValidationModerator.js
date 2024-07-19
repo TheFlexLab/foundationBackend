@@ -8,27 +8,23 @@ module.exports = async function (req, res, next) {
   // To check the question and statement not exceeded 500
   if (callType == 1) {
     if (userMessage.length >= 500)
-      return res
-        .status(400)
-        .json({
-          message: "Question / Statement should not exceeded 500 characters",
-          status: "ERROR",
-        });
+      return res.status(400).json({
+        message: "Question / Statement should not exceeded 500 characters",
+        status: "ERROR",
+      });
   }
   // To check the question and statement not exceeded 500
   if (callType == 2) {
     if (userMessage.length >= 350)
-      return res
-        .status(400)
-        .json({
-          message: "Option should not exceeded 350 characters",
-          status: "ERROR",
-        });
+      return res.status(400).json({
+        message: "Option should not exceeded 350 characters",
+        status: "ERROR",
+      });
   }
   const response = await axios.post(
     OPEN_AI_URL,
     {
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       // model: "gpt-3.5-turbo-1106",
       messages: [
         { role: "system", content: SYSTEM_MESSAGES[3] }, // SYSTEM_MESSAGES[3] -- Prompt to handle the moderator

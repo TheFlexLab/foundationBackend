@@ -88,7 +88,7 @@ async function handleRequest(
     const response = await axios.post(
       OPEN_AI_URL,
       {
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         // model: "gpt-3.5-turbo-1106",
         messages: [
           { role: "system", content: SYSTEM_MESSAGES },
