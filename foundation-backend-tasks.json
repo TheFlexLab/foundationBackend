@@ -18,7 +18,7 @@
             "environment": [
                 {
                     "name": "GITHUB_CLIENT_ID",
-                    "value": "\"Iv23li0Ad9nVaEK27ZdO\""
+                    "value": "Iv23li0Ad9nVaEK27ZdO"
                 },
                 {
                     "name": "AWS_SES_SENDER",
@@ -62,11 +62,11 @@
                 },
                 {
                     "name": "AWS_S3_BUCKET_NAME",
-                    "value": "\"development.on.foundation\""
+                    "value": "development.on.foundation"
                 },
                 {
                     "name": "INSTAGRAM_CLIENT_ID",
-                    "value": "\"343379541856647\""
+                    "value": "343379541856647"
                 },
                 {
                     "name": "BACKEND_URL",
@@ -90,7 +90,7 @@
                 },
                 {
                     "name": "JWT_SECRET",
-                    "value": "\"secret\""
+                    "value": "secret"
                 },
                 {
                     "name": "MONGO_PASSWORD",
