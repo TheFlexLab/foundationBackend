@@ -34,7 +34,7 @@
                 },
                 {
                     "name": "STRIPE_SECRET_KEY",
-                    "value": "\"sk_test_51Ott5GRsSrx9w04q0DWrFydCRU9cgaCvk8Wu3h1xh9acO5nhfcMsvzOUvM6XshChYp56FmBDiXb9JBevH0G5YK3l009SJjLqyZ\""
+                    "value": "sk_test_51Ott5GRsSrx9w04q0DWrFydCRU9cgaCvk8Wu3h1xh9acO5nhfcMsvzOUvM6XshChYp56FmBDiXb9JBevH0G5YK3l009SJjLqyZ"
                 },
                 {
                     "name": "MONGO_URI",
