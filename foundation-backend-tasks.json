@@ -30,7 +30,7 @@
                 },
                 {
                     "name": "GOOGLE_CLIENT_SECRET",
-                    "value": "\"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\""
+                    "value": "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"
                 },
                 {
                     "name": "STRIPE_SECRET_KEY",
