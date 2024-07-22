@@ -459,7 +459,7 @@ router.get(
    *         name: sort
    *         schema:
    *           type: string
-   *           enum: [Newest First, Last Updated, Most Popular]
+   *           enum: [Oldest First, Newest First, Last Updated, Most Popular]
    *         description: Sort criteria for quests.
    *       - in: query
    *         name: type
@@ -487,14 +487,14 @@ router.get(
    *         schema:
    *           type: integer
    *           minimum: 0
-   *           maximum: 5
+   *           maximum: 1000
    *         description: Initial moderation rating for quests.
    *       - in: query
    *         name: moderationRatingFinal
    *         schema:
    *           type: integer
    *           minimum: 0
-   *           maximum: 5
+   *           maximum: 1000
    *         description: Final moderation rating for quests.
    *       - in: query
    *         name: participated

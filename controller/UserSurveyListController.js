@@ -15,6 +15,7 @@ const { QUEST_COMPLETED_AMOUNT, USER_LIST_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT, L
 const UserQuestSetting = require("../models/UserQuestSetting");
 const { linkUserList, sharedLinkDynamicImageUserList } = require("../controller/UserQuestSettingController")
 const { createStartQuestUserList, updateChangeAnsStartQuestUserList } = require("../controller/StartQuestController")
+const { notification1, notification2, notification3, } = require("../notifications/sharedList");
 
 // User's List APIs
 
@@ -1167,6 +1168,19 @@ const findCategoryByLink = async (req, res) => {
                         });
                     }
                 }
+            }
+
+            if(updatedPosts.length === 1) {
+                updatedPosts.splice(0, 0, notification1);
+            }
+            else if (updatedPosts.length >= 2 && updatedPosts.length < 5){
+                updatedPosts.splice(0, 0, notification1);
+                updatedPosts.splice(3, 0, notification2);
+            }
+            else if (updatedPosts.length >= 5) {
+                updatedPosts.splice(0, 0, notification1);
+                updatedPosts.splice(3, 0, notification2);
+                updatedPosts.splice(7, 0, notification3);
             }
 
             const newCategoryDoc = {

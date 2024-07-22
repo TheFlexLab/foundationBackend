@@ -43,7 +43,7 @@ module.exports = {
     // "Please enter your job title. If the title is valid and complete, it will be echoed back to you. If it contains any errors, it will be auto-corrected. If it's not recognized as a valid job title, it will be Rejected.",
     "Please enter your job title. If the title is valid and complete, it will be echoed back to you. If it contains any errors, it will be only auto-corrected to standard. If it's not recognized as a valid job title, it will be Rejected.",
     // For Single word options
-    "Correct word or number to standard English without contractions. NEVER change numbers to words. NEVER correct brand names, informal words or trademarks like Coke. NEVER introduce synonyms. NEVER add new words. Shortest response only.",
+    "Correct word or number to standard English without contractions. NEVER change numbers to words. NEVER correct brand names, informal words or trademarks like Coke. NEVER introduce synonyms like autumn. NEVER add new words. Shortest response only.",
   ],
   REFERRALCODE: "July2024",
   // ACCOUNT_SIGNUP_AMOUNT: 4,

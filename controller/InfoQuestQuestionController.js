@@ -23,6 +23,7 @@ const {
   PostSchema,
 } = require("../models/UserList");
 const Treasury = require("../models/Treasury");
+const {notification1, notification2, notification3, notification4, notification5, notification6, notification7, notification8, notification9, notification10, notification11,} = require("../notifications/home")
 
 const createInfoQuestQuest = async (req, res) => {
   try {
@@ -1204,7 +1205,9 @@ const getQuestsAll = async (req, res) => {
     });
 
     query = query.sort(
-      sort === "Newest First"
+          sort === "Oldest First"
+        ? { createdAt: 1, _id: 1 }
+        :  sort === "Newest First"
         ? { createdAt: -1, _id: 1 }
         : sort === "Last Updated"
         ? { lastInteractedAt: -1, _id: 1 }
@@ -1440,18 +1443,11 @@ const getQuestsAll = async (req, res) => {
           });
           if (!user) throw new Error(`No user found against ${uuid}`);
           let mode = user.isGuestMode;
-          let notification1,
-            notification2,
-            notification3,
-            notification4,
-            notification5,
-            notification6,
-            notification7,
-            notification8;
+          let notificationGuest1, notificationGuest2;
 
           if (mode && page === 1) {
-            // Define Guest's notification1 properties
-            notification1 = {
+            // Define Guest's notificationGuest1 properties
+            notificationGuest1 = {
               id: "system_notification",
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "Ready to start growing your FDX balance?",
@@ -1466,8 +1462,8 @@ const getQuestsAll = async (req, res) => {
               mode: "Guest",
               timestamp: new Date().toISOString(),
             };
-            // Define Guest's notification2 properties
-            notification2 = {
+            // Define Guest's notificationGuest2 properties
+            notificationGuest2 = {
               id: "system_notification",
               icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
               header: "What is Foundation?",
@@ -1482,136 +1478,9 @@ const getQuestsAll = async (req, res) => {
               mode: "Guest",
               timestamp: new Date().toISOString(),
             };
-            result1.splice(0, 0, notification1);
-            result1.splice(2, 0, notification2);
+            result1.splice(0, 0, notificationGuest1);
+            result1.splice(2, 0, notificationGuest2);
           } else if (!mode) {
-            notification1 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "How it works",
-              text: [
-                "On Foundation, you can post content, participate in posts and earn badges. These activities add value to your data, making you more desirable for companies looking to advertise to people like you.",
-              ],
-              buttonText: "",
-              buttonUrl: "",
-              category: "Home",
-              position: "Feed",
-              priority: 1,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification2 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "How to use Foundation",
-              text: [
-                "Start by participating in posts and adding badges to your profile. Each interaction enhances the value of your data and the network, increasing your earning potential.",
-              ],
-              buttonText: "",
-              buttonUrl: "",
-              category: "Home",
-              position: "Feed",
-              priority: 4,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification3 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Engage with posts, earn FDX",
-              text: [
-                "Start participating in posts to earn FDX tokens. Keep scrolling or sort by category up top to participate in posts you care about.",
-              ],
-              buttonText: "",
-              buttonUrl: "",
-              category: "Home",
-              position: "Feed",
-              priority: 8,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification4 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "What is FDX?",
-              text: [
-                "FDX (Foundation Data Exchange Tokens) represent the value of data on the Foundation network. Every interaction on Foundation earns FDX, which can be used on the platform or sold for dollars once enough data demand is established.",
-              ],
-              buttonText: "My FDX",
-              buttonUrl: "/treasury",
-              category: "Home",
-              position: "Feed",
-              priority: 12,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification5 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Want to create your own post?",
-              text: [
-                "It costs FDX tokens to create a post but every time someone else engages with it, you earn FDX tokens. If 1 million people engage with your post, you will have a lot of tokens!",
-              ],
-              buttonText: "Create a Post",
-              buttonUrl: "/post",
-              category: "Home",
-              position: "Feed",
-              priority: 16,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification6 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Anonymity is key",
-              text: [
-                "Share your views, insights and data anonymously on Foundation. You control who can link your data to you, ensuring both privacy and proper compensation.",
-              ],
-              buttonText: "",
-              buttonUrl: "",
-              category: "Home",
-              position: "Feed",
-              priority: 20,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification7 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Build your data portfolio",
-              text: [
-                "By consistently adding data to your Foundation profile, you're creating a valuable asset. Companies are willing to pay for authentic data with no middle man, and you earn tokens for your contributions.",
-              ],
-              buttonText: "",
-              buttonUrl: "",
-              category: "Home",
-              position: "Feed",
-              priority: 24,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
-
-            notification8 = {
-              id: "system_notification",
-              icon: "https://www.flickr.com/photos/160246067@N08/39735543880/",
-              header: "Integrity matters",
-              text: [
-                "Foundation values integrity and transparency. If users attempt to manipulate the system by adding misleading options or unfairly objecting to good answers, they risk damaging their reputation. This can lead to reduced visibility of their posts and answers, as well as lower earnings of tokens.",
-              ],
-              buttonText: "",
-              buttonUrl: "",
-              category: "Home",
-              position: "Feed",
-              priority: 28,
-              mode: "User",
-              timestamp: new Date().toISOString(),
-            };
             // Page 1
             if (page === 1 && nextPage === false) {
               if (result1.length < 2) {
@@ -1657,7 +1526,7 @@ const getQuestsAll = async (req, res) => {
 
             // Page 4
             if (page === 4 && nextPage === false) {
-              if (result1.length > 2 && result1.length < 5) {
+              if (result1.length >= 2 && result1.length < 5) {
                 result1.splice(2, 0, notification7);
               } else if (result1.length === 5) {
                 result1.splice(2, 0, notification7);
@@ -1667,6 +1536,31 @@ const getQuestsAll = async (req, res) => {
             if (page === 4 && nextPage === true) {
               result1.splice(2, 0, notification7);
               result1.splice(6, 0, notification8);
+            }
+
+            // Page 5
+            if (page === 5 && nextPage === false) {
+              if (result1.length >= 3) {
+                result1.splice(3, 0, notification9);
+              }
+            }
+            if (page === 5 && nextPage === true) {
+              result1.splice(3, 0, notification9);
+            }
+
+            // Page 6
+            if (page === 6 && nextPage === false) {
+              if (result1.length >= 1 && result1.length < 4) {
+                result1.splice(1, 0, notification10);
+              }
+              else if(result1.length >= 4){
+                result1.splice(1, 0, notification10);
+                result1.splice(5, 0, notification11);
+              }
+            }
+            if (page === 6 && nextPage === true) {
+              result1.splice(1, 0, notification10);
+              result1.splice(5, 0, notification11);
             }
           }
         }
