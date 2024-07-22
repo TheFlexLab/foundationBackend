@@ -1,0 +1,262 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:551217652383:task-definition/foundation-backend-tasks:1",
+    "containerDefinitions": [
+        {
+            "name": "foundation-backend",
+            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "foundation-backend-5173-tcp",
+                    "containerPort": 5173,
+                    "hostPort": 5173,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "GITHUB_CLIENT_ID",
+                    "value": "\"Iv23li0Ad9nVaEK27ZdO\""
+                },
+                {
+                    "name": "AWS_SES_SENDER",
+                    "value": "noreply@on.foundation"
+                },
+                {
+                    "name": "TWITTER_CONSUMER_SECRET",
+                    "value": "\"6G3L78f6UHEWdqsyky3RzZFs1Ruig38eS5jFjcbuIeramrLyKG\""
+                },
+                {
+                    "name": "GOOGLE_CLIENT_SECRET",
+                    "value": "\"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\""
+                },
+                {
+                    "name": "STRIPE_SECRET_KEY",
+                    "value": "\"sk_test_51Ott5GRsSrx9w04q0DWrFydCRU9cgaCvk8Wu3h1xh9acO5nhfcMsvzOUvM6XshChYp56FmBDiXb9JBevH0G5YK3l009SJjLqyZ\""
+                },
+                {
+                    "name": "MONGO_URI",
+                    "value": "mongodb+srv://haiderflexlab:PYgmNy0SSSvYZHKj@cluster0.dzuqng9.mongodb.net/foundationDevelopment?retryWrites=true&w=majority"
+                },
+                {
+                    "name": "ALGORITHM",
+                    "value": "\"aes-256-cbc\""
+                },
+                {
+                    "name": "AWS_SECRET_ACCESS_KEY",
+                    "value": "\"bebkdL7NlmPvTD80hBOYYM+jwb/j55x5By4pTyxz\""
+                },
+                {
+                    "name": "AWS_SES_REGION",
+                    "value": "\"us-east-2\""
+                },
+                {
+                    "name": "MONGO_USER",
+                    "value": "haiderflexlab"
+                },
+                {
+                    "name": "DOCS_DB_NAME",
+                    "value": "foundationDev"
+                },
+                {
+                    "name": "AWS_S3_BUCKET_NAME",
+                    "value": "\"development.on.foundation\""
+                },
+                {
+                    "name": "INSTAGRAM_CLIENT_ID",
+                    "value": "\"343379541856647\""
+                },
+                {
+                    "name": "BACKEND_URL",
+                    "value": "\"https://api.development.on.foundation\""
+                },
+                {
+                    "name": "LINKEDIN_SECRET",
+                    "value": "\"dn5tIorbCgaqAsKC\""
+                },
+                {
+                    "name": "DOCS_DB_USER",
+                    "value": "foundationDatabse"
+                },
+                {
+                    "name": "AWS_S3_REGION",
+                    "value": "\"us-east-1\""
+                },
+                {
+                    "name": "DOCS_DB_PASSWORD",
+                    "value": "foundationDatabse123012"
+                },
+                {
+                    "name": "JWT_SECRET",
+                    "value": "\"secret\""
+                },
+                {
+                    "name": "MONGO_PASSWORD",
+                    "value": "PYgmNy0SSSvYZHKj"
+                },
+                {
+                    "name": "AWS_SNS_SECRET_KEY",
+                    "value": "EUqpKiz0B4jQO0z7gKV7Cex2u3C8GfzqL2YpjV5R"
+                },
+                {
+                    "name": "AWS_SNS_REGION",
+                    "value": "us-east-2"
+                },
+                {
+                    "name": "EMAIL_PASSWORD",
+                    "value": "wvuhqfpbrtummhhj"
+                },
+                {
+                    "name": "AWS_S3_SECRET_ACCESS_KEY",
+                    "value": "\"de8ZfoajK/RrhnS4PRD9/0omAC7AkcEsMNeENg5a\""
+                },
+                {
+                    "name": "OPEN_AI_KEY",
+                    "value": "6Nz7d09pydpTP1dSGRN3T3BlbkFJeoSfZHi6aMWv9EJBQ05h"
+                },
+                {
+                    "name": "FACEBOOK_APP_SECRET",
+                    "value": "\"5a6af75fdb11fa22c911e57ae0d374df\""
+                },
+                {
+                    "name": "INSTAGRAM_CLIENT_SECRET",
+                    "value": "\"f2b57190abc6da76b70609802471ca81\""
+                },
+                {
+                    "name": "GOOGLE_CLIENT_ID",
+                    "value": "\"659261232291-vpi494e3bipn51ub1g3s7aadd3lcef8u.apps.googleusercontent.com\""
+                },
+                {
+                    "name": "USER_VERIFICATION_TOKEN_SECRET",
+                    "value": "\"dgfgpspdifgskdfngussj490385jsp8ms\""
+                },
+                {
+                    "name": "GITHUB_CLIENT_SECRET",
+                    "value": "\"c2011dfa1eae69306eefc75168d71956a9e70066\""
+                },
+                {
+                    "name": "FACEBOOK_APP_ID",
+                    "value": "\"882916076242427\""
+                },
+                {
+                    "name": "STRIPE_CLIENT_ID",
+                    "value": "\"ca_FkyHCg7X8mlvCUdMDao4mMxagUfhIwXb\""
+                },
+                {
+                    "name": "AWS_SES_ReceiverEmails",
+                    "value": "[\"david@foundation-io.com\", \"justin@foundatoin-io.com\"]"
+                },
+                {
+                    "name": "rpID",
+                    "value": "\"development.on.foundation\""
+                },
+                {
+                    "name": "OPEN_AI_URL",
+                    "value": "https://api.openai.com/v1/chat/completions"
+                },
+                {
+                    "name": "FRONTEND_URL",
+                    "value": "\"https://development.on.foundation\""
+                },
+                {
+                    "name": "AWS_S3_ACCESS_KEY",
+                    "value": "\"AKIAYAVZB4KP6E6OLWVZ\""
+                },
+                {
+                    "name": "TWITTER_CONSUMER_KEY",
+                    "value": "\"ge8P4UqM2LsI1Cjtmfyl8xZmL\""
+                },
+                {
+                    "name": "DEVELOPMENT",
+                    "value": "false"
+                },
+                {
+                    "name": "BASE_PORT",
+                    "value": "7354"
+                },
+                {
+                    "name": "AWS_ACCESS_KEY",
+                    "value": "\"AKIAYAVZB4KPROLIH5PO\""
+                },
+                {
+                    "name": "EMAIL_USERNAME",
+                    "value": "haider.flexlab@gmail.com"
+                },
+                {
+                    "name": "LINKEDIN_KEY",
+                    "value": "\"78m35axurl22ym\""
+                },
+                {
+                    "name": "AWS_SNS_ACCESS_KEY",
+                    "value": "AKIAYAVZB4KPT4M7Y2EX"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/foundation-backend-tasks",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "us-east-2",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "foundation-backend-tasks",
+    "executionRoleArn": "arn:aws:iam::551217652383:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 1,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "8192",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2024-07-22T15:15:40.686Z",
+    "registeredBy": "arn:aws:iam::551217652383:user/devlopmentFullAccess",
+    "tags": []
+}
