@@ -1,9 +1,9 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:us-east-2:551217652383:task-definition/foundation-backend-tasks:1",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:551217652383:task-definition/foundation-backend-tasks:5",
     "containerDefinitions": [
         {
             "name": "foundation-backend",
-            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend",
+            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend:1add17bdbd481914c7d95716c89c1406ab161ad0",
             "cpu": 0,
             "portMappings": [
                 {
@@ -25,20 +25,16 @@
                     "value": "noreply@on.foundation"
                 },
                 {
-                    "name": "TWITTER_CONSUMER_SECRET",
-                    "value": "6G3L78f6UHEWdqsyky3RzZFs1Ruig38eS5jFjcbuIeramrLyKG"
-                },
-                {
                     "name": "GOOGLE_CLIENT_SECRET",
                     "value": "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"
                 },
                 {
-                    "name": "STRIPE_SECRET_KEY",
-                    "value": "sk_test_51Ott5GRsSrx9w04q0DWrFydCRU9cgaCvk8Wu3h1xh9acO5nhfcMsvzOUvM6XshChYp56FmBDiXb9JBevH0G5YK3l009SJjLqyZ"
+                    "name": "TWITTER_CONSUMER_SECRET",
+                    "value": "6G3L78f6UHEWdqsyky3RzZFs1Ruig38eS5jFjcbuIeramrLyKG"
                 },
                 {
-                    "name": "MONGO_URI",
-                    "value": "mongodb+srv://haiderflexlab:PYgmNy0SSSvYZHKj@cluster0.dzuqng9.mongodb.net/foundationDevelopment?retryWrites=true&w=majority"
+                    "name": "STRIPE_SECRET_KEY",
+                    "value": "sk_test_51Ott5GRsSrx9w04q0DWrFydCRU9cgaCvk8Wu3h1xh9acO5nhfcMsvzOUvM6XshChYp56FmBDiXb9JBevH0G5YK3l009SJjLqyZ"
                 },
                 {
                     "name": "ALGORITHM",
@@ -49,28 +45,32 @@
                     "value": "\"bebkdL7NlmPvTD80hBOYYM+jwb/j55x5By4pTyxz\""
                 },
                 {
+                    "name": "MONGO_URI",
+                    "value": "mongodb+srv://haiderflexlab:PYgmNy0SSSvYZHKj@cluster0.dzuqng9.mongodb.net/foundationDevelopment?retryWrites=true&w=majority"
+                },
+                {
                     "name": "AWS_SES_REGION",
                     "value": "\"us-east-2\""
-                },
-                {
-                    "name": "MONGO_USER",
-                    "value": "haiderflexlab"
-                },
-                {
-                    "name": "DOCS_DB_NAME",
-                    "value": "foundationDev"
                 },
                 {
                     "name": "AWS_S3_BUCKET_NAME",
                     "value": "development.on.foundation"
                 },
                 {
-                    "name": "INSTAGRAM_CLIENT_ID",
-                    "value": "343379541856647"
+                    "name": "DOCS_DB_NAME",
+                    "value": "foundationDev"
+                },
+                {
+                    "name": "MONGO_USER",
+                    "value": "haiderflexlab"
                 },
                 {
                     "name": "BACKEND_URL",
                     "value": "\"https://api.development.on.foundation\""
+                },
+                {
+                    "name": "INSTAGRAM_CLIENT_ID",
+                    "value": "343379541856647"
                 },
                 {
                     "name": "LINKEDIN_SECRET",
@@ -105,12 +105,12 @@
                     "value": "us-east-2"
                 },
                 {
-                    "name": "EMAIL_PASSWORD",
-                    "value": "wvuhqfpbrtummhhj"
-                },
-                {
                     "name": "AWS_S3_SECRET_ACCESS_KEY",
                     "value": "\"de8ZfoajK/RrhnS4PRD9/0omAC7AkcEsMNeENg5a\""
+                },
+                {
+                    "name": "EMAIL_PASSWORD",
+                    "value": "wvuhqfpbrtummhhj"
                 },
                 {
                     "name": "OPEN_AI_KEY",
@@ -129,12 +129,12 @@
                     "value": "\"659261232291-vpi494e3bipn51ub1g3s7aadd3lcef8u.apps.googleusercontent.com\""
                 },
                 {
-                    "name": "USER_VERIFICATION_TOKEN_SECRET",
-                    "value": "\"dgfgpspdifgskdfngussj490385jsp8ms\""
-                },
-                {
                     "name": "GITHUB_CLIENT_SECRET",
                     "value": "\"c2011dfa1eae69306eefc75168d71956a9e70066\""
+                },
+                {
+                    "name": "USER_VERIFICATION_TOKEN_SECRET",
+                    "value": "\"dgfgpspdifgskdfngussj490385jsp8ms\""
                 },
                 {
                     "name": "FACEBOOK_APP_ID",
@@ -157,12 +157,12 @@
                     "value": "https://api.openai.com/v1/chat/completions"
                 },
                 {
-                    "name": "FRONTEND_URL",
-                    "value": "\"https://development.on.foundation\""
-                },
-                {
                     "name": "AWS_S3_ACCESS_KEY",
                     "value": "\"AKIAYAVZB4KP6E6OLWVZ\""
+                },
+                {
+                    "name": "FRONTEND_URL",
+                    "value": "\"https://development.on.foundation\""
                 },
                 {
                     "name": "TWITTER_CONSUMER_KEY",
@@ -193,10 +193,8 @@
                     "value": "AKIAYAVZB4KPT4M7Y2EX"
                 }
             ],
-            "environmentFiles": [],
             "mountPoints": [],
             "volumesFrom": [],
-            "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -207,18 +205,30 @@
                 },
                 "secretOptions": []
             },
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost/7354/ || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3
+            },
             "systemControls": []
         }
     ],
     "family": "foundation-backend-tasks",
     "executionRoleArn": "arn:aws:iam::551217652383:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 1,
+    "revision": 5,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
         {
             "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.24"
         },
         {
             "name": "ecs.capability.execution-role-awslogs"
@@ -228,6 +238,9 @@
         },
         {
             "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
         },
         {
             "name": "ecs.capability.execution-role-ecr-pull"
@@ -256,7 +269,7 @@
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2024-07-22T15:15:40.686Z",
+    "registeredAt": "2024-07-23T23:22:19.567Z",
     "registeredBy": "arn:aws:iam::551217652383:user/devlopmentFullAccess",
     "tags": []
 }
