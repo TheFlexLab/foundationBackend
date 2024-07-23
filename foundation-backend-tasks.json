@@ -1,15 +1,15 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:us-east-2:551217652383:task-definition/foundation-backend-tasks:5",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:551217652383:task-definition/foundation-backend-tasks:8",
     "containerDefinitions": [
         {
             "name": "foundation-backend",
-            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend:1add17bdbd481914c7d95716c89c1406ab161ad0",
+            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend:8a6954af0d52d7bf35a9125ceb32693341faf3ba",
             "cpu": 0,
             "portMappings": [
                 {
-                    "name": "foundation-backend-5173-tcp",
-                    "containerPort": 5173,
-                    "hostPort": 5173,
+                    "name": "foundation-backend-7354-tcp",
+                    "containerPort": 7354,
+                    "hostPort": 7354,
                     "protocol": "tcp",
                     "appProtocol": "http"
                 }
@@ -208,7 +208,7 @@
             "healthCheck": {
                 "command": [
                     "CMD-SHELL",
-                    "curl -f http://localhost/7354/ || exit 1"
+                    "curl -f http://localhost:7354/ || exit 1"
                 ],
                 "interval": 30,
                 "timeout": 5,
@@ -218,9 +218,10 @@
         }
     ],
     "family": "foundation-backend-tasks",
+    "taskRoleArn": "arn:aws:iam::551217652383:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::551217652383:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 5,
+    "revision": 8,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
@@ -238,6 +239,9 @@
         },
         {
             "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
         },
         {
             "name": "ecs.capability.container-health-check"
@@ -269,7 +273,7 @@
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2024-07-23T23:22:19.567Z",
+    "registeredAt": "2024-07-23T23:54:19.089Z",
     "registeredBy": "arn:aws:iam::551217652383:user/devlopmentFullAccess",
     "tags": []
 }
