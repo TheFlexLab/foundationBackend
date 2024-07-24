@@ -90,7 +90,7 @@ let notification6 = {
 
 let notification7 = {
     id: "system_notification",
-    header: "What does Foundation do with my data I've added? ",
+    header: "What does Foundation do with my data?",
     text: [
         "Nothing. Foundation does not own the information you populate within the platform. You own your data and can decide what sources you want to share it with and what price. ",
     ],
@@ -107,7 +107,7 @@ let notification8 = {
     id: "system_notification",
     header: "Want to create your own post?",
     text: [
-        "It costs FDX tokens to create a post but every time someone else engages with it, you earn more FDX tokens. If 1 million people engage with your post, you will have a lot of tokens!",
+        "You will be rewarded FDX tokens for every post you create. Also, every time someone else engages with your post, you will earn aditional FDX tokens. If 1 million people engage with your post, you will have a lot of tokens!",
     ],
     buttonText: "Create a Post",
     buttonUrl: "/post",
