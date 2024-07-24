@@ -43,6 +43,7 @@ router.post("/easySearch/:term?",
   SearchController.easySearch
 );
 
+// Not being use at FE, Send `req.body.uuid` in body 1st
 router.post("/searchBookmarks",
   /**
    * @swagger
@@ -67,6 +68,7 @@ router.post("/searchBookmarks",
   SearchController.searchBookmarks
 );
 
+// Not being use at FE, Send `req.body.uuid` in body 1st
 router.post("/searchHiddenQuest",
   /**
    * @swagger

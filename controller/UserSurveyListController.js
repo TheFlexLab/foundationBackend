@@ -36,10 +36,8 @@ const {
   notification2,
   notification3,
 } = require("../notifications/sharedList");
-const { uploadS3Bucket } = require("../utils/uploadS3Bucket");
 
 // User's List APIs
-
 const userList = async (req, res) => {
   try {
     const userUuid = req.params.userUuid;
@@ -371,13 +369,6 @@ const generateCategoryShareLink = async (req, res) => {
           userSpent.feeSchedual.creatingListCustomLinkFdx +
           USER_LIST_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT;
         await userSpent.save();
-        await uploadS3Bucket({
-          fileName: customizedLink,
-          description:
-            "A revolutionary new social platform. Own your data. Get rewarded.",
-          route: "static_pages/list",
-          title: "Foundation: Shared list",
-        });
       } else {
         categoryDoc.link = shortLink.generate(8);
         await createLedger({
@@ -395,13 +386,6 @@ const generateCategoryShareLink = async (req, res) => {
         userSpent.feeSchedual.creatingListLinkFdx =
           userSpent.feeSchedual.creatingListLinkFdx + LIST_LINK;
         await userSpent.save();
-        await uploadS3Bucket({
-          fileName: categoryDoc.link,
-          description:
-            "A revolutionary new social platform. Own your data. Get rewarded.",
-          route: "static_pages/list",
-          title: "Foundation: Shared list",
-        });
       }
 
       categoryDoc.updatedAt = new Date().toISOString();

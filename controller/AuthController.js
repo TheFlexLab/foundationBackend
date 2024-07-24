@@ -2597,7 +2597,8 @@ const deleteByUUID = async (req, res) => {
 };
 const logout = async (req, res) => {
   try {
-    const uuid = req.cookies.uuid;
+    // const uuid = req.cookies.uuid;
+    const uuid = req.body.uuid;
 
     // Create Ledger
     await createLedger({
@@ -2626,7 +2627,8 @@ const logout = async (req, res) => {
 
 const setStates = async (req, res) => {
   try {
-    const uuid = req.cookies.uuid;
+    // const uuid = req.cookies.uuid;
+    const uuid = req.body.uuid;
     const updatedUser = await User.findOneAndUpdate(
       { uuid: uuid },
       {
@@ -2657,9 +2659,12 @@ const setStates = async (req, res) => {
   }
 };
 
+// Please set req.body.uuid at FE before using the API
 const setBookmarkStates = async (req, res) => {
   try {
-    const uuid = req.cookies.uuid;
+    // This API is not being used at FE ~Ref: Cookie removal due to middlware isGuest
+    // const uuid = req.cookies.uuid;
+    const uuid = req.body.uuid;
     const updatedUser = await User.findOneAndUpdate(
       { uuid: uuid },
       {

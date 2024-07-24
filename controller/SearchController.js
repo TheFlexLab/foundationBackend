@@ -66,9 +66,11 @@ const easySearch = async (req, res) => {
   }
 };
 
+// Not being use at FE, Send `req.body.uuid` in body 1st
 const searchBookmarks = async (req, res) => {
   const searchTerm = req.query.term;
-  const uuid = req.cookies.uuid;
+  // const uuid = req.cookies.uuid;
+  const uuid = req.body.uuid;
   const { moderationRatingFilter } = req.body;
   try {
     const hiddenUserSettings = await UserQuestSetting.find({
@@ -141,9 +143,11 @@ const searchBookmarks = async (req, res) => {
   }
 };
 
+// Not being use at FE, Send `req.body.uuid` in body 1st
 const searchHiddenQuest = async (req, res) => {
   const searchTerm = req.query.term;
-  const uuid = req.cookies.uuid;
+  // const uuid = req.cookies.uuid;
+  const uuid = req.body.uuid;
   try {
     const results = await UserQuestSetting.find({
       Question: { $regex: searchTerm, $options: "i" },

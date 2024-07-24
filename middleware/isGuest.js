@@ -7,14 +7,9 @@ const isGuest = async (req, res, next) => {
       next();
     } else if (!req.body.postLink) {
       let uuid;
-      if (req.cookies.uuid) {
-        console.log("cookies", req.cookies.uuid);
-        uuid = req.cookies.uuid;
-      } else if (req.body.uuid) {
-        console.log("body", req.body.uuid);
+      if (req.body.uuid) {
         uuid = req.body.uuid;
       } else {
-        console.log("userUuid", req.body.userUuid);
         uuid = req.body.userUuid;
       }
 

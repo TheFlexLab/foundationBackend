@@ -716,6 +716,7 @@ router.post(
   AuthController.setStates
 );
 
+// API is not being used at FE please set `req.body.uuid` at FE first
 router.post(
   "/setBookmarkStates",
   /**
