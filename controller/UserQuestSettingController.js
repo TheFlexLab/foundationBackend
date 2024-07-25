@@ -352,10 +352,10 @@ const status = async (req, res) => {
     }
     return res.status(200).json({
       message: `Share link ${status === "Disable"
-          ? "Disabled"
-          : status === "Delete"
-            ? "Deleted"
-            : "Enabled"
+        ? "Disabled"
+        : status === "Delete"
+          ? "Deleted"
+          : "Enabled"
         } Successfully`,
       data: updatedUserQuestSetting,
     });
@@ -375,7 +375,7 @@ const suppressConditions = [
 
 const createFeedback = async (req, res) => {
   try {
-    const { hiddenMessage, questForeignKey, uuid, Question } = req.body;
+    const { feedbackMessage, questForeignKey, uuid, Question } = req.body;
 
     const userQuestSetting = await UserQuestSetting.findOne(
       {
@@ -384,9 +384,9 @@ const createFeedback = async (req, res) => {
       }
     )
     let questSetting;
-    if(!userQuestSetting){
+    if (!userQuestSetting) {
       const userQuestSettingModel = new UserQuestSetting({
-        hiddenMessage: hiddenMessage,
+        feedbackMessage: feedbackMessage,
         questForeignKey: questForeignKey,
         uuid: uuid,
         Question: Question,
@@ -399,14 +399,41 @@ const createFeedback = async (req, res) => {
       });
     }
     else {
-      userQuestSetting.hiddenMessage = hiddenMessage;
       userQuestSetting.feedbackTime = new Date();
+      userQuestSetting.feedbackMessage = feedbackMessage;
       const updatedUserQuestSetting = await userQuestSetting.save();
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
         data: updatedUserQuestSetting,
       });
-    }  
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: ` An error occurred while Feedback UserQuestSetting: ${error.message}`,
+    });
+  }
+}
+
+const updateFeedback = async (req, res) => {
+  try {
+    const { feedbackMessage, questForeignKey, uuid } = req.body;
+
+    const userQuestSetting = await UserQuestSetting.findOne(
+      {
+        uuid: uuid,
+        questForeignKey: questForeignKey
+      }
+    )
+    userQuestSetting.feedbackTime = new Date();
+    userQuestSetting.feedbackMessage = feedbackMessage;
+    const updatedUserQuestSetting = await userQuestSetting.save();
+
+    return res.status(201).json({
+      message: "Feedback Updated Successfully!",
+      data: updatedUserQuestSetting,
+    });
 
   } catch (error) {
     console.error(error);
@@ -1068,5 +1095,6 @@ module.exports = {
   linkUserList,
   sharedLinkDynamicImageUserList,
   createFeedback,
+  updateFeedback,
   // get,
 };

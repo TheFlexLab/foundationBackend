@@ -68,6 +68,32 @@ router.post(
 );
 
 router.post(
+  "/userQuestSetting/updateFeedback",
+  isUrlSharedPostValidToInteract,
+  /**
+   * @swagger
+   * /userQuestSetting/updateFeedback:
+   *   post:
+   *     tags:
+   *       - User Quest Setting
+   *     summary: Create user quest setting
+   *     description: Endpoint to create user quest setting
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UserQuestSettingCreateRequest'
+   *     responses:
+   *       '200':
+   *         description: User quest setting created successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  UserQuestSettingController.updateFeedback
+);
+
+router.post(
   "/userQuestSetting/create",
   isUrlSharedPostValidToInteract,
   /**
