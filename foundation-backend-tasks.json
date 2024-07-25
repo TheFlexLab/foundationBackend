@@ -154,7 +154,7 @@
                 },
                 {
                     "name": "rpID",
-                    "value": "development.on.foundation"
+                    "value": "api-v2.on.foundation"
                 },
                 {
                     "name": "OPEN_AI_URL",
@@ -166,7 +166,7 @@
                 },
                 {
                     "name": "FRONTEND_URL",
-                    "value": "https://development.on.foundation"
+                    "value": "https://staging.on.foundation"
                 },
                 {
                     "name": "PAYPAL_CLIENT_ID",
