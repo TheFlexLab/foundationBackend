@@ -20,6 +20,10 @@ const StartQuestsSchema = mongoose.Schema(
     btnStatus: {
       type: String,
     },
+    isFeedback: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -20,6 +20,7 @@ const puppeteer = require("puppeteer");
 const {
   sharedLinkDynamicImageHTML,
 } = require("../templates/sharedLinkDynamicImageHTML");
+const StartQuests = require("../models/StartQuests");
 
 const createOrUpdate = async (req, res) => {
   try {
@@ -393,6 +394,16 @@ const createFeedback = async (req, res) => {
         feedbackTime: new Date(),
       });
       questSetting = await userQuestSettingModel.save()
+      const startQuestModel = new StartQuests({
+        addedAnswer: "",
+        addedAnswerUuid: "",
+        data: [],
+        isAddedAnsSelected: "",
+        questForeignKey: questForeignKey,
+        uuid: uuid,
+        isFeedback: true
+      })
+      await startQuestModel.save();
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
         data: questSetting,
@@ -400,6 +411,16 @@ const createFeedback = async (req, res) => {
     }
     else {
       if (userQuestSetting.feedbackMessage !== "") return res.status(403).json({ message: "Feedback is already given" });
+      const startQuestModel = new StartQuests({
+        addedAnswer: "",
+        addedAnswerUuid: "",
+        data: [],
+        isAddedAnsSelected: "",
+        questForeignKey: questForeignKey,
+        uuid: uuid,
+        isFeedback: true
+      })
+      await startQuestModel.save();
       userQuestSetting.feedbackTime = new Date();
       userQuestSetting.feedbackMessage = feedbackMessage;
       const updatedUserQuestSetting = await userQuestSetting.save();

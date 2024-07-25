@@ -2310,7 +2310,11 @@ async function getQuestionsWithStatus(allQuestions, uuid) {
       await allQuestions.map(async function (rcrd) {
         await startedQuestions.map(function (rec) {
           if (rec.questForeignKey === rcrd?._id?.toString()) {
-            if (
+            if(rec.isFeedback){
+              rcrd.startStatus = "completed";
+              rcrd.startQuestData = rec;
+            }
+            else if (
               rcrd.usersChangeTheirAns?.trim() !== "" ||
               rcrd.whichTypeQuestion === "ranked choise"
             ) {
