@@ -351,13 +351,12 @@ const status = async (req, res) => {
       return res.status(404).json({ message: "Share link not found" });
     }
     return res.status(200).json({
-      message: `Share link ${
-        status === "Disable"
+      message: `Share link ${status === "Disable"
           ? "Disabled"
           : status === "Delete"
-          ? "Deleted"
-          : "Enabled"
-      } Successfully`,
+            ? "Deleted"
+            : "Enabled"
+        } Successfully`,
       data: updatedUserQuestSetting,
     });
   } catch (error) {
@@ -373,6 +372,41 @@ const suppressConditions = [
   { id: "Unclear / Doesn’t make Sense", minCount: 2 },
   { id: "Duplicate / Similar Post", minCount: 2 },
 ];
+
+const createFeedback = async (req, res) => {
+  try {
+    const { hiddenMessage, questForeignKey, uuid, Question } = req.body;
+
+    const userQuestSetting = await UserQuestSetting.findOne(
+      {
+        uuid: uuid,
+        questForeignKey: questForeignKey
+      }
+    )
+    let questSetting;
+    if(!userQuestSetting){
+      const userQuestSettingModel = new UserQuestSetting({
+        hiddenMessage: hiddenMessage,
+        questForeignKey: questForeignKey,
+        uuid: uuid,
+        Question: Question,
+        feedbackTime: new Date(),
+      });
+      questSetting = await userQuestSettingModel.save()
+    }
+
+    return res.status(201).json({
+      message: "Feedback Submitted Successfully!",
+      data: questSetting,
+    });    
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: ` An error occurred while Feedback UserQuestSetting: ${error.message}`,
+    });
+  }
+}
 
 const create = async (req, res) => {
   try {
@@ -1025,5 +1059,6 @@ module.exports = {
   customLink,
   linkUserList,
   sharedLinkDynamicImageUserList,
+  createFeedback,
   // get,
 };
