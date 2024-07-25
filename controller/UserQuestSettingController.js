@@ -399,6 +399,7 @@ const createFeedback = async (req, res) => {
       });
     }
     else {
+      if (userQuestSetting.feedbackMessage !== "") return res.status(403).json({ message: "Feedback is already given" });
       userQuestSetting.feedbackTime = new Date();
       userQuestSetting.feedbackMessage = feedbackMessage;
       const updatedUserQuestSetting = await userQuestSetting.save();
