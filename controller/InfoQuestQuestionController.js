@@ -1142,9 +1142,10 @@ const getQuestsAll = async (req, res) => {
   } else if (Page === "Hidden") {
     //console.log("running");
     filterObj.uuid = uuid;
-    filterObj.hidden = true;
+    // filterObj.hidden = true;
+    filterObj.feedbackMessage = { $ne: "" };
     const Questions = await UserQuestSetting.find(filterObj)
-      .sort({ hiddenTime: -1 })
+      .sort({ feedbackTime: -1 })
       // .sort(sort === "Newest First" ? { createdAt: -1 } : "createdAt")
       .skip(skip)
       .limit(pageSize);
