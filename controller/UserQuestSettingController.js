@@ -393,12 +393,20 @@ const createFeedback = async (req, res) => {
         feedbackTime: new Date(),
       });
       questSetting = await userQuestSettingModel.save()
+      return res.status(201).json({
+        message: "Feedback Submitted Successfully!",
+        data: questSetting,
+      });
     }
-
-    return res.status(201).json({
-      message: "Feedback Submitted Successfully!",
-      data: questSetting,
-    });    
+    else {
+      userQuestSetting.hiddenMessage = hiddenMessage;
+      userQuestSetting.feedbackTime = new Date();
+      const updatedUserQuestSetting = await userQuestSetting.save();
+      return res.status(201).json({
+        message: "Feedback Submitted Successfully!",
+        data: updatedUserQuestSetting,
+      });
+    }  
 
   } catch (error) {
     console.error(error);
