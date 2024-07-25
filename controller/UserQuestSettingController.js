@@ -13,6 +13,7 @@ const { updateUserBalance } = require("../utils/userServices");
 const { updateTreasury } = require("../utils/treasuryService");
 const {
   USER_QUEST_SETTING_LINK_CUSTOMIZATION_DEDUCTION_AMOUNT,
+  QUEST_COMPLETED_AMOUNT,
   POST_LINK,
 } = require("../constants/index");
 const nodeHtmlToImage = require("node-html-to-image");
@@ -404,6 +405,42 @@ const createFeedback = async (req, res) => {
         isFeedback: true
       })
       await startQuestModel.save();
+
+      const txID = crypto.randomBytes(11).toString("hex");
+
+      // Create Ledger
+      await createLedger({
+        uuid: uuid,
+        txUserAction: "postFeedBackGiven",
+        txID: txID,
+        txAuth: "User",
+        txFrom: uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: questForeignKey,
+        // txDescription : "User completes a quest"
+      });
+      // Create Ledger
+      await createLedger({
+        uuid: uuid,
+        txUserAction: "postFeedBackGiven",
+        txID: txID,
+        txAuth: "DAO",
+        txFrom: "DAO Treasury",
+        txTo: uuid,
+        txAmount: QUEST_COMPLETED_AMOUNT,
+        txData: questForeignKey,
+        // txDescription : "Incentive for completing quests"
+      });
+      // Decrement the Treasury
+      await updateTreasury({ amount: QUEST_COMPLETED_AMOUNT, dec: true });
+      // Increment the UserBalance
+      await updateUserBalance({
+        uuid: uuid,
+        amount: QUEST_COMPLETED_AMOUNT,
+        inc: true,
+      });
+
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
         data: questSetting,
@@ -424,6 +461,42 @@ const createFeedback = async (req, res) => {
       userQuestSetting.feedbackTime = new Date();
       userQuestSetting.feedbackMessage = feedbackMessage;
       const updatedUserQuestSetting = await userQuestSetting.save();
+
+      const txID = crypto.randomBytes(11).toString("hex");
+
+      // Create Ledger
+      await createLedger({
+        uuid: uuid,
+        txUserAction: "postFeedBackGiven",
+        txID: txID,
+        txAuth: "User",
+        txFrom: uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: questForeignKey,
+        // txDescription : "User completes a quest"
+      });
+      // Create Ledger
+      await createLedger({
+        uuid: uuid,
+        txUserAction: "postFeedBackGiven",
+        txID: txID,
+        txAuth: "DAO",
+        txFrom: "DAO Treasury",
+        txTo: uuid,
+        txAmount: QUEST_COMPLETED_AMOUNT,
+        txData: questForeignKey,
+        // txDescription : "Incentive for completing quests"
+      });
+      // Decrement the Treasury
+      await updateTreasury({ amount: QUEST_COMPLETED_AMOUNT, dec: true });
+      // Increment the UserBalance
+      await updateUserBalance({
+        uuid: uuid,
+        amount: QUEST_COMPLETED_AMOUNT,
+        inc: true,
+      });
+
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
         data: updatedUserQuestSetting,
