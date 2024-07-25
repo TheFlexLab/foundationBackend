@@ -98,4 +98,42 @@ router.post(
   DevScriptController.dbReset
 );
 
+router.get(
+  "/userListSeoSetting",
+  /**
+   * @swagger
+   * /devscript/userListSeoSetting:
+   *   get:
+   *     tags:
+   *       - DevScriptRoutes
+   *     summary: To Set users list seo
+   *     description: To Set users list seo
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  DevScriptController.userListSeoSetting
+);
+
+router.get(
+  "/userPostSeoSetting",
+  /**
+   * @swagger
+   * /devscript/userPostSeoSetting:
+   *   get:
+   *     tags:
+   *       - DevScriptRoutes
+   *     summary: To Set users post seo
+   *     description: To Set users post seo
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  DevScriptController.userPostSeoSetting
+);
+
 module.exports = router;

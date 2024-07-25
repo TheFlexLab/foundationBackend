@@ -2,6 +2,8 @@ const User = require("../models/UserModel");
 const { UserListSchema, CategorySchema, PostSchema } = require("../models/UserList");
 const { MONGO_URI_MAIN, MONGO_URI_STAG, MONGO_URI_DEV } = require("../config/env");
 const { MongoClient } = require('mongodb');
+const { uploadS3Bucket } = require('../utils/uploadS3Bucket');
+const UserQuestSetting = require('../models/UserQuestSetting');
 
 // const excep = async (req, res) => {
 //   try {
@@ -226,7 +228,7 @@ const dbReset = async (req, res) => {
     try {
         const { db } = req.body;  // Assuming db is coming from the request body
         const validDbs = ["main", "stag", "dev"];
-        
+
         if (!validDbs.includes(db)) {
             return res.status(404).json({ message: `DB ${db} does not exist` });
         }
@@ -257,7 +259,77 @@ const dbReset = async (req, res) => {
     }
 };
 
+const userListSeoSetting = async (req, res) => {
+    try {
+        // Aggregation pipeline
+        const pipeline = [
+            { $unwind: "$list" },
+            { $match: { "list.link": { $ne: null } } },
+            {
+                $project: {
+                    link: "$list.link",
+                    // Add any other necessary fields you need to project
+                }
+            }
+        ];
+
+        // Run the aggregation
+        const result = await UserListSchema.aggregate(pipeline);
+
+        // Iterate through the result and call uploadS3Bucket for each category
+        for (const doc of result) {
+            await uploadS3Bucket({
+                fileName: doc.link,
+                description: "A revolutionary new social platform. Own your data. Get rewarded.",
+                route: "static_pages/list",
+                title: "Foundation: Shared list",
+            });
+        }
+
+        // Send success response
+        res.status(200).json({
+            message: 'SEO Created',
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while creating the userList: ${error.message}`,
+        });
+    }
+};
+
+const userPostSeoSetting = async (req, res) => {
+    try {
+
+        const result = await UserQuestSetting.find({
+            link: { $ne: "" }
+        }).lean();
+
+        // Iterate through the result and call uploadS3Bucket for each category
+        for (const doc of result) {
+            await uploadS3Bucket({
+                fileName: doc.link,
+                description: doc.Question,
+                route: "static_pages",
+                title: "Foundation",
+            });
+        }
+
+        // Send success response
+        res.status(200).json({
+            message: 'SEO Created',
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while creating the userList: ${error.message}`,
+        });
+    }
+};
+
 module.exports = {
     createUserListForAllUsers,
     dbReset,
+    userListSeoSetting,
+    userPostSeoSetting,
 };

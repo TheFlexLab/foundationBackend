@@ -79,6 +79,7 @@ router.get("/getBadges/:userId",
   BadgeController.getBadges
 );
 
+// ALERT: API is not being used at FE send `req.body.uuid` before use.
 router.post("/addBadge/social", socialProtect,
   /**
    * @swagger

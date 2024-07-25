@@ -17,7 +17,8 @@ const createBookmarkQuest = async (req, res) => {
     const question = await new BookmarkQuests({
       Question: req.body.Question,
       questForeignKey: req.body.questForeignKey,
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
       whichTypeQuestion: req.body.whichTypeQuestion,
       createdBy: owner.uuid,
       moderationRatingCount: req.body.moderationRatingCount,
@@ -27,11 +28,13 @@ const createBookmarkQuest = async (req, res) => {
     !questions && res.status(404).send("Not Created 1");
     // Create Ledger
     await createLedger({
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
       txUserAction: "bookmarkAdded",
       txID: crypto.randomBytes(11).toString("hex"),
       txAuth: "User",
-      txFrom: req.cookies.uuid,
+      // txFrom: req.cookies.uuid,
+      txFrom: req.body.uuid,
       txTo: "dao",
       txAmount: "0",
       txData: questions._id,
@@ -48,21 +51,26 @@ const createBookmarkQuest = async (req, res) => {
 };
 const deleteBookmarkQuest = async (req, res) => {
   try {
+    console.log(req.body.uuid)
     const questions = await BookmarkQuests.findOne({
       questForeignKey: req.body.questForeignKey,
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
     });
     await BookmarkQuests.deleteOne({
       questForeignKey: req.body.questForeignKey,
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
     });
     // Create Ledger
     await createLedger({
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
       txUserAction: "bookmarkRemoved",
       txID: crypto.randomBytes(11).toString("hex"),
       txAuth: "User",
-      txFrom: req.cookies.uuid,
+      // txFrom: req.cookies.uuid,
+      txFrom: req.body.uuid,
       txTo: "dao",
       txAmount: "0",
       txData: questions._id,
@@ -76,10 +84,13 @@ const deleteBookmarkQuest = async (req, res) => {
     res.status(500).send("Not Deleted 2" + err.message);
   }
 };
+
+// Not being use at FE, Send `req.body.uuid` in body 1st
 const getAllBookmarkQuests = async (req, res) => {
   try {
     const Questions = await BookmarkQuests.find({
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
     });
     // //console.log(Questions);
     res.status(200).json(Questions);
@@ -87,6 +98,8 @@ const getAllBookmarkQuests = async (req, res) => {
     res.status(500).send(err);
   }
 };
+
+// Not being use at FE, Send `req.body.uuid` in body 1st
 const getAllBookmarkQuestions = async (req, res) => {
   try {
     const { uuid, _page, _limit } = req.body;
@@ -101,7 +114,8 @@ const getAllBookmarkQuestions = async (req, res) => {
       filterObj.whichTypeQuestion = req.body.type;
     }
     if (req.body.filter === true) {
-      filterObj.createdBy = req.cookies.uuid;
+      // filterObj.createdBy = req.cookies.uuid;
+      filterObj.createdBy = req.body.uuid;
     }
 
     const Questions = await BookmarkQuests.find(filterObj)

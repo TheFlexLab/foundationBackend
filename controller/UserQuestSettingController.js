@@ -104,6 +104,8 @@ const link = async (req, res) => {
       await uploadS3Bucket({
         fileName: savedOrUpdatedUserQuestSetting.link,
         description: savedOrUpdatedUserQuestSetting.Question,
+        route: "static_pages",
+        title: "Foundation",
       });
     } else {
       // Create a short link
@@ -114,6 +116,8 @@ const link = async (req, res) => {
       await uploadS3Bucket({
         fileName: savedOrUpdatedUserQuestSetting.link,
         description: savedOrUpdatedUserQuestSetting.Question,
+        route: "static_pages",
+        title: "Foundation",
       });
     }
 
@@ -262,6 +266,8 @@ const customLink = async (req, res) => {
       await uploadS3Bucket({
         fileName: savedOrUpdatedUserQuestSetting.link,
         description: savedOrUpdatedUserQuestSetting.Question,
+        route: "static_pages",
+        title: "Foundation",
       });
     } else {
       // Create a short link
@@ -272,6 +278,8 @@ const customLink = async (req, res) => {
       await uploadS3Bucket({
         fileName: savedOrUpdatedUserQuestSetting.link,
         description: savedOrUpdatedUserQuestSetting.Question,
+        route: "static_pages",
+        title: "Foundation",
       });
     }
 
@@ -645,6 +653,7 @@ const update = async (req, res) => {
   }
 };
 
+// Use req.body.uuid
 const getAllHiddenQuestions = async (req, res) => {
   try {
     const { uuid, _page, _limit } = req.body;
@@ -659,7 +668,8 @@ const getAllHiddenQuestions = async (req, res) => {
       filterObj.whichTypeQuestion = req.body.type;
     }
     if (req.body.filter === true) {
-      filterObj.createdBy = req.cookies.uuid;
+      filterObj.createdBy = req.body.uuid;
+      // filterObj.createdBy = req.cookies.uuid;
     }
 
     const Questions = await BookmarkQuests.find(filterObj)
@@ -681,10 +691,12 @@ const getAllHiddenQuestions = async (req, res) => {
   }
 };
 
+// Use req.body.uuid
 const getAllHiddenQuests = async (req, res) => {
   try {
     const Questions = await BookmarkQuests.find({
-      uuid: req.cookies.uuid,
+      // uuid: req.cookies.uuid,
+      uuid: req.body.uuid,
     });
     // //console.log(Questions);
     res.status(200).json(Questions);

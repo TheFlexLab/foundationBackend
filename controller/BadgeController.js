@@ -96,6 +96,7 @@ const getBadges = async (req, res) => {
   }
 };
 
+// ALERT: API is not being used at FE send `req.body.uuid` before use.
 const addBadgeSocial = async (req, res) => {
   try {
     // Treasury Check
@@ -108,7 +109,8 @@ const addBadgeSocial = async (req, res) => {
     )
       return res.status(404).json({ message: "Treasury is not enough." });
 
-    const User = await UserModel.findOne({ uuid: req.cookies.uuid });
+    // const User = await UserModel.findOne({ uuid: req.cookies.uuid });
+    const User = await UserModel.findOne({ uuid: req.body.uuid });
     if (!User) throw new Error("No such User!");
     // Find the Badge
     const usersWithBadge = await UserModel.find({

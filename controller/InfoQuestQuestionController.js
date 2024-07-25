@@ -23,13 +23,25 @@ const {
   PostSchema,
 } = require("../models/UserList");
 const Treasury = require("../models/Treasury");
-const {notification1, notification2, notification3, notification4, notification5, notification6, notification7, notification8, notification9, notification10, notification11,} = require("../notifications/home")
+const {
+  notification1,
+  notification2,
+  notification3,
+  notification4,
+  notification5,
+  notification6,
+  notification7,
+  notification8,
+  notification9,
+  notification10,
+  notification11,
+} = require("../notifications/home");
 
 const createInfoQuestQuest = async (req, res) => {
   try {
     const userBalance = await getUserBalance(req.body.uuid);
-    if (userBalance < QUEST_CREATED_AMOUNT)
-      throw new Error("The balance is insufficient to create a Quest!");
+    // if (userBalance < QUEST_CREATED_AMOUNT)
+    //   throw new Error("The balance is insufficient to create a Quest!");
     // Find the user by uuid
     const user = await User.findOne({ uuid: req.body.uuid });
 
@@ -99,22 +111,22 @@ const createInfoQuestQuest = async (req, res) => {
       txUserAction: "postCreated",
       txID: txID,
       txAuth: "DAO",
-      txFrom: user.uuid,
-      txTo: "DAO Treasury",
+      txFrom: "DAO Treasury",
+      txTo: user.uuid,
       txAmount: QUEST_CREATED_AMOUNT,
       txData: createdQuestion._id,
       // txDescription : "Incentive for creating a quest"
     });
     // Increment the Treasury
-    await updateTreasury({ amount: QUEST_CREATED_AMOUNT, inc: true });
+    await updateTreasury({ amount: QUEST_CREATED_AMOUNT, dec: true });
     // Decrement the UserBalance
     await updateUserBalance({
       uuid: req.body.uuid,
       amount: QUEST_CREATED_AMOUNT,
-      dec: true,
+      inc: true,
     });
 
-    user.fdxSpent = user.fdxSpent + QUEST_CREATED_AMOUNT;
+    user.fdxEarned = user.fdxEarned + QUEST_CREATED_AMOUNT;
     user.feeSchedual.creatingPostFdx =
       user.feeSchedual.creatingPostFdx + QUEST_CREATED_AMOUNT;
     await user.save();
@@ -135,14 +147,20 @@ const createInfoQuestQuest = async (req, res) => {
 const deleteInfoQuestQuest = async (req, res) => {
   try {
     // Treasury Check
-    const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury)
-      return res.status(404).json({ message: "Treasury is not found." });
-    if (
-      Math.round(checkTreasury.amount) <= QUEST_CREATED_AMOUNT ||
-      Math.round(checkTreasury.amount) <= 0
-    )
-      return res.status(404).json({ message: "Treasury is not enough." });
+    // const checkTreasury = await Treasury.findOne();
+    // if (!checkTreasury)
+    //   return res.status(404).json({ message: "Treasury is not found." });
+    // if (
+    //   Math.round(checkTreasury.amount) <= QUEST_CREATED_AMOUNT ||
+    //   Math.round(checkTreasury.amount) <= 0
+    // )
+    //   return res.status(404).json({ message: "Treasury is not enough." });
+
+    const userBalanceCheck = await User.findOne({
+      uuid: req.params.userUuid,
+    });
+    if (userBalanceCheck.balance < QUEST_CREATED_AMOUNT)
+      return res.status(404).json({ message: "Balance is not enough." });
 
     const infoQuest = await InfoQuestQuestions.findOne({
       _id: req.params.questId,
@@ -245,8 +263,8 @@ const deleteInfoQuestQuest = async (req, res) => {
       txUserAction: "postDeleted",
       txID: txID,
       txAuth: "DAO",
-      txFrom: "DAO Treasury",
-      txTo: user.uuid,
+      txFrom: user.uuid,
+      txTo: "DAO Treasury",
       txAmount: QUEST_CREATED_AMOUNT,
       txDate: Date.now(),
       txDescription: "User deleted a Post",
@@ -254,15 +272,15 @@ const deleteInfoQuestQuest = async (req, res) => {
       // txDescription : "Incentive for creating a quest"
     });
     // Increment the Treasury
-    await updateTreasury({ amount: QUEST_CREATED_AMOUNT, dec: true });
+    await updateTreasury({ amount: QUEST_CREATED_AMOUNT, inc: true });
     // Decrement the UserBalance
     await updateUserBalance({
       uuid: req.params.userUuid,
       amount: QUEST_CREATED_AMOUNT,
-      inc: true,
+      dec: true,
     });
 
-    user.fdxEarned = user.fdxEarned + QUEST_CREATED_AMOUNT;
+    user.fdxSpent = user.fdxSpent + QUEST_CREATED_AMOUNT;
     await user.save();
 
     res
@@ -938,6 +956,7 @@ const suppressConditions = [
   { id: "Duplicate / Similar Post", minCount: 2 },
   { id: "Not interested", minCount: Number.POSITIVE_INFINITY },
   { id: "Does not apply to me", minCount: Number.POSITIVE_INFINITY },
+  { id: "Historical / Past Event", minCount: Number.POSITIVE_INFINITY },
 ];
 const getQuestsAll = async (req, res) => {
   const {
@@ -1205,9 +1224,9 @@ const getQuestsAll = async (req, res) => {
     });
 
     query = query.sort(
-          sort === "Oldest First"
+      sort === "Oldest First"
         ? { createdAt: 1, _id: 1 }
-        :  sort === "Newest First"
+        : sort === "Newest First"
         ? { createdAt: -1, _id: 1 }
         : sort === "Last Updated"
         ? { lastInteractedAt: -1, _id: 1 }
@@ -1371,7 +1390,8 @@ const getQuestsAll = async (req, res) => {
                 suppressItem.count >= condition.minCount &&
                 condition.id !== "Does not apply to me" &&
                 condition.id !== "Not interested" &&
-                condition.id !== "Needs More Options";
+                condition.id !== "Needs More Options" &&
+                condition.id !== "Historical / Past Event";
               feedback.push({
                 id: suppressItem._id,
                 count: suppressItem.count,
@@ -1552,8 +1572,7 @@ const getQuestsAll = async (req, res) => {
             if (page === 6 && nextPage === false) {
               if (result1.length >= 1 && result1.length < 4) {
                 result1.splice(1, 0, notification10);
-              }
-              else if(result1.length >= 4){
+              } else if (result1.length >= 4) {
                 result1.splice(1, 0, notification10);
                 result1.splice(5, 0, notification11);
               }
@@ -1840,11 +1859,18 @@ const getQuestByUniqueShareLink = async (req, res) => {
     // getQuestionsWithUserSettings
     const result1 = await getQuestionsWithUserSettings(result, uuid);
 
+    const userQuestSettingForTerminal = await UserQuestSetting.findOne({
+      uuid: uuid,
+      questForeignKey: userQuestSetting.questForeignKey,
+      linkStatus: "Enable",
+    });
+
     const resultArray = result1.map(getPercentage);
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
       selectedPercentage: item.selectedPercentage,
       contendedPercentage: item.contendedPercentage,
+      userQuestSetting: userQuestSettingForTerminal,
     }));
 
     const user = await User.findOne({ uuid: uuid });

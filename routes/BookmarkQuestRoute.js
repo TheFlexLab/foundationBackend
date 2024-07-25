@@ -66,6 +66,7 @@ router.post("/deleteBookmarkQuest",
   BookmarkQuestController.deleteBookmarkQuest
 );
 
+// Not being use at FE, Send `req.body.uuid` in body 1st
 router.post("/getAllBookmarkQuests",
   /**
    * @swagger
@@ -84,6 +85,7 @@ router.post("/getAllBookmarkQuests",
   BookmarkQuestController.getAllBookmarkQuests
 );
 
+// Not being use at FE, Send `req.body.uuid` in body 1st
 router.post("/getAllBookmarkQuestions",
   /**
    * @swagger
