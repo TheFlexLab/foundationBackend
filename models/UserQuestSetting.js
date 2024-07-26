@@ -65,6 +65,10 @@ const UserQuestSetting = mongoose.Schema(
       type: Date,
       default: null,
     },
+    historyDate: {
+      type: String,
+      default: null,
+    },
     result: {
       type: Array,
       // default: [{ answer: {}, contended: {} }],

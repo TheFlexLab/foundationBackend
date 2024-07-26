@@ -377,7 +377,7 @@ const suppressConditions = [
 
 const createFeedback = async (req, res) => {
   try {
-    const { feedbackMessage, questForeignKey, uuid, Question } = req.body;
+    const { feedbackMessage, questForeignKey, uuid, Question, historyDate } = req.body;
 
     const userQuestSetting = await UserQuestSetting.findOne(
       {
@@ -389,13 +389,10 @@ const createFeedback = async (req, res) => {
     // Subtract the start of the day from createdAt and check if the difference is less than one day (in milliseconds)
     let isHistorical = false;
     if (feedbackMessage === "Historical / Past Event") {
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
       const checkHistorical = await UserQuestSetting.findOne({
         questForeignKey: questForeignKey,
         feedbackMessage: feedbackMessage,
-        feedbackTime: { $gte: startOfDay }
+        historyDate: historyDate
       });
       if(checkHistorical) isHistorical = true;
     }
@@ -408,6 +405,7 @@ const createFeedback = async (req, res) => {
         uuid: uuid,
         Question: Question,
         feedbackTime: new Date(),
+        historyDate: historyDate ? historyDate : null,
       });
       questSetting = await userQuestSettingModel.save()
       const startQuestModel = new StartQuests({
@@ -476,6 +474,7 @@ const createFeedback = async (req, res) => {
 
       userQuestSetting.feedbackTime = new Date();
       userQuestSetting.feedbackMessage = feedbackMessage;
+      userQuestSetting.historyDate = historyDate ? historyDate : userQuestSetting.historyDate;
       const updatedUserQuestSetting = await userQuestSetting.save();
 
       const startQuestModel = new StartQuests({
