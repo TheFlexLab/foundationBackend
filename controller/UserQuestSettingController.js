@@ -385,6 +385,21 @@ const createFeedback = async (req, res) => {
         questForeignKey: questForeignKey
       }
     )
+
+    // Subtract the start of the day from createdAt and check if the difference is less than one day (in milliseconds)
+    let isHistorical = false;
+    if (feedbackMessage === "Historical / Past Event") {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const checkHistorical = await UserQuestSetting.findOne({
+        questForeignKey: questForeignKey,
+        feedbackMessage: feedbackMessage,
+        feedbackTime: { $gte: startOfDay }
+      });
+      if(checkHistorical) isHistorical = true;
+    }
+
     let questSetting;
     if (!userQuestSetting) {
       const userQuestSettingModel = new UserQuestSetting({
@@ -406,8 +421,18 @@ const createFeedback = async (req, res) => {
       })
       await startQuestModel.save();
 
-      const txID = crypto.randomBytes(11).toString("hex");
+      if (isHistorical) {
+        await InfoQuestQuestions.findOneAndUpdate(
+          {
+            _id: questForeignKey
+          },
+          {
+            isClosed: true
+          }
+        ).exec();
+      }
 
+      const txID = crypto.randomBytes(11).toString("hex");
       // Create Ledger
       await createLedger({
         uuid: uuid,
@@ -448,6 +473,11 @@ const createFeedback = async (req, res) => {
     }
     else {
       if (userQuestSetting.feedbackMessage !== "") return res.status(403).json({ message: "Feedback is already given" });
+
+      userQuestSetting.feedbackTime = new Date();
+      userQuestSetting.feedbackMessage = feedbackMessage;
+      const updatedUserQuestSetting = await userQuestSetting.save();
+
       const startQuestModel = new StartQuests({
         addedAnswer: "",
         addedAnswerUuid: "",
@@ -458,12 +488,19 @@ const createFeedback = async (req, res) => {
         isFeedback: true
       })
       await startQuestModel.save();
-      userQuestSetting.feedbackTime = new Date();
-      userQuestSetting.feedbackMessage = feedbackMessage;
-      const updatedUserQuestSetting = await userQuestSetting.save();
+
+      if (isHistorical) {
+        await InfoQuestQuestions.findOneAndUpdate(
+          {
+            _id: questForeignKey
+          },
+          {
+            isClosed: true
+          }
+        ).exec();
+      }
 
       const txID = crypto.randomBytes(11).toString("hex");
-
       // Create Ledger
       await createLedger({
         uuid: uuid,
