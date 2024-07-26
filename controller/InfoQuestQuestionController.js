@@ -1144,7 +1144,7 @@ const getQuestsAll = async (req, res) => {
     filterObj.uuid = uuid;
     filterObj.hidden = true;
     const Questions = await UserQuestSetting.find(filterObj)
-      .sort({ createdAt: -1 })
+      .sort({ hiddenTime: -1 })
       // .sort(sort === "Newest First" ? { createdAt: -1 } : "createdAt")
       .skip(skip)
       .limit(pageSize);
@@ -2494,6 +2494,42 @@ const checkMediaDuplicateUrl = async (req, res) => {
   }
 };
 
+const checkGifDuplicateUrl = async (req, res) => {
+  try {
+    const { url } = req.params;
+
+    // Construct a regex pattern to match the YouTube URL format
+    // const regex = new RegExp(`${id}`, "i");
+
+    // Use the regex pattern in the find query
+    const question = await InfoQuestQuestions.findOne({
+      url: url,
+      isActive: true,
+    });
+
+    if (question) {
+      // ID exists in the URL field, return an error
+      return res
+        .status(400)
+        .json({ error: "This link already exists.", duplicate: true });
+    }
+
+    // ID does not exist in the URL field, continue with other operations
+    // For example, you can insert the ID into the database here
+
+    res.status(200).json({
+      message:
+        "Link does not exist in the URL field. Proceed with other operations.",
+      duplicate: false,
+    });
+  } catch (error) {
+    console.error("Error checking ID in URL field:", error.message);
+    res
+      .status(500)
+      .json({ error: `Error checking ID in URL field: ${error.message}` });
+  }
+};
+
 // Function to get the final redirect URL from a short URL
 function getFinalRedirectSoundCloud(shortUrl) {
   const command = `curl -Ls -o /dev/null -w %{url_effective} ${shortUrl}`;
@@ -2578,6 +2614,7 @@ module.exports = {
   getQuestByUniqueId,
   getQuestionsWithUserSettings,
   checkMediaDuplicateUrl,
+  checkGifDuplicateUrl,
   getFullSoundcloudUrlFromShortUrl,
   getFlickerUrl,
   getQuestsAll,

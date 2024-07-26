@@ -311,7 +311,7 @@ const userSchema = mongoose.Schema(
       },
       defaultSort: {
         type: Boolean,
-        default: false,
+        default: true,
       },
     },
     notificationSettings: {
