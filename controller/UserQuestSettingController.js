@@ -394,7 +394,7 @@ const createFeedback = async (req, res) => {
         feedbackMessage: feedbackMessage,
         historyDate: historyDate
       });
-      if(checkHistorical) isHistorical = true;
+      if (checkHistorical) isHistorical = true;
     }
 
     let questSetting;
@@ -589,36 +589,47 @@ const create = async (req, res) => {
     //   questForeignKey: payload.questForeignKey,
     // });
 
-    let updateData = {
-      $set: { ...payload }, // Base the update object on the incoming payload
-    };
+    // let updateData = {
+    //   $set: { ...payload }, // Base the update object on the incoming payload
+    // };
 
-    // Add 'hiddenTime' conditionally
-    if (payload.hidden === true) {
-      updateData.$set.hiddenTime = new Date(); // Set to the current timestamp
-    }
-    //console.log(updateData);
-    let userQuestSettingSaved;
-    userQuestSettingSaved = await UserQuestSetting.findOneAndUpdate(
-      // Query criteria
-      { uuid: payload.uuid, questForeignKey: payload.questForeignKey },
-      // Update or insert payload
-      updateData,
-      // Options
-      { new: true, upsert: true }
+    // // Add 'hiddenTime' conditionally
+    // if (payload.hidden === true) {
+    //   updateData.$set.hiddenTime = new Date(); // Set to the current timestamp
+    // }
+    // //console.log(updateData);
+    // let userQuestSettingSaved;
+    // userQuestSettingSaved = await UserQuestSetting.findOneAndUpdate(
+    //   // Query criteria
+    //   { uuid: payload.uuid, questForeignKey: payload.questForeignKey },
+    //   // Update or insert payload
+    //   updateData,
+    //   // Options
+    //   { new: true, upsert: true }
+    // );
+    // const userQuestSettingExist = await UserQuestSetting.findOne({
+    //   uuid: payload.uuid,
+    //   questForeignKey: payload.questForeignKey,
+    // });
+    // // To check the record exist
+    // if (!userQuestSettingExist) throw new Error("userQuestSetting not exist");
+
+    // if (userQuestSettingExist && payload.hidden === true) {
+    //   // Document found, update hiddenTime and save
+    //   userQuestSettingExist.hiddenTime = new Date();
+    //   await userQuestSettingExist.save();
+    // }
+
+    let userQuestSettingSaved = await UserQuestSetting.findOne(
+      { uuid: req.body.uuid, questForeignKey: req.body.questForeignKey },
     );
-    const userQuestSettingExist = await UserQuestSetting.findOne({
-      uuid: payload.uuid,
-      questForeignKey: payload.questForeignKey,
-    });
-    // To check the record exist
-    if (!userQuestSettingExist) throw new Error("userQuestSetting not exist");
+    if (!userQuestSettingSaved) return res.status(404).json({ message: "userQuestSetting not exist" });
 
-    if (userQuestSettingExist && payload.hidden === true) {
-      // Document found, update hiddenTime and save
-      userQuestSettingExist.hiddenTime = new Date();
-      await userQuestSettingExist.save();
-    }
+    userQuestSettingSaved.Question = payload.Question;
+    userQuestSettingSaved.hidden = payload.hidden;
+    userQuestSettingSaved.hiddenMessage = payload.hiddenMessage;
+    userQuestSettingSaved.hiddenTime = new Date();
+    await userQuestSettingSaved.save();
 
     // To check the record exist
     // if (userQuestSettingExist){
