@@ -354,7 +354,6 @@ router.post(
    */
   InfoQuestQuestionController.getAllQuestsWithChangeAnsStatus
 );
-
 router.get(
   "/checkMediaDuplicateUrl/:id",
   /**
@@ -383,6 +382,33 @@ router.get(
   InfoQuestQuestionController.checkMediaDuplicateUrl
 );
 
+router.get(
+  "/checkGifDuplicateUrl/:url",
+  /**
+   * @swagger
+   * /infoquestions/checkMediaDuplicateUrl/{id}:
+   *   get:
+   *     tags:
+   *       - Info Quest Question
+   *     summary: Check media duplicate URL
+   *     description: Endpoint to check if the media URL is duplicate
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ID of the media
+   *     responses:
+   *       '200':
+   *         description: Media URL is not duplicate
+   *       '409':
+   *         description: Media URL is duplicate
+   *       '500':
+   *         description: Internal server error
+   */
+  InfoQuestQuestionController.checkGifDuplicateUrl
+);
 router.get(
   "/getFullSoundcloudUrlFromShortUrl",
   /**

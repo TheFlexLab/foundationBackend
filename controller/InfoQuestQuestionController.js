@@ -2499,6 +2499,32 @@ const checkMediaDuplicateUrl = async (req, res) => {
   }
 };
 
+const checkGifDuplicateUrl = async (req, res) => {
+  try {
+    const { url } = req.params;
+    const question = await InfoQuestQuestions.findOne({
+      url: url,
+      isActive: true,
+    });
+
+    if (question) {
+      return res
+        .status(400)
+        .json({ error: "This link already exists.", duplicate: true });
+    }
+    res.status(200).json({
+      message:
+        "Link does not exist in the URL field. Proceed with other operations.",
+      duplicate: false,
+    });
+  } catch (error) {
+    console.error("Error checking ID in URL field:", error.message);
+    res
+      .status(500)
+      .json({ error: `Error checking ID in URL field: ${error.message}` });
+  }
+};
+
 // Function to get the final redirect URL from a short URL
 function getFinalRedirectSoundCloud(shortUrl) {
   const command = `curl -Ls -o /dev/null -w %{url_effective} ${shortUrl}`;
@@ -2583,6 +2609,7 @@ module.exports = {
   getQuestByUniqueId,
   getQuestionsWithUserSettings,
   checkMediaDuplicateUrl,
+  checkGifDuplicateUrl,
   getFullSoundcloudUrlFromShortUrl,
   getFlickerUrl,
   getQuestsAll,

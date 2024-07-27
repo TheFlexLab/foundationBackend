@@ -16,10 +16,10 @@ module.exports = {
   SYSTEM_MESSAGES: [
     // Q/S
     // "Correct provided statement to standard English without contractions. Shortest responses only.",
-    "ONLY Correct this text to standard English without contractions. NEVER change numbers to words. NEVER correct brand names, informal words or trademarks like Coke. NEVER introduce synonyms. NEVER add new words. Shortest response only.",
+    "ONLY correct this text to standard English without contractions. NEVER change numbers to words. NEVER correct brand names, informal words or trademarks like Coke. NEVER introduce synonyms. NEVER add new words. Shortest response only.",
     // OPTION
     // "Correct text to standard English without contractions. NEVER correct brand names, informal words or trademarks like Coke. Do not introduce synonyms. Shortest responses only",
-    "ONLY Correct this text to standard English without contractions. NEVER change numbers to words. NEVER correct brand names, informal words or trademarks like Coke. NEVER introduce synonyms. NEVER add new words. Shortest response only.",
+    "ONLY correct this text to standard English without contractions. NEVER change numbers to words. NEVER correct brand names, informal words or trademarks like Coke. NEVER introduce synonyms. NEVER add new words. Shortest response only.",
     // CATEGORY
     "Give the best category using only these: Architecture, Arts, Business, Culture, Economics, Education, Entertainment, Environment, Ethics, Finance, Fitness, Food, Geography, Health, History, Hobbies, Home, Law, Media, Music, Parenting, Pets, Philosophy, Personal, Politics, Preferences, Psychology, Religion, Science, Society, Sports, Technology. Return one category only. Shortest responses only",
     // COC
