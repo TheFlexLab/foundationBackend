@@ -1024,6 +1024,10 @@ const getQuestsAll = async (req, res) => {
     if (media === "Music") {
       filterObj.url = { $regex: "soundcloud.com", $options: "i" };
     }
+
+    if (media === "Giphy") {
+      filterObj.url = { $regex: "giphy.com", $options: "i" };
+    }
   }
 
   if (terms) {
