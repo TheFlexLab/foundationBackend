@@ -129,6 +129,9 @@ router.get(
    */
   (req, res, next) => {
     if (req.query.error) {
+      console.log("Request",req);
+      console.log("Query",req.query);
+      console.log("Error",req.query.error);
       return res.redirect(`${CLIENT_URL}`);
     }
     next();
