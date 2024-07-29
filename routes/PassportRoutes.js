@@ -110,7 +110,7 @@ router.get(
    *       '302':
    *         description: Redirect to LinkedIn authentication page
    */
-  passport.authenticate("linkedin")
+  passport.authenticate("linkedin", { scope: ["profile", "email"] })
 );
 
 router.get(
@@ -129,15 +129,12 @@ router.get(
    */
   (req, res, next) => {
     if (req.query.error) {
-      console.log("Request",req);
-      console.log("Query",req.query);
-      console.log("Error",req.query.error);
       return res.redirect(`${CLIENT_URL}`);
     }
     next();
   },
   passport.authenticate("linkedin", {
-    failureRedirect: `https://facebook.com`,
+    failureRedirect: CLIENT_URL,
     session: false,
   }),
   PassportController.oauthSuccessHandler
