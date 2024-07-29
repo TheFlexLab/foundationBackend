@@ -1,9 +1,9 @@
 {
-    "family": "foundation-backend-tasks",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:551217652383:task-definition/foundation-backend-tasks:31",
     "containerDefinitions": [
         {
             "name": "foundation-backend",
-            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend:311ae36e31c13bb0b610923a38257e6e1f2a7fdc",
+            "image": "551217652383.dkr.ecr.us-east-2.amazonaws.com/foundation-backend:5504f704b50d3ea89818785ede6c1f8aa1b18eb8",
             "cpu": 0,
             "portMappings": [
                 {
@@ -154,7 +154,7 @@
                 },
                 {
                     "name": "rpID",
-                    "value": "api-v2.on.foundation"
+                    "value": "api.development.on.foundation"
                 },
                 {
                     "name": "OPEN_AI_URL",
@@ -166,7 +166,7 @@
                 },
                 {
                     "name": "FRONTEND_URL",
-                    "value": "https://staging.on.foundation"
+                    "value": "https://development.on.foundation"
                 },
                 {
                     "name": "PAYPAL_CLIENT_ID",
@@ -228,9 +228,53 @@
             "systemControls": []
         }
     ],
+    "family": "foundation-backend-tasks",
     "taskRoleArn": "arn:aws:iam::551217652383:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::551217652383:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
+    "revision": 31,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.24"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
     "requiresCompatibilities": [
         "FARGATE"
     ],
@@ -239,5 +283,8 @@
     "runtimePlatform": {
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
-    }
+    },
+    "registeredAt": "2024-07-29T14:57:46.419Z",
+    "registeredBy": "arn:aws:iam::551217652383:user/devlopmentFullAccess",
+    "tags": []
 }
