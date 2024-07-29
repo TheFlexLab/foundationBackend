@@ -142,7 +142,7 @@ router.get(
 
 router.get(
   '/linkedin',
-  passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress'] })
+  passport.authenticate('linkedin', { scope: ['profile', 'email'] })
 );
 
 router.get(
@@ -163,7 +163,7 @@ router.get(
           console.error('Login error:', err.message);
           return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
         }
-        res.redirect(`${CLIENT_URL}`);
+        PassportController.oauthSuccessHandler
       });
     })(req, res, next);
   }
