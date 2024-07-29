@@ -142,7 +142,7 @@ router.get(
 
 router.get(
   '/linkedin',
-  passport.authenticate('linkedin', { scope: ['profile', 'email'] })
+  passport.authenticate('linkedin')
 );
 
 router.get(
