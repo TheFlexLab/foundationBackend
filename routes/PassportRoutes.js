@@ -154,7 +154,7 @@ router.get(
         return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
       }
       if (!user) {
-        console.error('LinkedIn authentication failed: no user returned');
+        console.error('LinkedIn authentication failed: no user returned', info);
         return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
       }
 
