@@ -66,24 +66,12 @@ app.use(
   })
 );
 
-// app.use(
-//   sessionExpress({
-//     secret: "somethingsecretgoeshere",
-//     resave: false,
-//     saveUninitialized: true,
-//     // cookie: { secure: true }
-//   })
-// );
-
-// Set trust proxy
-app.set('trust proxy', 1);
 app.use(
   sessionExpress({
     secret: "somethingsecretgoeshere",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true },
-    proxy: true,
+    // cookie: { secure: true }
   })
 );
 // app.use(
