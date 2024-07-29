@@ -137,7 +137,7 @@ router.get(
     next();
   },
   passport.authenticate("linkedin", {
-    failureRedirect: CLIENT_URL,
+    failureRedirect: `https://facebook.com`,
     session: false,
   }),
   PassportController.oauthSuccessHandler
