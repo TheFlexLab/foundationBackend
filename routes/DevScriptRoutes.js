@@ -136,4 +136,23 @@ router.get(
   DevScriptController.userPostSeoSetting
 );
 
+router.get(
+  "/setFeedback",
+  /**
+   * @swagger
+   * /devscript/setFeedback:
+   *   get:
+   *     tags:
+   *       - DevScriptRoutes
+   *     summary: To Set users post seo
+   *     description: To Set users post seo
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  DevScriptController.setFeedback
+);
+
 module.exports = router;

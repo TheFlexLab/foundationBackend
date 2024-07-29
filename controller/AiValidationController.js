@@ -52,6 +52,7 @@ async function handleRequest(
   try {
     const { queryType } = req.query;
     let userMessage = req.query.userMessage;
+
     // Check if userMessage is empty
     if (!userMessage) {
       res.status(400).json({ message: "Empty Message", status: "ERROR" });
@@ -73,6 +74,7 @@ async function handleRequest(
     if (callType == 1 || callType == 2 || callType == 10) {
       userMessage = removeTrailingPeriods(userMessage);
       userMessage = removeTrailingQuestionMarks(userMessage);
+      userMessage = userMessage.toLowerCase();
     }
     if (callType == 2 || callType == 10) {
       isAllNumbers(userMessage) && { message: userMessage, status: "OK" };
@@ -83,7 +85,7 @@ async function handleRequest(
     //   userMessage = removeTrailingQuestionMarks(userMessage);
     //   userMessage = userMessage + "."
     // }
-
+    console.log("message", userMessage);
     //  throw new Error("custom");
     const response = await axios.post(
       OPEN_AI_URL,
@@ -91,8 +93,11 @@ async function handleRequest(
         model: "gpt-4o-mini",
         // model: "gpt-3.5-turbo-1106",
         messages: [
-          { role: "system", content: SYSTEM_MESSAGES },
-          { role: "user", content: userMessage },
+          {
+            role: "system",
+            content: [{ text: SYSTEM_MESSAGES, type: "text" }],
+          },
+          { role: "user", content: [{ text: userMessage, type: "text" }] },
         ],
         temperature: 0,
         max_tokens: 256,

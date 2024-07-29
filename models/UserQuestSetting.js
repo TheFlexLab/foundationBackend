@@ -57,6 +57,18 @@ const UserQuestSetting = mongoose.Schema(
       type: Date, // Setting the field type to Date
       default: null, // Default value is null (no hidden time)
     },
+    feedbackMessage: {
+      type: String,
+      default: "",
+    },
+    feedbackTime: {
+      type: Date,
+      default: null,
+    },
+    historyDate: {
+      type: String,
+      default: null,
+    },
     result: {
       type: Array,
       // default: [{ answer: {}, contended: {} }],

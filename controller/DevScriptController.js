@@ -4,6 +4,9 @@ const { MONGO_URI_MAIN, MONGO_URI_STAG, MONGO_URI_DEV } = require("../config/env
 const { MongoClient } = require('mongodb');
 const { uploadS3Bucket } = require('../utils/uploadS3Bucket');
 const UserQuestSetting = require('../models/UserQuestSetting');
+const StartQuests = require('../models/StartQuests');
+const InfoQuestQuestions = require('../models/InfoQuestQuestions');
+
 
 // const excep = async (req, res) => {
 //   try {
@@ -327,9 +330,82 @@ const userPostSeoSetting = async (req, res) => {
     }
 };
 
+const setFeedback = async (req, res) => {
+    try {
+        const hiddenQuests = await UserQuestSetting.find({ hidden: true });
+
+        for (const quest of hiddenQuests) {
+            let updated = false;
+            if (quest.feedbackTime == null || !quest.feedbackTime) {
+                quest.feedbackTime = quest.hiddenTime;
+                updated = true;
+            }
+            if (quest.feedbackMessage === '' || !quest.feedbackMessage) {
+                quest.feedbackMessage = quest.hiddenMessage;
+                updated = true;
+            }
+            if (updated) {
+                await quest.save();
+                const startQuestExist = await StartQuests.findOne(
+                    {
+                        uuid: quest.uuid,
+                        questForeignKey: quest.questForeignKey,
+                    }
+                )
+                if (!startQuestExist) {
+                    const startQuestModel = new StartQuests({
+                        addedAnswer: "",
+                        addedAnswerUuid: "",
+                        data: [],
+                        isAddedAnsSelected: "",
+                        questForeignKey: quest.questForeignKey,
+                        uuid: quest.uuid,
+                        isFeedback: true
+                    })
+                    await startQuestModel.save();
+                } else {
+                    startQuestExist.isFeedback = true;
+                    await startQuestExist.save();
+                }
+            }
+
+            if (quest.hiddenMessage === "Historical / Past Event" && !quest.historyDate) {
+                quest.historyDate = null;
+                await quest.save();
+            } else if (quest.hiddenMessage === "Historical / Past Event" && quest.historyDate !== null) {
+                const sameDate = await UserQuestSetting.findOne({
+                    _id: { $ne: quest._id },
+                    hidden: true,
+                    historyDate: quest.historyDate
+                });
+                if (sameDate) {
+                    await InfoQuestQuestions.findOneAndUpdate(
+                        {
+                            _id: quest.questForeignKey
+                        },
+                        {
+                            isClosed: true
+                        }
+                    ).exec();
+                }
+            }
+        }
+
+        res.status(200).json({
+            message: 'Feedback updated successfully for hidden quests',
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while updating the feedback: ${error.message}`,
+        });
+    }
+};
+
 module.exports = {
     createUserListForAllUsers,
     dbReset,
     userListSeoSetting,
     userPostSeoSetting,
+    setFeedback,
 };

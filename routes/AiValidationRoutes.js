@@ -16,7 +16,7 @@ const aiValidationModerator = require("../middleware/aiValidationModerator");
 
 router.get(
   "/ai-validation/:callType",
-  cache,
+  // cache,
   /**
    * @swagger
    * /ai-validation/{callType}:
