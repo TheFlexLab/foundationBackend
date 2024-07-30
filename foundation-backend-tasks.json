@@ -203,6 +203,10 @@
                 {
                     "name": "AWS_SNS_ACCESS_KEY",
                     "value": "AKIAYAVZB4KPT4M7Y2EX"
+                },
+                {
+                    "name":" REDIS_URL",
+                    "value":"redis://foundation-backend-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379"
                 }
             ],
             "mountPoints": [],

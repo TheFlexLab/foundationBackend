@@ -8,6 +8,8 @@ const colors = require("colors");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
+const redis = require("redis");
+
 const {
   BASE_PORT,
   FRONTEND_URL,
@@ -50,6 +52,14 @@ const {
 require("../service/passport");
 // require("../service/test")
 
+// Create Redis client
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL, // Set this in your .env file
+  legacyMode: true, // Enable for Redis v4.x compatibility
+});
+
+redisClient.connect().catch(console.error);
+
 dotenv.config();
 
 // app.use(cors());
@@ -66,12 +76,21 @@ app.use(
   })
 );
 
+// app.use(
+//   sessionExpress({
+//     secret: "somethingsecretgoeshere",
+//     resave: false,
+//     saveUninitialized: true,
+//     // cookie: { secure: true }
+//   })
+// );
 app.use(
-  sessionExpress({
-    secret: "somethingsecretgoeshere",
+  session({
+    store: new RedisStore({ client: redisClient }),
+    secret: "somethingsecretgoeshere", // Replace with a secure secret
     resave: false,
-    saveUninitialized: true,
-    // cookie: { secure: true }
+    saveUninitialized: false,
+    cookie: { secure: true }, // Secure cookies in production
   })
 );
 // app.use(
