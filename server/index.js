@@ -8,7 +8,9 @@ const colors = require("colors");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
+const session = require("express-session");
 const redis = require("redis");
+const RedisStore = require("connect-redis").default;
 
 const {
   BASE_PORT,
