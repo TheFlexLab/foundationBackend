@@ -1161,6 +1161,14 @@ const getQuestsAll = async (req, res) => {
     });
 
     allQuestions = await Promise.all(mapPromises);
+    // Filter out suppressed questions if req.query.uuid does not match uuid
+    // if (req.query.uuid) {
+    //   allQuestions = allQuestions.filter((question) => {
+    //     return !question.suppressed || question.uuid === req.query.uuid;
+    //   });
+    // } else {
+    //   allQuestions = allQuestions.filter((question) => !question.suppressed);
+    // }
     totalQuestionsCount = await UserQuestSetting.countDocuments(filterObj);
   } else if (Page === "SharedLink") {
     //console.log("running");

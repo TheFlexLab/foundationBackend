@@ -22,6 +22,10 @@ const {
   sharedLinkDynamicImageHTML,
 } = require("../templates/sharedLinkDynamicImageHTML");
 const StartQuests = require("../models/StartQuests");
+const {
+  getPercentage,
+  getPercentageQuestForeignKey,
+} = require("../utils/getPercentage");
 
 const createOrUpdate = async (req, res) => {
   try {
@@ -379,6 +383,12 @@ const createFeedback = async (req, res) => {
   try {
     const { feedbackMessage, questForeignKey, uuid, Question, historyDate } = req.body;
 
+    const isOwner = await InfoQuestQuestions.findOne({
+      _id: questForeignKey,
+      uuid: uuid,
+    })
+    if (isOwner) res.status(403).json({ message: "You cannot give feedback or hide your own post." });
+
     const userQuestSetting = await UserQuestSetting.findOne(
       {
         uuid: uuid,
@@ -408,16 +418,27 @@ const createFeedback = async (req, res) => {
         historyDate: historyDate ? historyDate : null,
       });
       questSetting = await userQuestSettingModel.save()
-      const startQuestModel = new StartQuests({
-        addedAnswer: "",
-        addedAnswerUuid: "",
-        data: [],
-        isAddedAnsSelected: "",
-        questForeignKey: questForeignKey,
-        uuid: uuid,
-        isFeedback: true
-      })
-      await startQuestModel.save();
+      const startQuestExist = await StartQuests.findOne(
+        {
+          uuid: uuid,
+          questForeignKey: questForeignKey,
+        }
+      )
+      if (!startQuestExist) {
+        const startQuestModel = new StartQuests({
+          addedAnswer: "",
+          addedAnswerUuid: "",
+          data: [],
+          isAddedAnsSelected: "",
+          questForeignKey: questForeignKey,
+          uuid: uuid,
+          isFeedback: true
+        })
+        await startQuestModel.save();
+      } else {
+        startQuestExist.isFeedback = true;
+        await startQuestExist.save();
+      }
 
       if (isHistorical) {
         await InfoQuestQuestions.findOneAndUpdate(
@@ -464,9 +485,44 @@ const createFeedback = async (req, res) => {
         inc: true,
       });
 
+      const formatSetting = await InfoQuestQuestions.findOne({
+        _id: questSetting.questForeignKey,
+      }).populate("getUserBadge", "badges");
+
+      const resultDoc = getPercentageQuestForeignKey(formatSetting);
+
+      const formattedDoc = {
+        ...formatSetting._doc,
+        startStatus: "completed",
+        selectedPercentage: resultDoc?.selectedPercentage?.[0]
+          ? [
+            Object.fromEntries(
+              Object.entries(resultDoc.selectedPercentage[0]).sort(
+                (a, b) => parseInt(b[1]) - parseInt(a[1])
+              )
+            ),
+          ]
+          : [],
+        contendedPercentage: resultDoc?.contendedPercentage?.[0]
+          ? [
+            Object.fromEntries(
+              Object.entries(resultDoc.contendedPercentage[0]).sort(
+                (a, b) => parseInt(b[1]) - parseInt(a[1])
+              )
+            ),
+          ]
+          : [],
+        startQuestData: await StartQuests.findOne({
+          uuid: uuid,
+          questForeignKey: questForeignKey,
+          isFeedback: true
+        }),
+        userQuestSetting: questSetting,
+      }
+
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
-        data: questSetting,
+        data: formattedDoc,
       });
     }
     else {
@@ -477,16 +533,27 @@ const createFeedback = async (req, res) => {
       userQuestSetting.historyDate = historyDate ? historyDate : userQuestSetting.historyDate;
       const updatedUserQuestSetting = await userQuestSetting.save();
 
-      const startQuestModel = new StartQuests({
-        addedAnswer: "",
-        addedAnswerUuid: "",
-        data: [],
-        isAddedAnsSelected: "",
-        questForeignKey: questForeignKey,
-        uuid: uuid,
-        isFeedback: true
-      })
-      await startQuestModel.save();
+      const startQuestExist = await StartQuests.findOne(
+        {
+          uuid: uuid,
+          questForeignKey: questForeignKey,
+        }
+      )
+      if (!startQuestExist) {
+        const startQuestModel = new StartQuests({
+          addedAnswer: "",
+          addedAnswerUuid: "",
+          data: [],
+          isAddedAnsSelected: "",
+          questForeignKey: questForeignKey,
+          uuid: uuid,
+          isFeedback: true
+        })
+        await startQuestModel.save();
+      } else {
+        startQuestExist.isFeedback = true;
+        await startQuestExist.save();
+      }
 
       if (isHistorical) {
         await InfoQuestQuestions.findOneAndUpdate(
@@ -533,9 +600,44 @@ const createFeedback = async (req, res) => {
         inc: true,
       });
 
+      const formatSetting = await InfoQuestQuestions.findOne({
+        _id: updatedUserQuestSetting.questForeignKey,
+      }).populate("getUserBadge", "badges");
+
+      const resultDoc = getPercentageQuestForeignKey(formatSetting);
+
+      const formattedDoc = {
+        ...formatSetting._doc,
+        startStatus: "completed",
+        startQuestData: await StartQuests.findOne({
+          uuid: uuid,
+          questForeignKey: questForeignKey,
+          isFeedback: true
+        }),
+        userQuestSetting: updatedUserQuestSetting,
+        selectedPercentage: resultDoc?.selectedPercentage?.[0]
+        ? [
+          Object.fromEntries(
+            Object.entries(resultDoc.selectedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
+        : [],
+      contendedPercentage: resultDoc?.contendedPercentage?.[0]
+        ? [
+          Object.fromEntries(
+            Object.entries(resultDoc.contendedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
+        : [],
+      }
+
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
-        data: updatedUserQuestSetting,
+        data: formattedDoc,
       });
     }
 
@@ -619,6 +721,12 @@ const create = async (req, res) => {
     //   userQuestSettingExist.hiddenTime = new Date();
     //   await userQuestSettingExist.save();
     // }
+
+    const isOwner = await InfoQuestQuestions.findOne({
+      _id: req.body.questForeignKey,
+      uuid: req.body.uuid,
+    })
+    if (isOwner) res.status(403).json({ message: "You cannot give feedback or hide your own post." });
 
     let userQuestSettingSaved = await UserQuestSetting.findOne(
       { uuid: req.body.uuid, questForeignKey: req.body.questForeignKey },
