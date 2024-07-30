@@ -66,7 +66,7 @@
                 },
                 {
                     "name": "BACKEND_URL",
-                    "value": "https://api.development.on.foundation"
+                    "value": "https://api-v2.on.foundation"
                 },
                 {
                     "name": "INSTAGRAM_CLIENT_ID",
@@ -154,7 +154,7 @@
                 },
                 {
                     "name": "rpID",
-                    "value": "api.development.on.foundation"
+                    "value": "api-v2.on.foundation"
                 },
                 {
                     "name": "OPEN_AI_URL",
