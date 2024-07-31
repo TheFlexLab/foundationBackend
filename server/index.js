@@ -56,7 +56,7 @@ require("../service/passport");
 // require("../service/test")
 // Create Redis client
 const redisClient = redis.createClient({
-  url: REDIS_URL,
+  url: "rediss://foundation-backend-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379",
   // legacyMode: true, // Enable for Redis v4.x compatibility
 });
 
