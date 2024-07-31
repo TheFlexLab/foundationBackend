@@ -53,14 +53,11 @@ const {
 // import '../service/passport'
 require("../service/passport");
 // require("../service/test")
-
 // Create Redis client
 const redisClient = redis.createClient({
-  url: process.env.REDIS_URL, // Set this in your .env file
-  legacyMode: true, // Enable for Redis v4.x compatibility
+  url: "rediss://foundation-backend-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379",
+  // legacyMode: true, // Enable for Redis v4.x compatibility
 });
-
-redisClient.connect().catch(console.error);
 
 dotenv.config();
 
@@ -86,13 +83,38 @@ app.use(
 //     // cookie: { secure: true }
 //   })
 // );
+
+redisClient.on("error", (err) => {
+  console.error("Redis error:", err);
+});
+
+redisClient.on("connect", () => {
+  console.log("Connected to Redis successfully");
+});
+
+redisClient.on("reconnecting", () => {
+  console.log("Reconnecting to Redis...");
+});
+
+redisClient.on("end", () => {
+  console.log("Disconnected from Redis");
+});
+
+// Connect to Redis
+redisClient.connect().catch((err) => {
+  console.error("Error connecting to Redis:", err);
+});
 app.use(
   session({
     store: new RedisStore({ client: redisClient }),
     secret: "somethingsecretgoeshere", // Replace with a secure secret
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: true }, // Secure cookies in production
+    cookie: {
+      secure: false, // if true only transmit cookie over https
+      httpOnly: false, // if true prevent client side JS from reading the cookie
+      maxAge: 1000 * 60 * 10, // session max age in miliseconds
+    },
   })
 );
 // app.use(
