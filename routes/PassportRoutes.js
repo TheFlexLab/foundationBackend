@@ -110,7 +110,7 @@ router.get(
    *       '302':
    *         description: Redirect to LinkedIn authentication page
    */
-  passport.authenticate("linkedin", { scope: ["profile", "email"] })
+  passport.authenticate("linkedin")
 );
 
 router.get(
@@ -139,35 +139,6 @@ router.get(
   }),
   PassportController.oauthSuccessHandler
 );
-
-// router.get(
-//   '/linkedin',
-//   passport.authenticate('linkedin')
-// );
-
-// router.get(
-//   '/linkedin/callback',
-//   (req, res, next) => {
-//     passport.authenticate('linkedin', (err, user, info) => {
-//       if (err) {
-//         console.error('LinkedIn authentication error:', err.message);
-//         return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
-//       }
-//       if (!user) {
-//         console.error('LinkedIn authentication failed: no user returned', info);
-//         return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
-//       }
-
-//       req.logIn(user, (err) => {
-//         if (err) {
-//           console.error('Login error:', err.message);
-//           return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
-//         }
-//         PassportController.oauthSuccessHandler
-//       });
-//     })(req, res, next);
-//   }
-// );
 
 // Twitter
 router.get(
