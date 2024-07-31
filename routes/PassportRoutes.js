@@ -96,78 +96,78 @@ router.get(
 );
 
 // LinkedIn
-// router.get(
-//   "/linkedin",
-//   /**
-//    * @swagger
-//    * /auth/linkedin:
-//    *   get:
-//    *     tags:
-//    *       - Pasport
-//    *     summary: Authenticate with LinkedIn
-//    *     description: Endpoint to initiate authentication with LinkedIn
-//    *     responses:
-//    *       '302':
-//    *         description: Redirect to LinkedIn authentication page
-//    */
-//   passport.authenticate("linkedin", { scope: ["profile", "email"] })
-// );
-
-// router.get(
-//   "/linkedin/callback",
-//   /**
-//    * @swagger
-//    * /auth/linkedin/callback:
-//    *   get:
-//    *     tags:
-//    *       - Pasport
-//    *     summary: LinkedIn authentication callback
-//    *     description: Endpoint to handle callback after LinkedIn authentication
-//    *     responses:
-//    *       '302':
-//    *         description: Redirect to client URL
-//    */
-//   (req, res, next) => {
-//     if (req.query.error) {
-//       return res.redirect(`${CLIENT_URL}`);
-//     }
-//     next();
-//   },
-//   passport.authenticate("linkedin", {
-//     failureRedirect: CLIENT_URL,
-//     session: false,
-//   }),
-//   PassportController.oauthSuccessHandler
-// );
-
 router.get(
-  '/linkedin',
-  passport.authenticate('linkedin')
+  "/linkedin",
+  /**
+   * @swagger
+   * /auth/linkedin:
+   *   get:
+   *     tags:
+   *       - Pasport
+   *     summary: Authenticate with LinkedIn
+   *     description: Endpoint to initiate authentication with LinkedIn
+   *     responses:
+   *       '302':
+   *         description: Redirect to LinkedIn authentication page
+   */
+  passport.authenticate("linkedin", { scope: ["profile", "email"] })
 );
 
 router.get(
-  '/linkedin/callback',
+  "/linkedin/callback",
+  /**
+   * @swagger
+   * /auth/linkedin/callback:
+   *   get:
+   *     tags:
+   *       - Pasport
+   *     summary: LinkedIn authentication callback
+   *     description: Endpoint to handle callback after LinkedIn authentication
+   *     responses:
+   *       '302':
+   *         description: Redirect to client URL
+   */
   (req, res, next) => {
-    passport.authenticate('linkedin', (err, user, info) => {
-      if (err) {
-        console.error('LinkedIn authentication error:', err.message);
-        return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
-      }
-      if (!user) {
-        console.error('LinkedIn authentication failed: no user returned', info);
-        return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
-      }
-
-      req.logIn(user, (err) => {
-        if (err) {
-          console.error('Login error:', err.message);
-          return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
-        }
-        PassportController.oauthSuccessHandler
-      });
-    })(req, res, next);
-  }
+    if (req.query.error) {
+      return res.redirect(`${CLIENT_URL}`);
+    }
+    next();
+  },
+  passport.authenticate("linkedin", {
+    failureRedirect: CLIENT_URL,
+    session: false,
+  }),
+  PassportController.oauthSuccessHandler
 );
+
+// router.get(
+//   '/linkedin',
+//   passport.authenticate('linkedin')
+// );
+
+// router.get(
+//   '/linkedin/callback',
+//   (req, res, next) => {
+//     passport.authenticate('linkedin', (err, user, info) => {
+//       if (err) {
+//         console.error('LinkedIn authentication error:', err.message);
+//         return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
+//       }
+//       if (!user) {
+//         console.error('LinkedIn authentication failed: no user returned', info);
+//         return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
+//       }
+
+//       req.logIn(user, (err) => {
+//         if (err) {
+//           console.error('Login error:', err.message);
+//           return res.redirect(`${CLIENT_URL}/login?error=linkedin`);
+//         }
+//         PassportController.oauthSuccessHandler
+//       });
+//     })(req, res, next);
+//   }
+// );
 
 // Twitter
 router.get(

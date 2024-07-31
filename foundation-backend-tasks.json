@@ -206,7 +206,7 @@
                 },
                 {
                     "name":" REDIS_URL",
-                    "value":"redis://foundation-backend-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379"
+                    "value":"rediss://foundation-backend-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379"
                 }
             ],
             "mountPoints": [],

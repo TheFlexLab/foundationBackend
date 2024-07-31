@@ -17,6 +17,7 @@ const {
   FRONTEND_URL,
   FRONTEND_URL_1,
   rpID,
+  REDIS_URL,
 } = require("../config/env");
 const passport = require("passport");
 const swaggerUI = require("swagger-ui-express");
@@ -55,7 +56,7 @@ require("../service/passport");
 // require("../service/test")
 // Create Redis client
 const redisClient = redis.createClient({
-  url: "rediss://foundation-backend-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379",
+  url: REDIS_URL,
   // legacyMode: true, // Enable for Redis v4.x compatibility
 });
 
