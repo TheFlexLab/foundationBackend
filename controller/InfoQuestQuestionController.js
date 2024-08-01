@@ -1230,11 +1230,21 @@ const getQuestsAll = async (req, res) => {
     //console.log("🚀 ~ getQuestsAll ~ hiddenUserSettingIds:",hiddenUserSettingIds);
     //console.log("🚀 ~ getQuestsAll ~ filterObj:", filterObj);
 
+    // let query = InfoQuestQuestions.find({
+    //   _id: { $nin: hiddenUserSettingIds },
+    //   ...filterObj,
+    //   isActive: true,
+    // });
+
     let query = InfoQuestQuestions.find({
       _id: { $nin: hiddenUserSettingIds },
       ...filterObj,
       isActive: true,
-    });
+      $or: [
+        { suppressed: true, uuid: req.query.uuid },
+        { suppressed: false }
+      ]
+    });    
 
     query = query.sort(
       sort === "Oldest First"
@@ -2326,7 +2336,6 @@ async function getQuestionsWithStatus(allQuestions, uuid) {
       const startedQuestions = await StartQuests.find({
         uuid: uuid,
       });
-      console.log("quees", startedQuestions);
       let Result = [];
       await allQuestions.map(async function (rcrd) {
         await startedQuestions.map(function (rec) {

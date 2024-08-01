@@ -410,7 +410,11 @@ const createFeedback = async (req, res) => {
 
     let addOption = false;
     if (feedbackMessage === "Needs More Options") {
-      addOption = true;
+      const checkNeedsMoreOptions = await UserQuestSetting.findOne({
+        questForeignKey: questForeignKey,
+        feedbackMessage: feedbackMessage,
+      });
+      if (checkNeedsMoreOptions) addOption = true;
     }
 
     let questSetting;

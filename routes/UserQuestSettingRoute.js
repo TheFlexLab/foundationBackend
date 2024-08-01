@@ -44,6 +44,7 @@ router.post(
 router.post(
   "/userQuestSetting/createFeedback",
   isUrlSharedPostValidToInteract,
+  isGuest,
   /**
    * @swagger
    * /userQuestSetting/createFeedback:
@@ -70,6 +71,7 @@ router.post(
 router.post(
   "/userQuestSetting/updateFeedback",
   isUrlSharedPostValidToInteract,
+  isGuest,
   /**
    * @swagger
    * /userQuestSetting/updateFeedback:
