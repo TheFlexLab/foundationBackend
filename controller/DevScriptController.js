@@ -389,6 +389,25 @@ const setFeedback = async (req, res) => {
                     ).exec();
                 }
             }
+
+            if (quest.hiddenMessage === "Needs More Options") {
+                const questAlreadyExist = await UserQuestSetting.findOne({
+                    _id: { $ne: quest._id },
+                    hidden: true,
+                    hiddenMessage: "Needs More Options"
+                });
+                if (questAlreadyExist) {
+                    await InfoQuestQuestions.findOneAndUpdate(
+                        {
+                            _id: quest.questForeignKey
+                        },
+                        {
+                            usersAddTheirAns: true,
+                            isAddOptionFeedback: true,
+                        }
+                    ).exec();
+                }
+            }
         }
 
         res.status(200).json({
