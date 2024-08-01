@@ -1147,7 +1147,7 @@ const getQuestsAll = async (req, res) => {
     //console.log("running");
     filterObj.uuid = uuid;
     // filterObj.hidden = true;
-    filterObj.feedbackMessage = { $ne: '', $exists: true };
+    filterObj.feedbackMessage = { $ne: "", $exists: true };
     const Questions = await UserQuestSetting.find(filterObj)
       .sort({ feedbackTime: -1 })
       // .sort(sort === "Newest First" ? { createdAt: -1 } : "createdAt")
@@ -1191,7 +1191,7 @@ const getQuestsAll = async (req, res) => {
     totalQuestionsCount = await UserQuestSetting.countDocuments(filterObj);
   } else if (Page === "Feedback") {
     const hiddenUserSettings = await UserQuestSetting.find({
-      feedbackMessage: { $ne: '', $exists: true },
+      feedbackMessage: { $ne: "", $exists: true },
     });
 
     // Extract userSettingIds from hiddenUserSettings
@@ -1380,7 +1380,7 @@ const getQuestsAll = async (req, res) => {
       const feedbackReceived = await UserQuestSetting.aggregate([
         {
           $match: {
-            feedbackMessage: { $ne: '', $exists: true },
+            feedbackMessage: { $ne: "", $exists: true },
             questForeignKey: item._doc._id.toString(),
           },
         },
@@ -1420,10 +1420,12 @@ const getQuestsAll = async (req, res) => {
         hidden: true,
         questForeignKey: item._doc._id,
       });
-      resultArray[i]._doc.feedbackCount = await UserQuestSetting.countDocuments({
-        feedbackMessage: { $ne: '', $exists: true },
-        questForeignKey: item._doc._id,
-      });
+      resultArray[i]._doc.feedbackCount = await UserQuestSetting.countDocuments(
+        {
+          feedbackMessage: { $ne: "", $exists: true },
+          questForeignKey: item._doc._id,
+        }
+      );
 
       // if(!resultArray[i]._doc.isAddOptionFeedback){
       //   if (resultArray[i]._doc.hiddenCount === 0) {
@@ -2324,20 +2326,21 @@ async function getQuestionsWithStatus(allQuestions, uuid) {
       const startedQuestions = await StartQuests.find({
         uuid: uuid,
       });
-
+      console.log("quees", startedQuestions);
       let Result = [];
       await allQuestions.map(async function (rcrd) {
         await startedQuestions.map(function (rec) {
           if (rec.questForeignKey === rcrd?._id?.toString()) {
-            if(rcrd.isAddOptionFeedback) {
-              rcrd.startStatus = "add option";
+            if (rec.isFeedback && rec.data.length === 0) {
+              rcrd.startStatus = "continue";
               rcrd.startQuestData = rec;
-            }
-            else if(rec.isFeedback){
+            } else if (rec.isFeedback && rec.data.length > 0) {
+              rcrd.startStatus = "change answer";
+              rcrd.startQuestData = rec;
+            } else if (rec.isFeedback) {
               rcrd.startStatus = "completed";
               rcrd.startQuestData = rec;
-            }
-            else if (
+            } else if (
               rcrd.usersChangeTheirAns?.trim() !== "" ||
               rcrd.whichTypeQuestion === "ranked choise"
             ) {

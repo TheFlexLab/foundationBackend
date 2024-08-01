@@ -21,6 +21,7 @@ const { getPercentage } = require("../utils/getPercentage");
 const UserQuestSetting = require("../models/UserQuestSetting");
 const BookmarkQuests = require("../models/BookmarkQuests");
 const Ledgers = require("../models/Ledgers");
+const { findOne, findOneAndUpdate } = require("../models/Treasury");
 
 const updateViolationCounter = async (req, res) => {
   try {
@@ -74,9 +75,10 @@ const createStartQuest = async (req, res) => {
     await User.findOneAndUpdate(
       { uuid: checkSuppression.uuid },
       { $inc: { yourPostEngaged: 1 } }
-    );    
+    );
 
-    if (req.body.isSharedLinkAns) {// Increament $inc userQuest submtted count if questForeignKey exist in UserQuestSetting Model
+    if (req.body.isSharedLinkAns) {
+      // Increament $inc userQuest submtted count if questForeignKey exist in UserQuestSetting Model
       await UserQuestSetting.findOneAndUpdate(
         { questForeignKey: req.body.questForeignKey, link: req.body.postLink },
         { $inc: { questsCompleted: 1 } } // Increment questImpression field by 1
@@ -128,7 +130,8 @@ const createStartQuest = async (req, res) => {
         dec: true,
       });
       const userSpent = await User.findOne({ uuid: req.body.uuid });
-      userSpent.fdxSpent = userSpent.fdxSpent + QUEST_OPTION_CONTENTION_GIVEN_AMOUNT;
+      userSpent.fdxSpent =
+        userSpent.fdxSpent + QUEST_OPTION_CONTENTION_GIVEN_AMOUNT;
       await userSpent.save();
     }
 
@@ -137,8 +140,10 @@ const createStartQuest = async (req, res) => {
       { $inc: { contentionsGiven: contentionsGivenIncrement } }
     );
 
-    if (getInfoQuestQuestion.whichTypeQuestion === "multiple choise" || getInfoQuestQuestion.whichTypeQuestion === "open choice") {
-
+    if (
+      getInfoQuestQuestion.whichTypeQuestion === "multiple choise" ||
+      getInfoQuestQuestion.whichTypeQuestion === "open choice"
+    ) {
       if (req.body.isAddedAnsSelected) {
         await User.findOneAndUpdate(
           { uuid: req.body.uuid },
@@ -149,8 +154,6 @@ const createStartQuest = async (req, res) => {
           }
         );
       } else {
-
-
         for (const item of req.body.data?.selected) {
           const matchingStartQuest = await StartQuests.findOne({
             addedAnswer: item.question,
@@ -175,7 +178,6 @@ const createStartQuest = async (req, res) => {
       getInfoQuestQuestion.whichTypeQuestion === "open choice" ||
       getInfoQuestQuestion.whichTypeQuestion === "ranked choise"
     ) {
-
       for (const item of req.body.data?.contended) {
         const matchingStartQuest = await StartQuests.findOne({
           addedAnswer: item.question,
@@ -193,7 +195,6 @@ const createStartQuest = async (req, res) => {
         }
       }
     }
-
 
     // // Function to process an array
     // const processArray = async (array, fieldToUpdate) => {
@@ -230,15 +231,29 @@ const createStartQuest = async (req, res) => {
         (entry) => !entry.addedAnswerByUser
       );
     }
-    // Create a new StartQuests document
-    const question = new StartQuests({
+    const alreadyExistRecord = await StartQuests.findOne({
       questForeignKey: req.body.questForeignKey,
       uuid: req.body.uuid,
-      addedAnswer: req.body.addedAnswer,
-      data: req.body.data,
     });
-
-    await question.save();
+    let question;
+    if (!alreadyExistRecord) {
+      // Create a new StartQuests document
+      question = new StartQuests({
+        questForeignKey: req.body.questForeignKey,
+        uuid: req.body.uuid,
+        addedAnswer: req.body.addedAnswer,
+        data: req.body.data,
+      });
+      await question.save();
+    } else {
+      question = await StartQuests.findOneAndUpdate(
+        { questForeignKey: req.body.questForeignKey, uuid: req.body.uuid },
+        {
+          addedAnswer: req.body.addedAnswer,
+          data: req.body.data,
+        }
+      ).exec();
+    }
 
     // increment the totalStartQuest, selected and contended count
     const selectedCounter = {};
@@ -384,7 +399,9 @@ const createStartQuest = async (req, res) => {
       });
       const userEarned = await User.findOne({ uuid: req.body.uuid });
       userEarned.fdxEarned = userEarned.fdxEarned + QUEST_OPTION_ADDED_AMOUNT;
-      userEarned.rewardSchedual.postParticipationFdx = userEarned.rewardSchedual.postParticipationFdx + QUEST_OPTION_ADDED_AMOUNT;
+      userEarned.rewardSchedual.postParticipationFdx =
+        userEarned.rewardSchedual.postParticipationFdx +
+        QUEST_OPTION_ADDED_AMOUNT;
       await userEarned.save();
     }
     // Correct Answer or Wrong Answer
@@ -476,8 +493,11 @@ const createStartQuest = async (req, res) => {
     });
 
     const responsingUserEarnedFDX = await User.findOne({ uuid: req.body.uuid });
-    responsingUserEarnedFDX.fdxEarned = responsingUserEarnedFDX.fdxEarned + QUEST_COMPLETED_AMOUNT;
-    responsingUserEarnedFDX.rewardSchedual.myEngagementInPostFdx = responsingUserEarnedFDX.rewardSchedual.myEngagementInPostFdx + QUEST_COMPLETED_AMOUNT;
+    responsingUserEarnedFDX.fdxEarned =
+      responsingUserEarnedFDX.fdxEarned + QUEST_COMPLETED_AMOUNT;
+    responsingUserEarnedFDX.rewardSchedual.myEngagementInPostFdx =
+      responsingUserEarnedFDX.rewardSchedual.myEngagementInPostFdx +
+      QUEST_COMPLETED_AMOUNT;
     await responsingUserEarnedFDX.save();
 
     // Create Ledger
@@ -500,9 +520,12 @@ const createStartQuest = async (req, res) => {
       amount: QUEST_OWNER_ACCOUNT,
       inc: true,
     });
-    const ownerEarnedFDX = await User.findOne({ uuid: getInfoQuestQuestion.uuid });
+    const ownerEarnedFDX = await User.findOne({
+      uuid: getInfoQuestQuestion.uuid,
+    });
     ownerEarnedFDX.fdxEarned = ownerEarnedFDX.fdxEarned + QUEST_OWNER_ACCOUNT;
-    ownerEarnedFDX.rewardSchedual.postParticipationFdx = ownerEarnedFDX.rewardSchedual.postParticipationFdx + QUEST_OWNER_ACCOUNT;
+    ownerEarnedFDX.rewardSchedual.postParticipationFdx =
+      ownerEarnedFDX.rewardSchedual.postParticipationFdx + QUEST_OWNER_ACCOUNT;
     await ownerEarnedFDX.save();
 
     const bookmarkExist = await BookmarkQuests.findOne({
@@ -632,7 +655,8 @@ async function createStartQuestUserList(req, res) {
         dec: true,
       });
       const userSpent = await User.findOne({ uuid: req.body.uuid });
-      userSpent.fdxSpent = userSpent.fdxSpent + QUEST_OPTION_CONTENTION_GIVEN_AMOUNT;
+      userSpent.fdxSpent =
+        userSpent.fdxSpent + QUEST_OPTION_CONTENTION_GIVEN_AMOUNT;
       await userSpent.save();
     }
 
@@ -641,8 +665,10 @@ async function createStartQuestUserList(req, res) {
       { $inc: { contentionsGiven: contentionsGivenIncrement } }
     );
 
-    if (getInfoQuestQuestion.whichTypeQuestion === "multiple choise" || getInfoQuestQuestion.whichTypeQuestion === "open choice") {
-
+    if (
+      getInfoQuestQuestion.whichTypeQuestion === "multiple choise" ||
+      getInfoQuestQuestion.whichTypeQuestion === "open choice"
+    ) {
       if (req.body.isAddedAnsSelected) {
         await User.findOneAndUpdate(
           { uuid: req.body.uuid },
@@ -653,8 +679,6 @@ async function createStartQuestUserList(req, res) {
           }
         );
       } else {
-
-
         for (const item of req.body.data?.selected) {
           const matchingStartQuest = await StartQuests.findOne({
             addedAnswer: item.question,
@@ -679,7 +703,6 @@ async function createStartQuestUserList(req, res) {
       getInfoQuestQuestion.whichTypeQuestion === "open choice" ||
       getInfoQuestQuestion.whichTypeQuestion === "ranked choise"
     ) {
-
       for (const item of req.body.data?.contended) {
         const matchingStartQuest = await StartQuests.findOne({
           addedAnswer: item.question,
@@ -697,7 +720,6 @@ async function createStartQuestUserList(req, res) {
         }
       }
     }
-
 
     // if (getInfoQuestQuestion.whichTypeQuestion !== "ranked choise") {
     //   await User.findOneAndUpdate(
@@ -759,15 +781,29 @@ async function createStartQuestUserList(req, res) {
         (entry) => !entry.addedAnswerByUser
       );
     }
-    // Create a new StartQuests document
-    const question = new StartQuests({
+    const alreadyExistRecord = await StartQuests.findOne({
       questForeignKey: req.body.questForeignKey,
       uuid: req.body.uuid,
-      addedAnswer: req.body.addedAnswer,
-      data: req.body.data,
     });
-
-    await question.save();
+    let question;
+    if (!alreadyExistRecord) {
+      // Create a new StartQuests document
+      question = new StartQuests({
+        questForeignKey: req.body.questForeignKey,
+        uuid: req.body.uuid,
+        addedAnswer: req.body.addedAnswer,
+        data: req.body.data,
+      });
+      await question.save();
+    } else {
+      question = await StartQuests.findOneAndUpdate(
+        { questForeignKey: req.body.questForeignKey, uuid: req.body.uuid },
+        {
+          addedAnswer: req.body.addedAnswer,
+          data: req.body.data,
+        }
+      ).exec();
+    }
 
     // increment the totalStartQuest, selected and contended count
     const selectedCounter = {};
@@ -1026,7 +1062,9 @@ async function createStartQuestUserList(req, res) {
       amount: QUEST_OWNER_ACCOUNT,
       inc: true,
     });
-    const ownerUserEarned = await User.findOne({ uuid: getInfoQuestQuestion.uuid });
+    const ownerUserEarned = await User.findOne({
+      uuid: getInfoQuestQuestion.uuid,
+    });
     ownerUserEarned.fdxEarned = ownerUserEarned.fdxEarned + QUEST_OWNER_ACCOUNT;
     await ownerUserEarned.save();
     const bookmarkExist = await BookmarkQuests.findOne({
@@ -1060,7 +1098,7 @@ async function createStartQuestUserList(req, res) {
       message: `An error occurred while createStartQuest: ${err.message}`,
     };
   }
-};
+}
 const updateChangeAnsStartQuest = async (req, res) => {
   try {
     const checkSuppression = await InfoQuestQuestions.findOne({
@@ -1145,44 +1183,47 @@ const updateChangeAnsStartQuest = async (req, res) => {
             },
           }
         );
-
       } else {
         // Previous selected answers array
-        let previousAnswers = startQuestQuestion?.data[startQuestQuestion.data.length - 1]?.selected;
+        let previousAnswers =
+          startQuestQuestion?.data[startQuestQuestion.data.length - 1]
+            ?.selected;
 
         // New selected answers array
         let newAnswers = req.body.changeAnswerAddedObj?.selected;
 
         // Find common elements
-        const commonAnswers = previousAnswers?.filter(prevItem =>
-          newAnswers?.some(newItem => newItem.question === prevItem.question)
+        const commonAnswers = previousAnswers?.filter((prevItem) =>
+          newAnswers?.some((newItem) => newItem.question === prevItem.question)
         );
-
-
 
         // Remove common elements from both arrays
-        previousAnswers = previousAnswers?.filter(prevItem =>
-          !commonAnswers?.some(commonItem => commonItem.question === prevItem.question)
+        previousAnswers = previousAnswers?.filter(
+          (prevItem) =>
+            !commonAnswers?.some(
+              (commonItem) => commonItem.question === prevItem.question
+            )
         );
 
-        newAnswers = newAnswers?.filter(newItem =>
-          !commonAnswers?.some(commonItem => commonItem.question === newItem.question)
+        newAnswers = newAnswers?.filter(
+          (newItem) =>
+            !commonAnswers?.some(
+              (commonItem) => commonItem.question === newItem.question
+            )
         );
-
 
         previousAnswers?.map(async (item) => {
           const option = await InfoQuestQuestions.findOne(
             {
               _id: req.body.questId,
-              "QuestAnswers.question": item.question
+              "QuestAnswers.question": item.question,
             },
             {
-              QuestAnswers: { $elemMatch: { question: item.question } }
+              QuestAnswers: { $elemMatch: { question: item.question } },
             }
           );
 
           if (option?.QuestAnswers[0]?.uuid) {
-
             await User.findOneAndUpdate(
               { uuid: option.QuestAnswers[0].uuid },
               {
@@ -1192,16 +1233,16 @@ const updateChangeAnsStartQuest = async (req, res) => {
               }
             );
           }
-        })
+        });
 
         newAnswers?.map(async (item) => {
           const option = await InfoQuestQuestions.findOne(
             {
               _id: req.body.questId,
-              "QuestAnswers.question": item.question
+              "QuestAnswers.question": item.question,
             },
             {
-              QuestAnswers: { $elemMatch: { question: item.question } }
+              QuestAnswers: { $elemMatch: { question: item.question } },
             }
           );
           if (option?.QuestAnswers[0]?.uuid) {
@@ -1214,7 +1255,7 @@ const updateChangeAnsStartQuest = async (req, res) => {
               }
             );
           }
-        })
+        });
       }
     }
 
@@ -1225,42 +1266,44 @@ const updateChangeAnsStartQuest = async (req, res) => {
       getInfoQuestQuestion.whichTypeQuestion === "ranked choise"
     ) {
       // Previous selected answers array
-      let previousAnswers = startQuestQuestion?.data[startQuestQuestion.data.length - 1]?.contended;
+      let previousAnswers =
+        startQuestQuestion?.data[startQuestQuestion.data.length - 1]?.contended;
 
       // New selected answers array
       let newAnswers = req.body.changeAnswerAddedObj?.contended || [];
 
       // Find common elements
-      const commonAnswers = previousAnswers?.filter(prevItem =>
-        newAnswers?.some(newItem => newItem.question === prevItem.question)
+      const commonAnswers = previousAnswers?.filter((prevItem) =>
+        newAnswers?.some((newItem) => newItem.question === prevItem.question)
       );
-
-
 
       // Remove common elements from both arrays
-      previousAnswers = previousAnswers?.filter(prevItem =>
-        !commonAnswers?.some(commonItem => commonItem.question === prevItem.question)
+      previousAnswers = previousAnswers?.filter(
+        (prevItem) =>
+          !commonAnswers?.some(
+            (commonItem) => commonItem.question === prevItem.question
+          )
       );
 
-      newAnswers = newAnswers?.filter(newItem =>
-        !commonAnswers?.some(commonItem => commonItem.question === newItem.question)
+      newAnswers = newAnswers?.filter(
+        (newItem) =>
+          !commonAnswers?.some(
+            (commonItem) => commonItem.question === newItem.question
+          )
       );
-
 
       previousAnswers?.map(async (item) => {
         const option = await InfoQuestQuestions.findOne(
           {
             _id: req.body.questId,
-            "QuestAnswers.question": item.question
+            "QuestAnswers.question": item.question,
           },
           {
-            QuestAnswers: { $elemMatch: { question: item.question } }
+            QuestAnswers: { $elemMatch: { question: item.question } },
           }
         );
 
-
         if (option?.QuestAnswers[0]?.uuid) {
-
           await User.findOneAndUpdate(
             { uuid: option.QuestAnswers[0].uuid },
             {
@@ -1270,16 +1313,16 @@ const updateChangeAnsStartQuest = async (req, res) => {
             }
           );
         }
-      })
+      });
 
       newAnswers?.map(async (item) => {
         const option = await InfoQuestQuestions.findOne(
           {
             _id: req.body.questId,
-            "QuestAnswers.question": item.question
+            "QuestAnswers.question": item.question,
           },
           {
-            QuestAnswers: { $elemMatch: { question: item.question } }
+            QuestAnswers: { $elemMatch: { question: item.question } },
           }
         );
 
@@ -1293,11 +1336,8 @@ const updateChangeAnsStartQuest = async (req, res) => {
             }
           );
         }
-      })
+      });
     }
-
-
-
 
     // INCREMENT
     // Function to process an array
@@ -1403,8 +1443,6 @@ const updateChangeAnsStartQuest = async (req, res) => {
 
     //check if ledger already exists
 
-
-
     // Increment Counter
     if (contentionGivenCounter > 0) {
       const userBalance = await getUserBalance(req.body.uuid);
@@ -1414,8 +1452,7 @@ const updateChangeAnsStartQuest = async (req, res) => {
       )
         throw new Error("The balance is insufficient to give the contention!");
 
-
-      const txID = crypto.randomBytes(11).toString("hex")
+      const txID = crypto.randomBytes(11).toString("hex");
       // Create Ledger
       await createLedger({
         uuid: req.body.uuid,
@@ -1452,12 +1489,12 @@ const updateChangeAnsStartQuest = async (req, res) => {
         uuid: req.body.uuid,
       });
       const userSpent = await User.findOne({ uuid: req.body.uuid });
-      userSpent.fdxSpent = userSpent.fdxSpent + (QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter);
+      userSpent.fdxSpent =
+        userSpent.fdxSpent +
+        QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter;
       await userSpent.save();
     } else if (contentionGivenCounter < 0) {
-
-
-      const txID2 = crypto.randomBytes(11).toString("hex")
+      const txID2 = crypto.randomBytes(11).toString("hex");
       // Create Ledger
       await createLedger({
         uuid: req.body.uuid,
@@ -1500,7 +1537,10 @@ const updateChangeAnsStartQuest = async (req, res) => {
         uuid: req.body.uuid,
       });
       const userSpent = await User.findOne({ uuid: req.body.uuid });
-      userSpent.fdxSpent = userSpent.fdxSpent + (QUEST_OPTION_CONTENTION_REMOVED_AMOUNT * Math.abs(contentionGivenCounter));
+      userSpent.fdxSpent =
+        userSpent.fdxSpent +
+        QUEST_OPTION_CONTENTION_REMOVED_AMOUNT *
+          Math.abs(contentionGivenCounter);
       await userSpent.save();
     }
 
@@ -1546,7 +1586,9 @@ const updateChangeAnsStartQuest = async (req, res) => {
       });
       const userEarned = await User.findOne({ uuid: req.body.uuid });
       userEarned.fdxEarned = userEarned.fdxEarned + QUEST_OPTION_ADDED_AMOUNT;
-      userEarned.rewardSchedual.postParticipationFdx = userEarned.rewardSchedual.postParticipationFdx + QUEST_OPTION_ADDED_AMOUNT;
+      userEarned.rewardSchedual.postParticipationFdx =
+        userEarned.rewardSchedual.postParticipationFdx +
+        QUEST_OPTION_ADDED_AMOUNT;
       await userEarned.save();
     }
 
@@ -1637,7 +1679,8 @@ const updateChangeAnsStartQuest = async (req, res) => {
           });
         } else {
           selectedCounter[
-            `result.selected.${initialStartQuestData[initialStartQuestData.length - 1]?.selected
+            `result.selected.${
+              initialStartQuestData[initialStartQuestData.length - 1]?.selected
             }`
           ] = -1;
         }
@@ -1701,8 +1744,9 @@ const updateChangeAnsStartQuest = async (req, res) => {
           });
         } else {
           selectedCounter[
-            `result.selected.${startQuestQuestion.data[startQuestQuestion.data.length - 1]
-              ?.selected
+            `result.selected.${
+              startQuestQuestion.data[startQuestQuestion.data.length - 1]
+                ?.selected
             }`
           ] = 1;
         }
@@ -1717,7 +1761,7 @@ const updateChangeAnsStartQuest = async (req, res) => {
           }
         );
 
-        const txID3 = crypto.randomBytes(11).toString("hex")
+        const txID3 = crypto.randomBytes(11).toString("hex");
         // Create Ledger
         await createLedger({
           uuid: req.body.uuid,
@@ -1868,44 +1912,47 @@ const updateChangeAnsStartQuestUserList = async (req) => {
             },
           }
         );
-
       } else {
         // Previous selected answers array
-        let previousAnswers = startQuestQuestion?.data[startQuestQuestion.data.length - 1]?.selected;
+        let previousAnswers =
+          startQuestQuestion?.data[startQuestQuestion.data.length - 1]
+            ?.selected;
 
         // New selected answers array
         let newAnswers = req.body.changeAnswerAddedObj?.selected;
 
         // Find common elements
-        const commonAnswers = previousAnswers?.filter(prevItem =>
-          newAnswers?.some(newItem => newItem.question === prevItem.question)
+        const commonAnswers = previousAnswers?.filter((prevItem) =>
+          newAnswers?.some((newItem) => newItem.question === prevItem.question)
         );
-
-
 
         // Remove common elements from both arrays
-        previousAnswers = previousAnswers?.filter(prevItem =>
-          !commonAnswers?.some(commonItem => commonItem.question === prevItem.question)
+        previousAnswers = previousAnswers?.filter(
+          (prevItem) =>
+            !commonAnswers?.some(
+              (commonItem) => commonItem.question === prevItem.question
+            )
         );
 
-        newAnswers = newAnswers?.filter(newItem =>
-          !commonAnswers?.some(commonItem => commonItem.question === newItem.question)
+        newAnswers = newAnswers?.filter(
+          (newItem) =>
+            !commonAnswers?.some(
+              (commonItem) => commonItem.question === newItem.question
+            )
         );
-
 
         previousAnswers?.map(async (item) => {
           const option = await InfoQuestQuestions.findOne(
             {
               _id: req.body.questId,
-              "QuestAnswers.question": item.question
+              "QuestAnswers.question": item.question,
             },
             {
-              QuestAnswers: { $elemMatch: { question: item.question } }
+              QuestAnswers: { $elemMatch: { question: item.question } },
             }
           );
 
           if (option?.QuestAnswers[0]?.uuid) {
-
             await User.findOneAndUpdate(
               { uuid: option.QuestAnswers[0].uuid },
               {
@@ -1915,16 +1962,16 @@ const updateChangeAnsStartQuestUserList = async (req) => {
               }
             );
           }
-        })
+        });
 
         newAnswers?.map(async (item) => {
           const option = await InfoQuestQuestions.findOne(
             {
               _id: req.body.questId,
-              "QuestAnswers.question": item.question
+              "QuestAnswers.question": item.question,
             },
             {
-              QuestAnswers: { $elemMatch: { question: item.question } }
+              QuestAnswers: { $elemMatch: { question: item.question } },
             }
           );
           if (option?.QuestAnswers[0]?.uuid) {
@@ -1937,7 +1984,7 @@ const updateChangeAnsStartQuestUserList = async (req) => {
               }
             );
           }
-        })
+        });
       }
     }
 
@@ -1948,42 +1995,44 @@ const updateChangeAnsStartQuestUserList = async (req) => {
       getInfoQuestQuestion.whichTypeQuestion === "ranked choise"
     ) {
       // Previous selected answers array
-      let previousAnswers = startQuestQuestion?.data[startQuestQuestion.data.length - 1]?.contended;
+      let previousAnswers =
+        startQuestQuestion?.data[startQuestQuestion.data.length - 1]?.contended;
 
       // New selected answers array
       let newAnswers = req.body.changeAnswerAddedObj?.contended;
 
       // Find common elements
-      const commonAnswers = previousAnswers?.filter(prevItem =>
-        newAnswers?.some(newItem => newItem.question === prevItem.question)
+      const commonAnswers = previousAnswers?.filter((prevItem) =>
+        newAnswers?.some((newItem) => newItem.question === prevItem.question)
       );
-
-
 
       // Remove common elements from both arrays
-      previousAnswers = previousAnswers?.filter(prevItem =>
-        !commonAnswers?.some(commonItem => commonItem.question === prevItem.question)
+      previousAnswers = previousAnswers?.filter(
+        (prevItem) =>
+          !commonAnswers?.some(
+            (commonItem) => commonItem.question === prevItem.question
+          )
       );
 
-      newAnswers = newAnswers?.filter(newItem =>
-        !commonAnswers?.some(commonItem => commonItem.question === newItem.question)
+      newAnswers = newAnswers?.filter(
+        (newItem) =>
+          !commonAnswers?.some(
+            (commonItem) => commonItem.question === newItem.question
+          )
       );
-
 
       previousAnswers?.map(async (item) => {
         const option = await InfoQuestQuestions.findOne(
           {
             _id: req.body.questId,
-            "QuestAnswers.question": item.question
+            "QuestAnswers.question": item.question,
           },
           {
-            QuestAnswers: { $elemMatch: { question: item.question } }
+            QuestAnswers: { $elemMatch: { question: item.question } },
           }
         );
 
-
         if (option?.QuestAnswers[0]?.uuid) {
-
           await User.findOneAndUpdate(
             { uuid: option.QuestAnswers[0].uuid },
             {
@@ -1993,16 +2042,16 @@ const updateChangeAnsStartQuestUserList = async (req) => {
             }
           );
         }
-      })
+      });
 
       newAnswers?.map(async (item) => {
         const option = await InfoQuestQuestions.findOne(
           {
             _id: req.body.questId,
-            "QuestAnswers.question": item.question
+            "QuestAnswers.question": item.question,
           },
           {
-            QuestAnswers: { $elemMatch: { question: item.question } }
+            QuestAnswers: { $elemMatch: { question: item.question } },
           }
         );
 
@@ -2016,9 +2065,8 @@ const updateChangeAnsStartQuestUserList = async (req) => {
             }
           );
         }
-      })
+      });
     }
-
 
     // Check req.body.data and the last element's contended and selected arrays objects
     // const lastDataElement = req.body.changeAnswerAddedObj;
@@ -2171,11 +2219,15 @@ const updateChangeAnsStartQuestUserList = async (req) => {
     let contentionGivenCounter = requestedContention - savedContention;
 
     let txID;
-    const ledger = await Ledgers.findOne({ uuid: req.body.uuid, txUserAction: "postCompleted", txData: req.body.questId })
+    const ledger = await Ledgers.findOne({
+      uuid: req.body.uuid,
+      txUserAction: "postCompleted",
+      txData: req.body.questId,
+    });
     if (ledger) {
       txID = ledger.txID;
     } else {
-      throw new Error("Ledger doesnot exists")
+      throw new Error("Ledger doesnot exists");
     }
 
     // Increment Counter
@@ -2187,8 +2239,7 @@ const updateChangeAnsStartQuestUserList = async (req) => {
       )
         throw new Error("The balance is insufficient to give the contention!");
 
-
-      const txID = crypto.randomBytes(11).toString("hex")
+      const txID = crypto.randomBytes(11).toString("hex");
       // Create Ledger
       await createLedger({
         uuid: req.body.uuid,
@@ -2225,12 +2276,12 @@ const updateChangeAnsStartQuestUserList = async (req) => {
         uuid: req.body.uuid,
       });
       const userSpent = await User.findOne({ uuid: req.body.uuid });
-      userSpent.fdxSpent = userSpent.fdxSpent + (QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter);
+      userSpent.fdxSpent =
+        userSpent.fdxSpent +
+        QUEST_OPTION_CONTENTION_GIVEN_AMOUNT * contentionGivenCounter;
       await userSpent.save();
     } else if (contentionGivenCounter < 0) {
-
-
-      const txID2 = crypto.randomBytes(11).toString("hex")
+      const txID2 = crypto.randomBytes(11).toString("hex");
       // Create Ledger
       await createLedger({
         uuid: req.body.uuid,
@@ -2273,7 +2324,10 @@ const updateChangeAnsStartQuestUserList = async (req) => {
         uuid: req.body.uuid,
       });
       const userEarned = await User.findOne({ uuid: req.body.uuid });
-      userEarned.fdxEarned = userEarned.fdxEarned + (QUEST_OPTION_CONTENTION_REMOVED_AMOUNT * Math.abs(contentionGivenCounter));
+      userEarned.fdxEarned =
+        userEarned.fdxEarned +
+        QUEST_OPTION_CONTENTION_REMOVED_AMOUNT *
+          Math.abs(contentionGivenCounter);
       await userEarned.save();
     }
 
@@ -2369,7 +2423,8 @@ const updateChangeAnsStartQuestUserList = async (req) => {
           });
         } else {
           selectedCounter[
-            `result.selected.${initialStartQuestData[initialStartQuestData.length - 1]?.selected
+            `result.selected.${
+              initialStartQuestData[initialStartQuestData.length - 1]?.selected
             }`
           ] = -1;
         }
@@ -2433,8 +2488,9 @@ const updateChangeAnsStartQuestUserList = async (req) => {
           });
         } else {
           selectedCounter[
-            `result.selected.${startQuestQuestion.data[startQuestQuestion.data.length - 1]
-              ?.selected
+            `result.selected.${
+              startQuestQuestion.data[startQuestQuestion.data.length - 1]
+                ?.selected
             }`
           ] = 1;
         }
@@ -2449,7 +2505,7 @@ const updateChangeAnsStartQuestUserList = async (req) => {
           }
         );
 
-        const txID3 = crypto.randomBytes(11).toString("hex")
+        const txID3 = crypto.randomBytes(11).toString("hex");
         // Create Ledger
         await createLedger({
           uuid: req.body.uuid,
@@ -2523,7 +2579,7 @@ const updateChangeAnsStartQuestUserList = async (req) => {
     console.error(err);
     return {
       message: `An error occurred while updateChangeAnsStartQuest: ${err.message}`,
-    }
+    };
   }
 
   function Compare(obj1, obj2) {
@@ -2729,25 +2785,25 @@ const getStartQuestPercent = async (req, res) => {
             Yes: isNaN(percentageOfYesAns)
               ? 0
               : percentageOfYesAns % 1 === 0
-                ? percentageOfYesAns
-                : parseFloat(percentageOfYesAns.toFixed(1)),
+              ? percentageOfYesAns
+              : parseFloat(percentageOfYesAns.toFixed(1)),
             No: isNaN(percentageOfNoAns)
               ? 0
               : percentageOfNoAns % 1 === 0
-                ? percentageOfNoAns
-                : parseFloat(percentageOfNoAns.toFixed(1)),
+              ? percentageOfNoAns
+              : parseFloat(percentageOfNoAns.toFixed(1)),
           },
           contendedPercentage: {
             Yes: isNaN(percentageOfYesConAns)
               ? 0
               : percentageOfYesConAns % 1 === 0
-                ? percentageOfYesConAns
-                : parseFloat(percentageOfYesConAns.toFixed(1)),
+              ? percentageOfYesConAns
+              : parseFloat(percentageOfYesConAns.toFixed(1)),
             No: isNaN(percentageOfNoConAns)
               ? 0
               : percentageOfNoConAns % 1 === 0
-                ? percentageOfNoConAns
-                : parseFloat(percentageOfNoConAns.toFixed(1)),
+              ? percentageOfNoConAns
+              : parseFloat(percentageOfNoConAns.toFixed(1)),
           },
         };
 
@@ -2769,8 +2825,8 @@ const getStartQuestPercent = async (req, res) => {
           percentageOfSelectedOptions[option] = isNaN(percentage)
             ? 0
             : percentage % 1 === 0
-              ? percentage
-              : parseFloat(percentage.toFixed(1));
+            ? percentage
+            : parseFloat(percentage.toFixed(1));
         }
 
         for (const option in contendedOptionsCount) {
@@ -2779,8 +2835,8 @@ const getStartQuestPercent = async (req, res) => {
           percentageOfContendedOptions[option] = isNaN(percentage)
             ? 0
             : percentage % 1 === 0
-              ? percentage
-              : parseFloat(percentage.toFixed(1));
+            ? percentage
+            : parseFloat(percentage.toFixed(1));
         }
 
         const responseObj = {
@@ -2816,5 +2872,5 @@ module.exports = {
   getStartQuestPercent,
   getStartQuestInfo,
   createStartQuestUserList,
-  updateChangeAnsStartQuestUserList
+  updateChangeAnsStartQuestUserList,
 };
