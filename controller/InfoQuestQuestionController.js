@@ -1380,7 +1380,7 @@ const getQuestsAll = async (req, res) => {
       const suppression = await UserQuestSetting.aggregate([
         {
           $match: {
-            hidden: true,
+            feedbackMessage: {$ne: ""},
             questForeignKey: item._doc._id.toString(),
           },
         },
