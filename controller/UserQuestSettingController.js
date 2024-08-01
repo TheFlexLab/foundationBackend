@@ -515,6 +515,7 @@ const createFeedback = async (req, res) => {
         {
           $set: {
             suppressed: isSuppressed,
+            suppressedReason: isSuppressed ? feedbackMessage : ""
           },
         },
         { new: true }
@@ -696,6 +697,7 @@ const createFeedback = async (req, res) => {
         {
           $set: {
             suppressed: isSuppressed,
+            suppressedReason: isSuppressed ? feedbackMessage : ""
           },
         },
         { new: true }
