@@ -903,9 +903,9 @@ const create = async (req, res) => {
     // }
 
     // Get quest owner uuid
-    // const infoQuestQuestion = await InfoQuestQuestions.findOne({
-    //   _id: payload.questForeignKey,
-    // });
+    const infoQuestQuestion = await InfoQuestQuestions.findOne({
+      _id: payload.questForeignKey,
+    });
 
     // const suppression = await UserQuestSetting.aggregate([
     //   {
