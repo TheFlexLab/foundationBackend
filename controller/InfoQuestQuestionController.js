@@ -1236,15 +1236,31 @@ const getQuestsAll = async (req, res) => {
     //   isActive: true,
     // });
 
-    let query = InfoQuestQuestions.find({
-      _id: { $nin: hiddenUserSettingIds },
-      ...filterObj,
-      isActive: true,
-      $or: [
-        { suppressed: true, uuid: req.query.uuid },
-        { suppressed: false }
-      ]
-    });    
+    let query;
+    if(terms){
+      query = InfoQuestQuestions.find({
+        _id: { $nin: hiddenUserSettingIds },
+        isActive: true,
+        $or: [
+          { suppressed: true, uuid: req.query.uuid },
+          { suppressed: false }
+        ],
+        $or: [
+          ...filterObj.$or,
+        ]
+      });
+    }
+    else {
+      query = InfoQuestQuestions.find({
+        _id: { $nin: hiddenUserSettingIds },
+        ...filterObj,
+        isActive: true,
+        $or: [
+          { suppressed: true, uuid: req.query.uuid },
+          { suppressed: false }
+        ]
+      }); 
+    }    
 
     query = query.sort(
       sort === "Oldest First"
