@@ -1191,7 +1191,7 @@ const getQuestsAll = async (req, res) => {
     totalQuestionsCount = await UserQuestSetting.countDocuments(filterObj);
   } else if (Page === "Feedback") {
     const hiddenUserSettings = await UserQuestSetting.find({
-      hidden: true,
+      feedbackMessage: {$ne: ""},
     });
 
     // Extract userSettingIds from hiddenUserSettings
@@ -1421,15 +1421,17 @@ const getQuestsAll = async (req, res) => {
         questForeignKey: item._doc._id,
       });
 
-      if (resultArray[i]._doc.hiddenCount === 0) {
-        if (resultArray[i]._doc.suppressedReason) {
-          if (resultArray[i]._doc.suppressedReason === "") {
+      if(!resultArray[i]._doc.isAddOptionFeedback){
+        if (resultArray[i]._doc.hiddenCount === 0) {
+          if (resultArray[i]._doc.suppressedReason) {
+            if (resultArray[i]._doc.suppressedReason === "") {
+              resultArray.splice(i, 1);
+              i--;
+            }
+          } else {
             resultArray.splice(i, 1);
             i--;
           }
-        } else {
-          resultArray.splice(i, 1);
-          i--;
         }
       }
     }

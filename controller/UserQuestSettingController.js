@@ -396,7 +396,6 @@ const createFeedback = async (req, res) => {
       }
     )
 
-    // Subtract the start of the day from createdAt and check if the difference is less than one day (in milliseconds)
     let isHistorical = false;
     if (feedbackMessage === "Historical / Past Event") {
       const checkHistorical = await UserQuestSetting.findOne({
@@ -405,6 +404,15 @@ const createFeedback = async (req, res) => {
         historyDate: historyDate
       });
       if (checkHistorical) isHistorical = true;
+    }
+
+    let addOption = false;
+    if (feedbackMessage === "Needs More Options") {
+      const checkNeedsMoreOptions = await UserQuestSetting.findOne({
+        questForeignKey: questForeignKey,
+        feedbackMessage: feedbackMessage,
+      });
+      if (checkNeedsMoreOptions) addOption = true;
     }
 
     let questSetting;
@@ -447,6 +455,18 @@ const createFeedback = async (req, res) => {
           },
           {
             isClosed: true
+          }
+        ).exec();
+      }
+
+      if (addOption) {
+        await InfoQuestQuestions.findOneAndUpdate(
+          {
+            _id: questForeignKey
+          },
+          {
+            isAddOptionFeedback: true,
+            usersAddTheirAns: true,
           }
         ).exec();
       }
@@ -562,6 +582,18 @@ const createFeedback = async (req, res) => {
           },
           {
             isClosed: true
+          }
+        ).exec();
+      }
+
+      if (addOption) {
+        await InfoQuestQuestions.findOneAndUpdate(
+          {
+            _id: questForeignKey
+          },
+          {
+            isAddOptionFeedback: true,
+            usersAddTheirAns: true,
           }
         ).exec();
       }

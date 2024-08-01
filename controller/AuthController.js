@@ -1927,6 +1927,10 @@ const userInfo = async (req, res) => {
           hidden: true,
           uuid: userUuid,
         }),
+        feedbackGiven: await UserQuestSetting.countDocuments({
+          feedbackMessage: {$ne: ""},
+          uuid: userUuid,
+        }),
         myCreatedQuestsCount: await InfoQuestQuestions.countDocuments({
           uuid: userUuid,
           isActive: true,

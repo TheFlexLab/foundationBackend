@@ -98,6 +98,10 @@ const InfoQuestQuestionsSchema = mongoose.Schema(
       type: Boolean,
       default: false
     },
+    isAddOptionFeedback: {
+      type: Boolean,
+      default: false
+    },
   },
   { timestamps: true }
 );
