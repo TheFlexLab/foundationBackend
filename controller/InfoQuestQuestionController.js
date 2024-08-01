@@ -1191,7 +1191,7 @@ const getQuestsAll = async (req, res) => {
     totalQuestionsCount = await UserQuestSetting.countDocuments(filterObj);
   } else if (Page === "Feedback") {
     const hiddenUserSettings = await UserQuestSetting.find({
-      feedbackMessage: {$ne: ""},
+      feedbackMessage: { $ne: '', $exists: true },
     });
 
     // Extract userSettingIds from hiddenUserSettings
@@ -1377,16 +1377,16 @@ const getQuestsAll = async (req, res) => {
 
     if (Page === "Feedback") {
       // Get the count of hidden items grouped by hidden message
-      const suppression = await UserQuestSetting.aggregate([
+      const feedbackReceived = await UserQuestSetting.aggregate([
         {
           $match: {
-            feedbackMessage: {$ne: ""},
+            feedbackMessage: { $ne: '', $exists: true },
             questForeignKey: item._doc._id.toString(),
           },
         },
         {
           $group: {
-            _id: "$hiddenMessage",
+            _id: "$feedbackMessage",
             count: { $sum: 1 },
           },
         },
@@ -1394,9 +1394,9 @@ const getQuestsAll = async (req, res) => {
 
       let feedback = [];
 
-      if (suppression) {
-        // For each suppression item, check against suppressConditions
-        suppression.forEach((suppressItem) => {
+      if (feedbackReceived) {
+        // For each feedbackReceived item, check against suppressConditions
+        feedbackReceived.forEach((suppressItem) => {
           suppressConditions.forEach((condition) => {
             if (suppressItem._id === condition.id) {
               const violated =
@@ -1420,20 +1420,24 @@ const getQuestsAll = async (req, res) => {
         hidden: true,
         questForeignKey: item._doc._id,
       });
+      resultArray[i]._doc.feedbackCount = await UserQuestSetting.countDocuments({
+        feedbackMessage: { $ne: '', $exists: true },
+        questForeignKey: item._doc._id,
+      });
 
-      if(!resultArray[i]._doc.isAddOptionFeedback){
-        if (resultArray[i]._doc.hiddenCount === 0) {
-          if (resultArray[i]._doc.suppressedReason) {
-            if (resultArray[i]._doc.suppressedReason === "") {
-              resultArray.splice(i, 1);
-              i--;
-            }
-          } else {
-            resultArray.splice(i, 1);
-            i--;
-          }
-        }
-      }
+      // if(!resultArray[i]._doc.isAddOptionFeedback){
+      //   if (resultArray[i]._doc.hiddenCount === 0) {
+      //     if (resultArray[i]._doc.suppressedReason) {
+      //       if (resultArray[i]._doc.suppressedReason === "") {
+      //         resultArray.splice(i, 1);
+      //         i--;
+      //       }
+      //     } else {
+      //       resultArray.splice(i, 1);
+      //       i--;
+      //     }
+      //   }
+      // }
     }
   }
 
