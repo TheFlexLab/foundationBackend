@@ -357,13 +357,12 @@ const status = async (req, res) => {
       return res.status(404).json({ message: "Share link not found" });
     }
     return res.status(200).json({
-      message: `Share link ${
-        status === "Disable"
+      message: `Share link ${status === "Disable"
           ? "Disabled"
           : status === "Delete"
-          ? "Deleted"
-          : "Enabled"
-      } Successfully`,
+            ? "Deleted"
+            : "Enabled"
+        } Successfully`,
       data: updatedUserQuestSetting,
     });
   } catch (error) {
@@ -452,6 +451,18 @@ const createFeedback = async (req, res) => {
           },
           {
             isClosed: true,
+          }
+        ).exec();
+      }
+
+      if (addOption) {
+        await InfoQuestQuestions.findOneAndUpdate(
+          {
+            _id: questForeignKey,
+          },
+          {
+            isAddOptionFeedback: true,
+            usersAddTheirAns: true,
           }
         ).exec();
       }
@@ -555,21 +566,21 @@ const createFeedback = async (req, res) => {
           feedbackMessage === "Needs More Options" ? "continue" : "completed",
         selectedPercentage: resultDoc?.selectedPercentage?.[0]
           ? [
-              Object.fromEntries(
-                Object.entries(resultDoc.selectedPercentage[0]).sort(
-                  (a, b) => parseInt(b[1]) - parseInt(a[1])
-                )
-              ),
-            ]
+            Object.fromEntries(
+              Object.entries(resultDoc.selectedPercentage[0]).sort(
+                (a, b) => parseInt(b[1]) - parseInt(a[1])
+              )
+            ),
+          ]
           : [],
         contendedPercentage: resultDoc?.contendedPercentage?.[0]
           ? [
-              Object.fromEntries(
-                Object.entries(resultDoc.contendedPercentage[0]).sort(
-                  (a, b) => parseInt(b[1]) - parseInt(a[1])
-                )
-              ),
-            ]
+            Object.fromEntries(
+              Object.entries(resultDoc.contendedPercentage[0]).sort(
+                (a, b) => parseInt(b[1]) - parseInt(a[1])
+              )
+            ),
+          ]
           : [],
         startQuestData: await StartQuests.findOne({
           uuid: uuid,
@@ -637,6 +648,59 @@ const createFeedback = async (req, res) => {
         ).exec();
       }
 
+      const suppression = await UserQuestSetting.aggregate([
+        {
+          $match: {
+            feedbackMessage: { $ne: "", $exists: true },
+            questForeignKey: questForeignKey,
+          },
+        },
+        {
+          $group: {
+            _id: "$feedbackMessage",
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+      let isSuppressed = false;
+
+      if (suppression) {
+        suppression.map((item) => {
+          if (suppression) {
+            suppressConditions.forEach(async (condition) => {
+              if (
+                item._id === "Needs More Options" &&
+                item.count >= condition.minCount
+              ) {
+                await InfoQuestQuestions.findOneAndUpdate(
+                  {
+                    _id: questForeignKey,
+                  },
+                  { $set: { usersAddTheirAns: true } }
+                ).exec();
+              } else if (
+                item._id === condition.id &&
+                item.count >= condition.minCount &&
+                item._id !== "Needs More Options"
+              ) {
+                isSuppressed = true;
+              }
+            });
+          }
+        });
+      }
+
+      // // Properly setting the fields to update with $set
+      await InfoQuestQuestions.findOneAndUpdate(
+        { _id: questForeignKey },
+        {
+          $set: {
+            suppressed: isSuppressed,
+          },
+        },
+        { new: true }
+      );
+
       const txID = crypto.randomBytes(11).toString("hex");
       // Create Ledger
       await createLedger({
@@ -689,21 +753,21 @@ const createFeedback = async (req, res) => {
         userQuestSetting: updatedUserQuestSetting,
         selectedPercentage: resultDoc?.selectedPercentage?.[0]
           ? [
-              Object.fromEntries(
-                Object.entries(resultDoc.selectedPercentage[0]).sort(
-                  (a, b) => parseInt(b[1]) - parseInt(a[1])
-                )
-              ),
-            ]
+            Object.fromEntries(
+              Object.entries(resultDoc.selectedPercentage[0]).sort(
+                (a, b) => parseInt(b[1]) - parseInt(a[1])
+              )
+            ),
+          ]
           : [],
         contendedPercentage: resultDoc?.contendedPercentage?.[0]
           ? [
-              Object.fromEntries(
-                Object.entries(resultDoc.contendedPercentage[0]).sort(
-                  (a, b) => parseInt(b[1]) - parseInt(a[1])
-                )
-              ),
-            ]
+            Object.fromEntries(
+              Object.entries(resultDoc.contendedPercentage[0]).sort(
+                (a, b) => parseInt(b[1]) - parseInt(a[1])
+              )
+            ),
+          ]
           : [],
       };
 
