@@ -2329,7 +2329,11 @@ async function getQuestionsWithStatus(allQuestions, uuid) {
       await allQuestions.map(async function (rcrd) {
         await startedQuestions.map(function (rec) {
           if (rec.questForeignKey === rcrd?._id?.toString()) {
-            if(rec.isFeedback){
+            if(rcrd.isAddOptionFeedback) {
+              rcrd.startStatus = "add option";
+              rcrd.startQuestData = rec;
+            }
+            else if(rec.isFeedback){
               rcrd.startStatus = "completed";
               rcrd.startQuestData = rec;
             }
