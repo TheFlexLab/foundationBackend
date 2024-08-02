@@ -595,6 +595,12 @@ const createFeedback = async (req, res) => {
         userQuestSetting: questSetting,
       };
 
+      await InfoQuestQuestions.findByIdAndUpdate(
+        { _id: questForeignKey },
+        { $inc: { submitCounter: 1 }},
+        { new: true }
+      ).exec();
+
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",
         data: formattedDoc,
@@ -776,6 +782,12 @@ const createFeedback = async (req, res) => {
           ]
           : [],
       };
+
+      await InfoQuestQuestions.findByIdAndUpdate(
+        { _id: questForeignKey },
+        { $inc: { submitCounter: 1 }},
+        { new: true }
+      ).exec();
 
       return res.status(201).json({
         message: "Feedback Submitted Successfully!",

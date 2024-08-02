@@ -6,6 +6,7 @@ const { uploadS3Bucket } = require('../utils/uploadS3Bucket');
 const UserQuestSetting = require('../models/UserQuestSetting');
 const StartQuests = require('../models/StartQuests');
 const InfoQuestQuestions = require('../models/InfoQuestQuestions');
+const Ledgers = require('../models/Ledgers');
 
 
 // const excep = async (req, res) => {
@@ -421,10 +422,80 @@ const setFeedback = async (req, res) => {
     }
 };
 
+const setPostCounters = async (req, res) => {
+    try {
+
+        const submitDocs = await Ledgers.find(
+            {
+                txUserAction: "postCompleted",
+                txAuth: "User",
+            }
+        )
+
+        for (const doc of submitDocs) {
+            await InfoQuestQuestions.findByIdAndUpdate(
+                {
+                    _id: doc.txData
+                },
+                {
+                    $inc: { submitCounter: 1 }
+                }
+            )
+        }
+
+        // Step 1: Aggregate to collect questForeignKeys from StartQuests based on Ledgers
+        const questForeignKeys = await Ledgers.aggregate([
+            {
+                $match: {
+                    txUserAction: "postCompletedChange",
+                    txAuth: "User"
+                }
+            },
+            {
+                $lookup: {
+                    from: 'startquests', // Ensure this matches your StartQuests collection name
+                    localField: 'txData',
+                    foreignField: '_id',
+                    as: 'startQuestDocs'
+                }
+            },
+            {
+                $unwind: '$startQuestDocs'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    questForeignKey: '$startQuestDocs.questForeignKey'
+                }
+            }
+        ]);
+
+        // Extract questForeignKeys
+        const foreignKeys = questForeignKeys.map(doc => doc.questForeignKey);
+
+        // Step 2: Update InfoQuestQuestions
+        const results = await InfoQuestQuestions.updateMany(
+            { _id: { $in: foreignKeys } },
+            { $inc: { changeCounter: 1 } }
+        );
+
+        res.status(200).json({
+            message: 'Counters are updated',
+            data: results
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while updating the feedback: ${error.message}`,
+        });
+    }
+};
+
 module.exports = {
     createUserListForAllUsers,
     dbReset,
     userListSeoSetting,
     userPostSeoSetting,
     setFeedback,
+    setPostCounters,
 };

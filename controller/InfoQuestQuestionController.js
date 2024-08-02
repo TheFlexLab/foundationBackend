@@ -35,6 +35,7 @@ const {
   notification9,
   notification10,
   notification11,
+  notification12,
 } = require("../notifications/home");
 
 const createInfoQuestQuest = async (req, res) => {
@@ -1237,30 +1238,27 @@ const getQuestsAll = async (req, res) => {
     // });
 
     let query;
-    if(terms){
+    if (terms) {
       query = InfoQuestQuestions.find({
         _id: { $nin: hiddenUserSettingIds },
         isActive: true,
         $or: [
           { suppressed: true, uuid: req.query.uuid },
-          { suppressed: false }
+          { suppressed: false },
         ],
+        $or: [...filterObj.$or],
+      });
+    } else {
+      query = InfoQuestQuestions.find({
+        _id: { $nin: hiddenUserSettingIds },
+        isActive: true,
         $or: [
-          ...filterObj.$or,
-        ]
+          { suppressed: true, uuid: req.query.uuid },
+          { suppressed: false },
+        ],
+        ...filterObj,
       });
     }
-    else {
-      query = InfoQuestQuestions.find({
-        _id: { $nin: hiddenUserSettingIds },
-        ...filterObj,
-        isActive: true,
-        $or: [
-          { suppressed: true, uuid: req.query.uuid },
-          { suppressed: false }
-        ]
-      }); 
-    }    
 
     query = query.sort(
       sort === "Oldest First"
@@ -1628,6 +1626,16 @@ const getQuestsAll = async (req, res) => {
               result1.splice(1, 0, notification10);
               result1.splice(5, 0, notification11);
             }
+
+            // Page 7
+            if (page === 7 && nextPage === false) {
+              if (result1.length >= 2) {
+                result1.splice(2, 0, notification12);
+              }
+            }
+            if (page === 7 && nextPage === true) {
+              result1.splice(2, 0, notification12);
+            }
           }
         }
       }
@@ -1985,6 +1993,35 @@ const getQuestByUniqueId = async (req, res) => {
     //console.log(error);
     res.status(500).json({
       message: `An error occurred while getQuestByUniqueShareLink InfoQuest: ${error.message}`,
+    });
+  }
+};
+
+const getEmbededPostByUniqueId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const infoQuest = await InfoQuestQuestions.find({
+      _id: id,
+    }).populate("getUserBadge", "badges");
+    if (!infoQuest) throw new Error("No Post Exist!");
+    const result1 = await getQuestionsWithStatus(infoQuest);
+
+    const resultArray = result1.map(getPercentage);
+    const desiredArray = resultArray.map((item) => ({
+      ...item._doc,
+      selectedPercentage: item.selectedPercentage,
+      contendedPercentage: item.contendedPercentage,
+      startStatus: "completed",
+      type: "embed",
+    }));
+
+    res.status(200).json({
+      data: desiredArray,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `An error occurred while emdeding post: ${error.message}`,
     });
   }
 };
@@ -2667,4 +2704,5 @@ module.exports = {
   getQuestByIdQuestForeignKey,
   getQuestionsWithStatusQuestForeignKey,
   getQuestionsWithUserSettingsQuestForeignKey,
+  getEmbededPostByUniqueId,
 };

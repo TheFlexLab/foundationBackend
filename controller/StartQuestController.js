@@ -55,6 +55,7 @@ const createStartQuest = async (req, res) => {
       {
         $set: { lastInteractedAt: currentDate.toISOString() },
         $inc: { interactingCounter: 1 },
+        $inc: { submitCounter: 1 },
       },
       { new: true } // To get the updated document
     );
@@ -578,6 +579,7 @@ async function createStartQuestUserList(req, res) {
       {
         $set: { lastInteractedAt: currentDate.toISOString() },
         $inc: { interactingCounter: 1 },
+        $inc: { submitCounter: 1 },
       },
       { new: true } // To get the updated document
     );
@@ -1125,6 +1127,7 @@ const updateChangeAnsStartQuest = async (req, res) => {
       {
         $set: { lastInteractedAt: currentDate.toISOString() },
         $inc: { interactingCounter: 1 },
+        $inc: { changeCounter: 1 },
       }
     ).exec();
 
@@ -1881,6 +1884,7 @@ const updateChangeAnsStartQuestUserList = async (req) => {
       {
         $set: { lastInteractedAt: currentDate.toISOString() },
         $inc: { interactingCounter: 1 },
+        $inc: { changeCounter: 1 },
       }
     ).exec();
 

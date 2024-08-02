@@ -55,6 +55,14 @@ const InfoQuestQuestionsSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    submitCounter: {
+      type: Number,
+      default: 0,
+    },
+    changeCounter: {
+      type: Number,
+      default: 0,
+    },
     totalStartQuest: {
       type: Number,
       default: 0,

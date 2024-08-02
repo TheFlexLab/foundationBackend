@@ -155,4 +155,23 @@ router.get(
   DevScriptController.setFeedback
 );
 
+router.get(
+  "/setPostCounters",
+  /**
+   * @swagger
+   * /devscript/setPostCounters:
+   *   get:
+   *     tags:
+   *       - DevScriptRoutes
+   *     summary: To Set users post seo
+   *     description: To Set users post seo
+   *     responses:
+   *       '200':
+   *         description: User information retrieved successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  DevScriptController.setPostCounters
+);
+
 module.exports = router;
