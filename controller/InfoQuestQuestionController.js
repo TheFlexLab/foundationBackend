@@ -49,6 +49,10 @@ const createInfoQuestQuest = async (req, res) => {
     if (!user) {
       return res.status(404).send("User not found");
     }
+
+    const questAlreadyExist = await InfoQuestQuestions.findOne({ Question: req.body.Question});
+    if(questAlreadyExist) return res.status(403).send("Quest already exist.");
+
     const question = await new InfoQuestQuestions({
       Question: req.body.Question,
       QuestionCorrect: req.body.QuestionCorrect,
