@@ -50,8 +50,10 @@ const createInfoQuestQuest = async (req, res) => {
       return res.status(404).send("User not found");
     }
 
-    const questAlreadyExist = await InfoQuestQuestions.findOne({ Question: req.body.Question});
-    if(questAlreadyExist) return res.status(403).send("Quest already exist.");
+    const questAlreadyExist = await InfoQuestQuestions.findOne({
+      Question: req.body.Question,
+    });
+    if (questAlreadyExist) return res.status(403).send("Quest already exist.");
 
     const question = await new InfoQuestQuestions({
       Question: req.body.Question,
@@ -1356,7 +1358,8 @@ const getQuestsAll = async (req, res) => {
     //console.log("Start" + start + "end" + end);
 
     nextPage = end < Result.length;
-    resultArray = Result.slice(start, end).map(getPercentage);
+
+    resultArray = Result?.slice(start, end).map(getPercentage);
   } else if (participated === "Not") {
     //console.log("Inside resultArray participated Not");
 
@@ -1380,13 +1383,14 @@ const getQuestsAll = async (req, res) => {
     // const start = req.body.start;
     // const end = req.body.end;
     //console.log("Start" + start + "end" + end);
-
     resultArray = Result.slice(start, end).map(getPercentage);
     nextPage = end < Result.length;
   } else {
     //console.log("Inside resultArray else");
     nextPage = skip + pageSize < totalQuestionsCount;
-    resultArray = allQuestions.map((item) => getPercentage(item));
+    console.log("b participated", allQuestions);
+    resultArray = allQuestions?.map((item) => getPercentage(item));
+    console.log("a participated");
   }
 
   for (let i = 0; i < resultArray.length; i++) {
@@ -2397,7 +2401,11 @@ async function getQuestionsWithStatus(allQuestions, uuid) {
       await allQuestions.map(async function (rcrd) {
         await startedQuestions.map(function (rec) {
           if (rec.questForeignKey === rcrd?._id?.toString()) {
-            if (rec.isFeedback && rec.data.length === 0) {
+            if (
+              rec.isFeedback &&
+              rec.data.length === 0 &&
+              rcrd.isAddOptionFeedback
+            ) {
               rcrd.startStatus = "continue";
               rcrd.startQuestData = rec;
             } else if (rec.isFeedback && rec.data.length > 0) {

@@ -1,6 +1,8 @@
 const UserQuestSetting = require("../models/UserQuestSetting");
 
-const getPercentage = (document, page, quest ) => {
+const getPercentage = (document, page, quest) => {
+  console.log("hello", document, page, quest);
+
   let result;
   let totalStartQuest;
 
@@ -44,9 +46,7 @@ const getPercentage = (document, page, quest ) => {
 
         contendedKeys.forEach((key) => {
           percentageObject[key] =
-            ((item.contended[key] / totalStartQuest) * 100).toFixed(
-              0
-            ) + "%";
+            ((item.contended[key] / totalStartQuest) * 100).toFixed(0) + "%";
         });
 
         return percentageObject;
@@ -64,8 +64,7 @@ const getPercentage = (document, page, quest ) => {
 
       selectedKeys.forEach((key) => {
         percentageObject[key] =
-          ((item.selected[key] / totalStartQuest) * 100).toFixed(0) +
-          "%";
+          ((item.selected[key] / totalStartQuest) * 100).toFixed(0) + "%";
       });
 
       return percentageObject;
@@ -86,9 +85,7 @@ const getPercentage = (document, page, quest ) => {
 
         contendedKeys.forEach((key) => {
           percentageObject[key] =
-            ((item.contended[key] / totalStartQuest) * 100).toFixed(
-              0
-            ) + "%";
+            ((item.contended[key] / totalStartQuest) * 100).toFixed(0) + "%";
         });
 
         return percentageObject;
@@ -98,7 +95,7 @@ const getPercentage = (document, page, quest ) => {
     return { ...document, selectedPercentage, contendedPercentage };
   }
 };
-const getPercentageQuestForeignKey = (document, quest ) => {
+const getPercentageQuestForeignKey = (document, quest) => {
   let result;
   let totalStartQuest;
 
@@ -106,8 +103,8 @@ const getPercentageQuestForeignKey = (document, quest ) => {
   //   result = quest?.result;
   //   totalStartQuest = quest?.questsCompleted;
   // } else {
-    result = document?.result;
-    totalStartQuest = document?.totalStartQuest;
+  result = document?.result;
+  totalStartQuest = document?.totalStartQuest;
   // }
 
   if (document.whichTypeQuestion === "ranked choise" && result) {
@@ -142,9 +139,7 @@ const getPercentageQuestForeignKey = (document, quest ) => {
 
         contendedKeys.forEach((key) => {
           percentageObject[key] =
-            ((item.contended[key] / totalStartQuest) * 100).toFixed(
-              0
-            ) + "%";
+            ((item.contended[key] / totalStartQuest) * 100).toFixed(0) + "%";
         });
 
         return percentageObject;
@@ -162,8 +157,7 @@ const getPercentageQuestForeignKey = (document, quest ) => {
 
       selectedKeys.forEach((key) => {
         percentageObject[key] =
-          ((item.selected[key] / totalStartQuest) * 100).toFixed(0) +
-          "%";
+          ((item.selected[key] / totalStartQuest) * 100).toFixed(0) + "%";
       });
 
       return percentageObject;
@@ -184,9 +178,7 @@ const getPercentageQuestForeignKey = (document, quest ) => {
 
         contendedKeys.forEach((key) => {
           percentageObject[key] =
-            ((item.contended[key] / totalStartQuest) * 100).toFixed(
-              0
-            ) + "%";
+            ((item.contended[key] / totalStartQuest) * 100).toFixed(0) + "%";
         });
 
         return percentageObject;
@@ -199,5 +191,5 @@ const getPercentageQuestForeignKey = (document, quest ) => {
 
 module.exports = {
   getPercentage,
-  getPercentageQuestForeignKey
-}
+  getPercentageQuestForeignKey,
+};

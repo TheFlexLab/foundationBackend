@@ -357,12 +357,13 @@ const status = async (req, res) => {
       return res.status(404).json({ message: "Share link not found" });
     }
     return res.status(200).json({
-      message: `Share link ${status === "Disable"
+      message: `Share link ${
+        status === "Disable"
           ? "Disabled"
           : status === "Delete"
-            ? "Deleted"
-            : "Enabled"
-        } Successfully`,
+          ? "Deleted"
+          : "Enabled"
+      } Successfully`,
       data: updatedUserQuestSetting,
     });
   } catch (error) {
@@ -403,7 +404,7 @@ const createFeedback = async (req, res) => {
       const checkHistorical = await UserQuestSetting.findOne({
         questForeignKey: questForeignKey,
         feedbackMessage: feedbackMessage,
-        historyDate: historyDate,
+        historyDate: historyDate ? historyDate : null,
       });
       if (checkHistorical) isHistorical = true;
     }
@@ -459,18 +460,6 @@ const createFeedback = async (req, res) => {
         ).exec();
       }
 
-      if (addOption) {
-        await InfoQuestQuestions.findOneAndUpdate(
-          {
-            _id: questForeignKey,
-          },
-          {
-            isAddOptionFeedback: true,
-            usersAddTheirAns: true,
-          }
-        ).exec();
-      }
-
       const suppression = await UserQuestSetting.aggregate([
         {
           $match: {
@@ -502,6 +491,18 @@ const createFeedback = async (req, res) => {
                   { $set: { usersAddTheirAns: true } }
                 ).exec();
               } else if (
+                item._id === "Needs More Options" &&
+                item.count === 1
+              ) {
+                await InfoQuestQuestions.findOneAndUpdate(
+                  {
+                    _id: questForeignKey,
+                  },
+                  {
+                    $set: { isAddOptionFeedback: true },
+                  }
+                ).exec();
+              } else if (
                 item._id === condition.id &&
                 item.count >= condition.minCount &&
                 item._id !== "Needs More Options"
@@ -519,7 +520,7 @@ const createFeedback = async (req, res) => {
         {
           $set: {
             suppressed: isSuppressed,
-            suppressedReason: isSuppressed ? feedbackMessage : ""
+            suppressedReason: isSuppressed ? feedbackMessage : "",
           },
         },
         { new: true }
@@ -571,21 +572,21 @@ const createFeedback = async (req, res) => {
           feedbackMessage === "Needs More Options" ? "continue" : "completed",
         selectedPercentage: resultDoc?.selectedPercentage?.[0]
           ? [
-            Object.fromEntries(
-              Object.entries(resultDoc.selectedPercentage[0]).sort(
-                (a, b) => parseInt(b[1]) - parseInt(a[1])
-              )
-            ),
-          ]
+              Object.fromEntries(
+                Object.entries(resultDoc.selectedPercentage[0]).sort(
+                  (a, b) => parseInt(b[1]) - parseInt(a[1])
+                )
+              ),
+            ]
           : [],
         contendedPercentage: resultDoc?.contendedPercentage?.[0]
           ? [
-            Object.fromEntries(
-              Object.entries(resultDoc.contendedPercentage[0]).sort(
-                (a, b) => parseInt(b[1]) - parseInt(a[1])
-              )
-            ),
-          ]
+              Object.fromEntries(
+                Object.entries(resultDoc.contendedPercentage[0]).sort(
+                  (a, b) => parseInt(b[1]) - parseInt(a[1])
+                )
+              ),
+            ]
           : [],
         startQuestData: await StartQuests.findOne({
           uuid: uuid,
@@ -597,7 +598,7 @@ const createFeedback = async (req, res) => {
 
       await InfoQuestQuestions.findByIdAndUpdate(
         { _id: questForeignKey },
-        { $inc: { submitCounter: 1 }},
+        { $inc: { submitCounter: 1 } },
         { new: true }
       ).exec();
 
@@ -707,7 +708,7 @@ const createFeedback = async (req, res) => {
         {
           $set: {
             suppressed: isSuppressed,
-            suppressedReason: isSuppressed ? feedbackMessage : ""
+            suppressedReason: isSuppressed ? feedbackMessage : "",
           },
         },
         { new: true }
@@ -765,27 +766,27 @@ const createFeedback = async (req, res) => {
         userQuestSetting: updatedUserQuestSetting,
         selectedPercentage: resultDoc?.selectedPercentage?.[0]
           ? [
-            Object.fromEntries(
-              Object.entries(resultDoc.selectedPercentage[0]).sort(
-                (a, b) => parseInt(b[1]) - parseInt(a[1])
-              )
-            ),
-          ]
+              Object.fromEntries(
+                Object.entries(resultDoc.selectedPercentage[0]).sort(
+                  (a, b) => parseInt(b[1]) - parseInt(a[1])
+                )
+              ),
+            ]
           : [],
         contendedPercentage: resultDoc?.contendedPercentage?.[0]
           ? [
-            Object.fromEntries(
-              Object.entries(resultDoc.contendedPercentage[0]).sort(
-                (a, b) => parseInt(b[1]) - parseInt(a[1])
-              )
-            ),
-          ]
+              Object.fromEntries(
+                Object.entries(resultDoc.contendedPercentage[0]).sort(
+                  (a, b) => parseInt(b[1]) - parseInt(a[1])
+                )
+              ),
+            ]
           : [],
       };
 
       await InfoQuestQuestions.findByIdAndUpdate(
         { _id: questForeignKey },
-        { $inc: { submitCounter: 1 }},
+        { $inc: { submitCounter: 1 } },
         { new: true }
       ).exec();
 
