@@ -88,7 +88,6 @@ const {
 } = require("../utils/security");
 const Treasury = require("../models/Treasury");
 const Ledgers = require("../models/Ledgers");
-const { exec } = require('child_process');
 
 const changePassword = async (req, res) => {
   try {
@@ -1404,7 +1403,8 @@ const updateUserSettings = async (req, res) => {
     if (
       (req.body.email && !typeof req.body.emailNotifications === "boolean") ||
       (!req.body.email && typeof req.body.emailNotifications === "boolean")
-    ) {
+    )
+    {
       throw new Error(
         "Please provide both email and emailNotifications for email"
       );
@@ -1451,7 +1451,7 @@ const updateUserSettings = async (req, res) => {
     res.status(500).json({
       message: `An error occurred while updating user: ${error.message}`,
     });
-  }
+  }    
 };
 
 // const userInfo = async (req, res) => {
@@ -1666,6 +1666,14 @@ const userInfo = async (req, res) => {
   try {
     const password = req.query.infoc;
     const userUuid = req.params.userUuid;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if(req.socket.remoteAddress){
+      console.log("Socket=============>:", req.socket.remoteAddress);
+    }
+    if(req.headers['x-forwarded-for']){
+      console.log("Headers=============>:", req.headers['x-forwarded-for']);
+    }
+    console.log("IP=================>:", ip);
 
     const user = await User.findOne({ uuid: userUuid });
     if (!user) {
