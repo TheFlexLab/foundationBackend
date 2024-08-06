@@ -2,14 +2,14 @@ const mongoose = require("mongoose");
 const DocumentDB = process.env.DATABASE;
 
 const connectDB = async () => {
-  if (DocumentDB === "DocumentDB") {
+  if (true) {
     try {
       const conn = await mongoose.connect(
         "mongodb://" +
-          process.env.DOCS_DB_USER +
+          "foundationDatabse" +
           ":" +
-          process.env.DOCS_DB_PASSWORD +
-          "@foundation.cluster-chkicsa8wkr6.us-east-2.docdb.amazonaws.com:27017/" + process.env.DOCS_DB_NAME +"?tls=true&tlsCAFile=global-bundle.pem" +
+          "foundation" +
+          "@foundation.cluster-chkicsa8wkr6.us-east-2.docdb.amazonaws.com:27017/" + "foundationDevelopmentDocDb" +"?tls=true&tlsCAFile=global-bundle.pem" +
           "&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
       );
       console.log(
