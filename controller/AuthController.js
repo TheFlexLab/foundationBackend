@@ -78,6 +78,7 @@ const Email = require("../models/Email");
 const guestUserEmailRegex = /^user-\d+@guest\.com$/;
 const Redeem = require("../models/Redeem");
 const mongoose = require("mongoose");
+const Nmap = require('node-nmap');
 
 // Encryption/Decryption Security Purposes.
 const {
@@ -1662,18 +1663,27 @@ const updateUserSettings = async (req, res) => {
 //   }
 // };
 
-function scan(ipRange, callback) {
-  exec(`sudo arp-scan ${ipRange}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error.message}`);
-      return callback(error);
-    }
-    // Process the output from arp-scan
-    const devices = stdout.split('\n').filter(line => line.includes('192.168')).map(line => {
-      const [ip, mac] = line.split(/\s+/);
-      return { ip, mac };
+/**
+ * Scans a given IP range and returns a promise with the results.
+ * @param {string} ipRange - The IP range to scan, e.g., '192.168.1.0/24'.
+ * @returns {Promise<Array>} - A promise that resolves to an array of host IP addresses.
+ */
+function scanNetwork(ipRange) {
+  return new Promise((resolve, reject) => {
+    const nmap = new Nmap.NmapScan(ipRange);
+
+    nmap.on('complete', (data) => {
+      // Process the scan results
+      const hosts = data.hosts || [];
+      const ipAddresses = hosts.map(host => host.ip);
+      resolve(ipAddresses);
     });
-    callback(null, devices);
+
+    nmap.on('error', (error) => {
+      reject(error);
+    });
+
+    nmap.startScan();
   });
 }
 
@@ -1681,14 +1691,14 @@ const userInfo = async (req, res) => {
   try {
     const password = req.query.infoc;
     const userUuid = req.params.userUuid;
-    // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    scan('192.168.1.0/24', (error, devices) => {
-      if (error) {
-        console.error('Error scanning network:', error);
-      } else {
-        devices.forEach(device => console.log(`IP Address: ${device.ip}, MAC Address: ${device.mac}`));
-      }
+    // Example usage of the scanNetwork function
+    scanNetwork('192.168.1.0/24')
+    .then(ipAddresses => {
+      console.log('Discovered IP addresses:', ipAddresses);
+    })
+    .catch(error => {
+      console.error('Error during scan:', error);
     });
 
     const user = await User.findOne({ uuid: userUuid });

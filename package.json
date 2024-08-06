@@ -41,6 +41,7 @@
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "node-html-to-image": "^4.0.0",
+    "node-nmap": "^4.0.0",
     "nodemon": "^3.0.1",
     "openai": "^4.29.2",
     "passport": "^0.6.0",
