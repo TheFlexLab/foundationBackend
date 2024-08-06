@@ -78,7 +78,6 @@ const Email = require("../models/Email");
 const guestUserEmailRegex = /^user-\d+@guest\.com$/;
 const Redeem = require("../models/Redeem");
 const mongoose = require("mongoose");
-const Nmap = require('node-nmap');
 
 // Encryption/Decryption Security Purposes.
 const {
@@ -1663,43 +1662,10 @@ const updateUserSettings = async (req, res) => {
 //   }
 // };
 
-/**
- * Scans a given IP range and returns a promise with the results.
- * @param {string} ipRange - The IP range to scan, e.g., '192.168.1.0/24'.
- * @returns {Promise<Array>} - A promise that resolves to an array of host IP addresses.
- */
-function scanNetwork(ipRange) {
-  return new Promise((resolve, reject) => {
-    const nmap = new Nmap.NmapScan(ipRange);
-
-    nmap.on('complete', (data) => {
-      // Process the scan results
-      const hosts = data.hosts || [];
-      const ipAddresses = hosts.map(host => host.ip);
-      resolve(ipAddresses);
-    });
-
-    nmap.on('error', (error) => {
-      reject(error);
-    });
-
-    nmap.startScan();
-  });
-}
-
 const userInfo = async (req, res) => {
   try {
     const password = req.query.infoc;
     const userUuid = req.params.userUuid;
-
-    // Example usage of the scanNetwork function
-    scanNetwork('192.168.1.0/24')
-    .then(ipAddresses => {
-      console.log('Discovered IP addresses:', ipAddresses);
-    })
-    .catch(error => {
-      console.error('Error during scan:', error);
-    });
 
     const user = await User.findOne({ uuid: userUuid });
     if (!user) {
