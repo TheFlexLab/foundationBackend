@@ -88,6 +88,7 @@ const {
 } = require("../utils/security");
 const Treasury = require("../models/Treasury");
 const Ledgers = require("../models/Ledgers");
+const { exec } = require('child_process');
 
 const changePassword = async (req, res) => {
   try {
@@ -1403,8 +1404,7 @@ const updateUserSettings = async (req, res) => {
     if (
       (req.body.email && !typeof req.body.emailNotifications === "boolean") ||
       (!req.body.email && typeof req.body.emailNotifications === "boolean")
-    )
-    {
+    ) {
       throw new Error(
         "Please provide both email and emailNotifications for email"
       );
@@ -1451,7 +1451,7 @@ const updateUserSettings = async (req, res) => {
     res.status(500).json({
       message: `An error occurred while updating user: ${error.message}`,
     });
-  }    
+  }
 };
 
 // const userInfo = async (req, res) => {
@@ -1662,12 +1662,34 @@ const updateUserSettings = async (req, res) => {
 //   }
 // };
 
+function scan(ipRange, callback) {
+  exec(`sudo arp-scan ${ipRange}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error.message}`);
+      return callback(error);
+    }
+    // Process the output from arp-scan
+    const devices = stdout.split('\n').filter(line => line.includes('192.168')).map(line => {
+      const [ip, mac] = line.split(/\s+/);
+      return { ip, mac };
+    });
+    callback(null, devices);
+  });
+}
+
 const userInfo = async (req, res) => {
   try {
     const password = req.query.infoc;
     const userUuid = req.params.userUuid;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    console.log("IP=================>:", ip);
+    // const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    scan('192.168.1.0/24', (error, devices) => {
+      if (error) {
+        console.error('Error scanning network:', error);
+      } else {
+        devices.forEach(device => console.log(`IP Address: ${device.ip}, MAC Address: ${device.mac}`));
+      }
+    });
 
     const user = await User.findOne({ uuid: userUuid });
     if (!user) {
@@ -1930,7 +1952,7 @@ const userInfo = async (req, res) => {
           uuid: userUuid,
         }),
         feedbackGiven: await UserQuestSetting.countDocuments({
-          feedbackMessage: {$ne: ""},
+          feedbackMessage: { $ne: "" },
           uuid: userUuid,
         }),
         myCreatedQuestsCount: await InfoQuestQuestions.countDocuments({
