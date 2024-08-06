@@ -1,8 +1,6 @@
 const UserQuestSetting = require("../models/UserQuestSetting");
 
 const getPercentage = (document, page, quest) => {
-  console.log("hello", document, page, quest);
-
   let result;
   let totalStartQuest;
 

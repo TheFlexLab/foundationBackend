@@ -1388,9 +1388,7 @@ const getQuestsAll = async (req, res) => {
   } else {
     //console.log("Inside resultArray else");
     nextPage = skip + pageSize < totalQuestionsCount;
-    console.log("b participated", allQuestions);
     resultArray = allQuestions?.map((item) => getPercentage(item));
-    console.log("a participated");
   }
 
   for (let i = 0; i < resultArray.length; i++) {
@@ -2007,11 +2005,17 @@ const getQuestByUniqueId = async (req, res) => {
 
 const getEmbededPostByUniqueId = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { link, resultsMode } = req.params;
+    console.log("mode", resultsMode);
+
+    const post = await await UserQuestSetting.findOne({
+      link: link,
+    });
 
     const infoQuest = await InfoQuestQuestions.find({
-      _id: id,
+      _id: post?.questForeignKey,
     }).populate("getUserBadge", "badges");
+
     if (!infoQuest) throw new Error("No Post Exist!");
     const result1 = await getQuestionsWithStatus(infoQuest);
 
@@ -2020,7 +2024,7 @@ const getEmbededPostByUniqueId = async (req, res) => {
       ...item._doc,
       selectedPercentage: item.selectedPercentage,
       contendedPercentage: item.contendedPercentage,
-      startStatus: "completed",
+      startStatus: resultsMode === "true" ? "completed" : "",
       type: "embed",
     }));
 
