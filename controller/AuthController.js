@@ -1666,6 +1666,8 @@ const userInfo = async (req, res) => {
   try {
     const password = req.query.infoc;
     const userUuid = req.params.userUuid;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    console.log("IP=================>:", ip);I
 
     const user = await User.findOne({ uuid: userUuid });
     if (!user) {

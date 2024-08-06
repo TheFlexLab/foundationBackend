@@ -105,6 +105,9 @@ redisClient.on("end", () => {
 redisClient.connect().catch((err) => {
   console.error("Error connecting to Redis:", err);
 });
+
+app.set('trust proxy', true);
+
 app.use(
   session({
     store: new RedisStore({ client: redisClient }),
