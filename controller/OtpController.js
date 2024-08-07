@@ -1,5 +1,6 @@
 const Otp = require("../models/Otp");
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const { addContactBadge } = require('../controller/BadgeController');
 
 // Generate OTP
 function generateOTP() {
@@ -57,6 +58,17 @@ const verifyOtp = async (req, res) => {
     const savedOTP = await Otp.findOne({ phoneNumber }).sort({ createdAt: -1 }).exec();
     if (!savedOTP || savedOTP.otp !== otp)
         throw new Error("Invalid OTP")
+
+    if(req.body.legacyEmail && req.body.userUuid){
+      const badge = {
+        body: {
+          uuid: req.body.userUuid,
+          type: "cell-phone",
+          data: phoneNumber,
+        }
+      }
+      await addContactBadge(badge);
+    }
 
     res.status(200).json({ message: 'OTP verification successful' });
   } catch (error) {
