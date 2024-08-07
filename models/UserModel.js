@@ -328,6 +328,10 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    ip: {
+      type: String,
+      default: ""
+    },
   },
   { timestamps: true }
 );
