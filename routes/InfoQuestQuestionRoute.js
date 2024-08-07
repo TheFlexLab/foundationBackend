@@ -318,7 +318,7 @@ router.get(
 );
 
 router.get(
-  "/getEmbededPostByUniqueId/:id",
+  "/getEmbededPostByUniqueLink/:link/:resultsMode",
   /**
    * @swagger
    * /infoquestions/getQuestByUniqueId/{postId}/{uuid}:
