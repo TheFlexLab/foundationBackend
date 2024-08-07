@@ -655,10 +655,10 @@ const signInUser = async (req, res) => {
 
 const createGuestMode = async (req, res) => {
   try {
-    const checkIP = await User.find({
+    const checkIP = await User.findOne({
       ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
     });
-    if (checkIP.length > 5) {
+    if (checkIP) {
       return res
         .status(403)
         .json({
