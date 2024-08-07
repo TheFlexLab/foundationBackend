@@ -332,6 +332,10 @@ const userSchema = mongoose.Schema(
       type: String,
       default: ""
     },
+    isLegacyEmailContactVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -2619,7 +2619,7 @@ const verify = async (req, res) => {
 
     res.cookie("uuid", req.user.uuid, cookieConfiguration());
     res.cookie("jwt", generateToken, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token: generateToken });
+    res.status(200).json({ ...user._doc, token: generateToken, isGoogleEmail:  user.email.includes("@gmail.com") ? true : false});
   } catch (error) {
     console.error(error.message);
     res.status(500).json({

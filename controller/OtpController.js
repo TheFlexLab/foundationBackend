@@ -1,5 +1,6 @@
 const Otp = require("../models/Otp");
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const User = require("../models/UserModel");
 const { addContactBadge } = require('../controller/BadgeController');
 
 // Generate OTP
@@ -68,6 +69,14 @@ const verifyOtp = async (req, res) => {
         }
       }
       await addContactBadge(badge);
+      await User.findOneAndUpdate(
+        {
+          uuid: req.body.userUuid
+        },
+        {
+          isLegacyEmailContactVerified: true
+        }
+      ).exec();
     }
 
     res.status(200).json({ message: 'OTP verification successful' });
