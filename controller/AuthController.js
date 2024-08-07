@@ -657,7 +657,7 @@ const createGuestMode = async (req, res) => {
       ip: req.headers['x-forwarded-for']
     })
     if(checkIP){
-      res.status(403).json({ message: "Sorry guest already exist, try from signup" });
+      return res.status(403).json({ message: "Sorry guest already exist, try from signup" });
     }
 
     const uuid = crypto.randomBytes(11).toString("hex");
