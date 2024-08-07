@@ -151,6 +151,7 @@ const signUpUser = async (req, res) => {
       password: hashPassword,
       uuid: uuid,
       role: "user",
+      ip: "",
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
@@ -256,6 +257,7 @@ const signUpUserBySocialLogin = async (req, res) => {
       email: payload._json.email,
       uuid: uuid,
       role: "user",
+      ip: ""
     });
 
     // Check Email Category
@@ -448,6 +450,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     const user = await new User({
       uuid: uuid,
       role: "user",
+      ip: ""
     });
 
     // Create a Badge at starting index
@@ -743,6 +746,7 @@ const signUpGuestMode = async (req, res) => {
           password: hashPassword,
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -840,6 +844,7 @@ const signUpSocialGuestMode = async (req, res) => {
           email: payload._json.email,
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -1050,6 +1055,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
         $set: {
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
