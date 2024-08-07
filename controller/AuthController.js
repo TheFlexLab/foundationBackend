@@ -653,7 +653,7 @@ const signInUser = async (req, res) => {
 const createGuestMode = async (req, res) => {
   try {
 
-    const checkIP = await User({
+    const checkIP = await User.findOne({
       ip: req.headers['x-forwarded-for']
     })
     if(checkIP){
