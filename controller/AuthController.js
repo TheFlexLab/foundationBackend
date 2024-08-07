@@ -655,12 +655,16 @@ const signInUser = async (req, res) => {
 
 const createGuestMode = async (req, res) => {
   try {
-
     const checkIP = await User.findOne({
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
-    })
-    if(checkIP){
-      return res.status(403).json({ message: "Sorry guest already exist, try from signup" });
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+    });
+    if (checkIP) {
+      return res
+        .status(403)
+        .json({
+          message:
+            "You've reached the maximum number of guest accounts allowed. Consider signing up for a full account.",
+        });
     }
 
     const uuid = crypto.randomBytes(11).toString("hex");
@@ -669,7 +673,7 @@ const createGuestMode = async (req, res) => {
       email: `user-${randomDigits}@guest.com`,
       uuid: uuid,
       isGuestMode: true,
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
