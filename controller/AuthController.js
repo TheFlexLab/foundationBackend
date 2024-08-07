@@ -654,7 +654,7 @@ const createGuestMode = async (req, res) => {
   try {
 
     const checkIP = await User.findOne({
-      ip: req.headers['x-forwarded-for']
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
     })
     if(checkIP){
       return res.status(403).json({ message: "Sorry guest already exist, try from signup" });
@@ -666,7 +666,7 @@ const createGuestMode = async (req, res) => {
       email: `user-${randomDigits}@guest.com`,
       uuid: uuid,
       isGuestMode: true,
-      ip: req.headers['x-forwarded-for']
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
