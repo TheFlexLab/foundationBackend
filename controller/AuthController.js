@@ -151,6 +151,7 @@ const signUpUser = async (req, res) => {
       password: hashPassword,
       uuid: uuid,
       role: "user",
+      ip: "",
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
@@ -256,6 +257,7 @@ const signUpUserBySocialLogin = async (req, res) => {
       email: payload._json.email,
       uuid: uuid,
       role: "user",
+      ip: ""
     });
 
     // Check Email Category
@@ -448,6 +450,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     const user = await new User({
       uuid: uuid,
       role: "user",
+      ip: ""
     });
 
     // Create a Badge at starting index
@@ -652,12 +655,25 @@ const signInUser = async (req, res) => {
 
 const createGuestMode = async (req, res) => {
   try {
+    const checkIP = await User.findOne({
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+    });
+    if (checkIP) {
+      return res
+        .status(403)
+        .json({
+          message:
+            "You've reached the maximum number of guest accounts allowed. Consider signing up for a full account.",
+        });
+    }
+
     const uuid = crypto.randomBytes(11).toString("hex");
     const randomDigits = getRandomDigits(6);
     const user = await new User({
       email: `user-${randomDigits}@guest.com`,
       uuid: uuid,
       isGuestMode: true,
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
@@ -734,6 +750,7 @@ const signUpGuestMode = async (req, res) => {
           password: hashPassword,
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -831,6 +848,7 @@ const signUpSocialGuestMode = async (req, res) => {
           email: payload._json.email,
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -1041,6 +1059,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
         $set: {
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -2608,7 +2627,7 @@ const verify = async (req, res) => {
 
     res.cookie("uuid", req.user.uuid, cookieConfiguration());
     res.cookie("jwt", generateToken, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token: generateToken });
+    res.status(200).json({ ...user._doc, token: generateToken, isGoogleEmail:  user.email.includes("@gmail.com") ? true : false});
   } catch (error) {
     console.error(error.message);
     res.status(500).json({

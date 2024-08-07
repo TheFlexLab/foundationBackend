@@ -86,6 +86,78 @@ router.post("/resendOtp",
   OtpController.resendOtp
 );
 
+router.post("/sendEmailOtp",
+  /**
+   * @swagger
+   * /sendEmailOtp:
+   *   post:
+   *     tags:
+   *       - OTP
+   *     summary: Send OTP
+   *     description: Endpoint to send OTP to the user's phone number or email
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/OtpRequest'
+   *     responses:
+   *       '200':
+   *         description: OTP sent successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  OtpController.sendEmailOtp
+);
 
+router.post("/verifyEmailOtp",
+  /**
+   * @swagger
+   * /verifyEmailOtp:
+   *   post:
+   *     tags:
+   *       - OTP
+   *     summary: Verify OTP
+   *     description: Endpoint to verify OTP entered by the user
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/OtpVerification'
+   *     responses:
+   *       '200':
+   *         description: OTP verified successfully
+   *       '400':
+   *         description: Invalid OTP
+   *       '500':
+   *         description: Internal server error
+   */
+  OtpController.verifyEmailOtp
+);
+
+router.post("/resendEmailOtp",
+  /**
+   * @swagger
+   * /resendEmailOtp:
+   *   post:
+   *     tags:
+   *       - OTP
+   *     summary: Resend OTP
+   *     description: Endpoint to resend OTP to the user's phone number or email
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/OtpRequest'
+   *     responses:
+   *       '200':
+   *         description: OTP resent successfully
+   *       '500':
+   *         description: Internal server error
+   */
+  OtpController.resendEmailOtp
+);
 
 module.exports = router;
