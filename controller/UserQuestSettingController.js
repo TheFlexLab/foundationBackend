@@ -886,9 +886,8 @@ const create = async (req, res) => {
       uuid: req.body.uuid,
       questForeignKey: req.body.questForeignKey,
     });
-    if (!userQuestSettingSaved){
-      userQuestSettingSaved = new UserQuestSetting();
-    }
+    if (!userQuestSettingSaved)
+      return res.status(404).json({ message: "userQuestSetting not exist" });
 
     userQuestSettingSaved.Question = payload.Question;
     userQuestSettingSaved.hidden = payload.hidden;
