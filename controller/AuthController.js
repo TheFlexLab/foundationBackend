@@ -1705,7 +1705,8 @@ const updateUserSettings = async (req, res) => {
 
 const userInfo = async (req, res) => {
   try {
-    const password = req.query.infoc;
+    let password;
+    if(!req.params.otp) password = req.query.infoc;
     const userUuid = req.params.userUuid;
 
     const user = await User.findOne({ uuid: userUuid });
@@ -1992,6 +1993,8 @@ const userInfo = async (req, res) => {
         totalSharedListsParticipentsCount: participentsCount,
       },
     };
+
+    if(req.params.otp) return resUser ? resUser : false;
 
     res.status(200).json(resUser);
   } catch (error) {

@@ -9,6 +9,7 @@ const {
 } = require("../service/auth");
 const { createLedger } = require("../utils/createLedger");
 const crypto = require("crypto");
+const { userInfo } = require("./AuthController");
 
 // Generate OTP
 function generateOTP() {
@@ -81,9 +82,11 @@ const verifyOtp = async (req, res) => {
           uuid: req.body.userUuid,
           type: "cell-phone",
           data: phoneNumber,
+          otp: true
         }
       }
-      await addContactBadge(badge);
+      const otpBadge = await addContactBadge(badge);
+      if(!otpBadge) throw new Error("Can't add badge from OTP");
       await User.findOneAndUpdate(
         {
           uuid: req.body.userUuid
@@ -92,9 +95,17 @@ const verifyOtp = async (req, res) => {
           isLegacyEmailContactVerified: true
         }
       ).exec();
+      const request = {
+        params: {
+          userUuid: req.body.userUuid,
+          otp: true
+        }
+      }
+      const user = await userInfo(request);
+      return res.status(200).json({ message: 'OTP verification successful', user: user });
     }
 
-    res.status(200).json({ message: 'OTP verification successful' });
+    return res.status(200).json({ message: 'OTP verification successful' });
   } catch (error) {
     console.error(error);
     res.status(500).json({

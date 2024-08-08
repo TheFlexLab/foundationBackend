@@ -383,7 +383,7 @@ router.get(
    *           type: string
    *       - in: query
    *         name: infoc
-   *         required: true
+   *         required: false
    *         description: The infoc of the user
    *         schema:
    *           type: string
