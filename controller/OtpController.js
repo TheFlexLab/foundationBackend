@@ -1,12 +1,9 @@
 const Otp = require("../models/Otp");
-const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
 const User = require("../models/UserModel");
-const { addContactBadge } = require('../controller/BadgeController');
+const { addContactBadge } = require("../controller/BadgeController");
 const AWS = require("aws-sdk");
-const {
-  createToken,
-  cookieConfiguration,
-} = require("../service/auth");
+const { createToken, cookieConfiguration } = require("../service/auth");
 const { createLedger } = require("../utils/createLedger");
 const crypto = require("crypto");
 const { userInfo } = require("./AuthController");
@@ -20,8 +17,8 @@ const sns = new SNSClient({
   region: process.env.AWS_SNS_REGION, // AWS region from environment variables
   credentials: {
     accessKeyId: process.env.AWS_SNS_ACCESS_KEY, // AWS access key from environment variables
-    secretAccessKey: process.env.AWS_SNS_SECRET_KEY // AWS secret key from environment variables
-  }
+    secretAccessKey: process.env.AWS_SNS_SECRET_KEY, // AWS secret key from environment variables
+  },
 });
 
 const SES_CONFIG = {
@@ -39,11 +36,11 @@ const sendOtp = async (req, res) => {
     Message: `Your OTP code is: ${generatedOtp}`, // Generate a 6-digit OTP code
     PhoneNumber: phoneNumber, // Recipient's phone number from environment variables
     MessageAttributes: {
-      'AWS.SNS.SMS.SenderID': {
-        'DataType': 'String',
-        'StringValue': 'String'
-      }
-    }
+      "AWS.SNS.SMS.SenderID": {
+        DataType: "String",
+        StringValue: "String",
+      },
+    },
   };
   try {
     // Send OTP via SNS
@@ -51,14 +48,14 @@ const sendOtp = async (req, res) => {
     const command = new PublishCommand(params);
     // Send the SMS message using the SNS client and the created command
     const message = await sns.send(command);
-    if (!message) throw new Error("OTP Failed!")
+    if (!message) throw new Error("OTP Failed!");
 
     // Save OTP to database
     const otp = await new Otp({ phoneNumber, otp: generatedOtp });
     const savedOtp = await otp.save();
     if (!savedOtp) throw new Error("OTP not saved!");
 
-    res.status(200).json({ message: 'OTP sent successfully', data: savedOtp });
+    res.status(200).json({ message: "OTP sent successfully", data: savedOtp });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -67,45 +64,39 @@ const sendOtp = async (req, res) => {
   }
 };
 
+const addCellPhoneBadge = async (data) => {};
 
 const verifyOtp = async (req, res) => {
   const { phoneNumber, otp } = req.body;
   try {
     // Check OTP from database
-    const savedOTP = await Otp.findOne({ phoneNumber }).sort({ createdAt: -1 }).exec();
-    if (!savedOTP || savedOTP.otp !== otp)
-      throw new Error("Invalid OTP")
+    const savedOTP = await Otp.findOne({ phoneNumber })
+      .sort({ createdAt: -1 })
+      .exec();
+    if (!savedOTP || savedOTP.otp !== otp) throw new Error("Invalid OTP");
 
     if (req.body.legacyEmail && req.body.userUuid) {
-      const badge = {
-        body: {
-          uuid: req.body.userUuid,
-          type: "cell-phone",
-          data: phoneNumber,
-          otp: true
-        }
-      }
-      const otpBadge = await addContactBadge(badge);
-      if(!otpBadge) throw new Error("Can't add badge from OTP");
       await User.findOneAndUpdate(
         {
-          uuid: req.body.userUuid
+          uuid: req.body.userUuid,
         },
         {
-          isLegacyEmailContactVerified: true
+          isLegacyEmailContactVerified: true,
         }
       ).exec();
       const request = {
         params: {
           userUuid: req.body.userUuid,
-          otp: true
-        }
-      }
+          otp: true,
+        },
+      };
       const user = await userInfo(request);
-      return res.status(200).json({ message: 'OTP verification successful', user: user });
+      return res
+        .status(200)
+        .json({ message: "OTP verification successful", user: user });
     }
 
-    return res.status(200).json({ message: 'OTP verification successful' });
+    return res.status(200).json({ message: "OTP verification successful" });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -121,31 +112,35 @@ const resendOtp = async (req, res) => {
     Message: `Your OTP code is: ${generatedOtp}`, // Generate a 6-digit OTP code
     PhoneNumber: phoneNumber, // Recipient's phone number from environment variables
     MessageAttributes: {
-      'AWS.SNS.SMS.SenderID': {
-        'DataType': 'String',
-        'StringValue': 'String'
-      }
-    }
+      "AWS.SNS.SMS.SenderID": {
+        DataType: "String",
+        StringValue: "String",
+      },
+    },
   };
   try {
     // Check if OTP was sent within the last 60 seconds
-    const lastSentTime = await Otp.findOne({ phoneNumber }).sort({ createdAt: -1 }).exec();
+    const lastSentTime = await Otp.findOne({ phoneNumber })
+      .sort({ createdAt: -1 })
+      .exec();
     if (lastSentTime && Date.now() - lastSentTime.createdAt.getTime() < 60000)
-      throw new Error("You can only request OTP resend once per minute")
+      throw new Error("You can only request OTP resend once per minute");
 
     // Send OTP via SNS
     // Create a new PublishCommand with the specified parameters
     const command = new PublishCommand(params);
     // Send the SMS message using the SNS client and the created command
     const message = await sns.send(command);
-    if (!message) throw new Error("OTP Failed!")
+    if (!message) throw new Error("OTP Failed!");
 
     // Save OTP to database
     const otp = await new Otp({ phoneNumber, otp: generatedOtp });
     const savedOtp = await otp.save();
     if (!savedOtp) throw new Error("OTP not saved!");
 
-    res.status(200).json({ message: 'OTP resent successfully', data: savedOtp });
+    res
+      .status(200)
+      .json({ message: "OTP resent successfully", data: savedOtp });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -184,7 +179,6 @@ const sendEmailOtp = async (req, res) => {
     },
   };
   try {
-
     const result = await sesClient.sendEmail(params).promise();
     if (!result) throw new Error("OTP Failed!");
 
@@ -193,7 +187,7 @@ const sendEmailOtp = async (req, res) => {
     const savedOtp = await otp.save();
     if (!savedOtp) throw new Error("OTP not saved!");
 
-    res.status(200).json({ message: 'OTP sent successfully', data: savedOtp });
+    res.status(200).json({ message: "OTP sent successfully", data: savedOtp });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -206,9 +200,10 @@ const verifyEmailOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {
     // Check OTP from database
-    const savedOTP = await Otp.findOne({ email }).sort({ createdAt: -1 }).exec();
-    if (!savedOTP || savedOTP.otp !== otp)
-      throw new Error("Invalid OTP")
+    const savedOTP = await Otp.findOne({ email })
+      .sort({ createdAt: -1 })
+      .exec();
+    if (!savedOTP || savedOTP.otp !== otp) throw new Error("Invalid OTP");
 
     const user = await User.findOne({ email: email });
 
@@ -270,9 +265,11 @@ const resendEmailOtp = async (req, res) => {
   };
   try {
     // Check if OTP was sent within the last 60 seconds
-    const lastSentTime = await Otp.findOne({ email }).sort({ createdAt: -1 }).exec();
+    const lastSentTime = await Otp.findOne({ email })
+      .sort({ createdAt: -1 })
+      .exec();
     if (lastSentTime && Date.now() - lastSentTime.createdAt.getTime() < 60000)
-      throw new Error("You can only request OTP resend once per minute")
+      throw new Error("You can only request OTP resend once per minute");
 
     // Send OTP via SNS
     const result = await sesClient.sendEmail(params).promise();
@@ -283,7 +280,9 @@ const resendEmailOtp = async (req, res) => {
     const savedOtp = await otp.save();
     if (!savedOtp) throw new Error("OTP not saved!");
 
-    res.status(200).json({ message: 'OTP resent successfully', data: savedOtp });
+    res
+      .status(200)
+      .json({ message: "OTP resent successfully", data: savedOtp });
   } catch (error) {
     console.error(error);
     res.status(500).json({
