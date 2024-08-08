@@ -1952,6 +1952,8 @@ const userInfo = async (req, res) => {
         ? totalSharedListsParticipentsCount[0].totalParticipents
         : 0;
 
+    const questIds = await InfoQuestQuestions.find({ uuid: userUuid }).select('_id').lean();
+
     const resUser = {
       ...user._doc,
       sharedQuestsStatistics: {
@@ -1971,6 +1973,10 @@ const userInfo = async (req, res) => {
         feedbackGiven: await UserQuestSetting.countDocuments({
           feedbackMessage: { $ne: "" },
           uuid: userUuid,
+        }),
+        feedbackReceived: await UserQuestSetting.countDocuments({
+          questForeignKey: { $in: questIds.map(q => q._id) },
+          feedbackMessage: { $ne: "" }
         }),
         myCreatedQuestsCount: await InfoQuestQuestions.countDocuments({
           uuid: userUuid,
