@@ -135,11 +135,11 @@ const signUpUser = async (req, res) => {
     const alreadyUser = await User.findOne({ email: req.body.email });
     if (alreadyUser) throw new Error("Email Already Exists");
 
-    const checkGoogleEmail = await isGoogleEmail(req.body.email);
-    if (checkGoogleEmail)
-      throw new Error(
-        "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
-      );
+    // const checkGoogleEmail = await isGoogleEmail(req.body.email);
+    // if (checkGoogleEmail)
+    //   throw new Error(
+    //     "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
+    //   );
 
     const uuid = crypto.randomBytes(11).toString("hex");
     //console.log(uuid);
@@ -151,6 +151,7 @@ const signUpUser = async (req, res) => {
       password: hashPassword,
       uuid: uuid,
       role: "user",
+      ip: "",
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
@@ -238,8 +239,13 @@ const signUpUserBySocialLogin = async (req, res) => {
     // }
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({ message: "Treasury is not found." });
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({ message: "Treasury is not enough." })
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
     // Check Google Account
     const payload = req.body;
     // Check if email already exist
@@ -251,6 +257,7 @@ const signUpUserBySocialLogin = async (req, res) => {
       email: payload._json.email,
       uuid: uuid,
       role: "user",
+      ip: ""
     });
 
     // Check Email Category
@@ -397,8 +404,13 @@ const signUpUserBySocialBadges = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({ message: "Treasury is not found." });
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({ message: "Treasury is not enough." })
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
     // Check Google Account
     const payload = req.body;
     // Check if email already exist
@@ -438,6 +450,7 @@ const signUpUserBySocialBadges = async (req, res) => {
     const user = await new User({
       uuid: uuid,
       role: "user",
+      ip: ""
     });
 
     // Create a Badge at starting index
@@ -582,10 +595,10 @@ const signInUser = async (req, res) => {
     if (!user) throw new Error("User not Found");
 
     // To check the google account
-    if (user?.badges[0]?.accountName === "Gmail")
-      throw new Error(
-        "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
-      );
+    // if (user?.badges[0]?.accountName === "Gmail")
+    //   throw new Error(
+    //     "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
+    //   );
     // To check the facebook account
     if (user?.badges[0]?.accountName === "Fmail")
       throw new Error("Please Login with Facebook Account");
@@ -642,12 +655,25 @@ const signInUser = async (req, res) => {
 
 const createGuestMode = async (req, res) => {
   try {
+    const checkIP = await User.findOne({
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+    });
+    if (checkIP) {
+      return res
+        .status(403)
+        .json({
+          message:
+            "You've reached the maximum number of guest accounts allowed. Consider signing up for a full account.",
+        });
+    }
+
     const uuid = crypto.randomBytes(11).toString("hex");
     const randomDigits = getRandomDigits(6);
     const user = await new User({
       email: `user-${randomDigits}@guest.com`,
       uuid: uuid,
       isGuestMode: true,
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
     });
     const users = await user.save();
     if (!users) throw new Error("User not Created");
@@ -708,11 +734,11 @@ const signUpGuestMode = async (req, res) => {
       return;
     }
 
-    const checkGoogleEmail = await isGoogleEmail(req.body.email);
-    if (checkGoogleEmail)
-      throw new Error(
-        "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
-      );
+    // const checkGoogleEmail = await isGoogleEmail(req.body.email);
+    // if (checkGoogleEmail)
+    //   throw new Error(
+    //     "We have detected that this is a Google hosted e-mail-For greater security,please use 'Continue with Google'"
+    //   );
 
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(req.body.password, salt);
@@ -724,6 +750,7 @@ const signUpGuestMode = async (req, res) => {
           password: hashPassword,
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -792,8 +819,13 @@ const signUpSocialGuestMode = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({ message: "Treasury is not found." });
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({ message: "Treasury is not enough." })
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
 
     const payload = req.body;
 
@@ -816,6 +848,7 @@ const signUpSocialGuestMode = async (req, res) => {
           email: payload._json.email,
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -965,8 +998,13 @@ const signUpGuestBySocialBadges = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({ message: "Treasury is not found." });
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({ message: "Treasury is not enough." })
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
     const payload = req.body;
 
     let id;
@@ -1021,6 +1059,7 @@ const signUpGuestBySocialBadges = async (req, res) => {
         $set: {
           role: "user",
           isGuestMode: false,
+          ip: ""
         },
       }
     );
@@ -1403,8 +1442,7 @@ const updateUserSettings = async (req, res) => {
     if (
       (req.body.email && !typeof req.body.emailNotifications === "boolean") ||
       (!req.body.email && typeof req.body.emailNotifications === "boolean")
-    )
-    {
+    ) {
       throw new Error(
         "Please provide both email and emailNotifications for email"
       );
@@ -1433,9 +1471,13 @@ const updateUserSettings = async (req, res) => {
       }
     }
 
-    user.userSettings.darkMode = req.body.darkMode ?? user.userSettings.darkMode;
-    user.userSettings.defaultSort = req.body.defaultSort ?? user.userSettings.defaultSort;
-    user.notificationSettings.systemNotifications = req.body.systemNotifications ?? user.notificationSettings.systemNotifications;
+    user.userSettings.darkMode =
+      req.body.darkMode ?? user.userSettings.darkMode;
+    user.userSettings.defaultSort =
+      req.body.defaultSort ?? user.userSettings.defaultSort;
+    user.notificationSettings.systemNotifications =
+      req.body.systemNotifications ??
+      user.notificationSettings.systemNotifications;
     await user.save();
 
     // Respond with updated user settings
@@ -1445,13 +1487,12 @@ const updateUserSettings = async (req, res) => {
         notificationSettings: user.notificationSettings,
       },
     });
-
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
       message: `An error occurred while updating user: ${error.message}`,
     });
-  }    
+  }
 };
 
 // const userInfo = async (req, res) => {
@@ -1664,7 +1705,8 @@ const updateUserSettings = async (req, res) => {
 
 const userInfo = async (req, res) => {
   try {
-    const password = req.query.infoc;
+    let password;
+    if(!req.params.otp) password = req.query.infoc;
     const userUuid = req.params.userUuid;
 
     const user = await User.findOne({ uuid: userUuid });
@@ -1868,8 +1910,8 @@ const userInfo = async (req, res) => {
 
     const suppressQuestsCount = await InfoQuestQuestions.countDocuments({
       uuid: userUuid,
-      suppressed: true
-    })
+      suppressed: true,
+    });
 
     // Total shared lists count for a specific user
     const totalSharedListsCount = await UserListSchema.aggregate([
@@ -1911,6 +1953,8 @@ const userInfo = async (req, res) => {
         ? totalSharedListsParticipentsCount[0].totalParticipents
         : 0;
 
+    const questIds = await InfoQuestQuestions.find({ uuid: userUuid }).select('_id').lean();
+
     const resUser = {
       ...user._doc,
       sharedQuestsStatistics: {
@@ -1928,8 +1972,12 @@ const userInfo = async (req, res) => {
           uuid: userUuid,
         }),
         feedbackGiven: await UserQuestSetting.countDocuments({
-          feedbackMessage: {$ne: ""},
+          feedbackMessage: { $ne: "" },
           uuid: userUuid,
+        }),
+        feedbackReceived: await UserQuestSetting.countDocuments({
+          questForeignKey: { $in: questIds.map(q => q._id) },
+          feedbackMessage: { $ne: "" }
         }),
         myCreatedQuestsCount: await InfoQuestQuestions.countDocuments({
           uuid: userUuid,
@@ -1945,6 +1993,8 @@ const userInfo = async (req, res) => {
         totalSharedListsParticipentsCount: participentsCount,
       },
     };
+
+    if(req.params.otp) return resUser ? resUser : false;
 
     res.status(200).json(resUser);
   } catch (error) {
@@ -2193,8 +2243,9 @@ const sendVerifyEmailGuest = async (req, res) => {
     );
 
     // Step 3 - Email the user a unique verification link
-    const url = `${FRONTEND_URL.split(",")[0]
-      }/VerifyCode/?${verificationTokenFull}`;
+    const url = `${
+      FRONTEND_URL.split(",")[0]
+    }/VerifyCode/?${verificationTokenFull}`;
     // console.log("url", url);
     // return res.status(200).json({ url });
 
@@ -2275,8 +2326,9 @@ const sendVerifyEmail = async (req, res) => {
     //console.log("verificationToken", verificationToken);
 
     // Step 3 - Email the user a unique verification link
-    const url = `${FRONTEND_URL.split(",")[0]
-      }/VerifyCode/?${verificationTokenFull}`;
+    const url = `${
+      FRONTEND_URL.split(",")[0]
+    }/VerifyCode/?${verificationTokenFull}`;
     // console.log("url", url);
     // return res.status(200).json({ url });
     // //console.log("url", url);
@@ -2474,8 +2526,13 @@ const verify = async (req, res) => {
   try {
     // Treasury Check
     const checkTreasury = await Treasury.findOne();
-    if (!checkTreasury) return res.status(404).json({ message: "Treasury is not found." });
-    if (Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT || Math.round(checkTreasury.amount) <= 0) return res.status(404).json({ message: "Treasury is not enough." })
+    if (!checkTreasury)
+      return res.status(404).json({ message: "Treasury is not found." });
+    if (
+      Math.round(checkTreasury.amount) <= ACCOUNT_BADGE_ADDED_AMOUNT ||
+      Math.round(checkTreasury.amount) <= 0
+    )
+      return res.status(404).json({ message: "Treasury is not enough." });
     // Step 2 - Find user with matching ID
     const user = await User.findOne({ uuid: req.user.uuid }).exec();
     if (!user) {
@@ -2483,13 +2540,28 @@ const verify = async (req, res) => {
         message: "User does not exists",
       });
     }
+    if (user.email.includes("@gmail.com")) {
+      // Check Email Category
+      const emailStatus = await eduEmailCheck(req, res, user.email);
+      let type = "";
+      if (emailStatus.status === "OK") type = "Education";
 
-    // Create a Badge
-    user.badges.unshift({
-      accountId: user.email,
-      accountName: "Email",
-      isVerified: true,
-    });
+      // Create a Badge at starting index
+      user.badges.unshift({
+        accountId: user.email,
+        accountName: "google",
+        details: encryptData(user),
+        isVerified: true,
+        type: type,
+      });
+    } else {
+      // Create a Badge
+      user.badges.unshift({
+        accountId: user.email,
+        accountName: "Email",
+        isVerified: true,
+      });
+    }
     // Step 3 - Update user verification status to true
     user.requiredAction = true;
     user.gmailVerified = true;
@@ -2520,16 +2592,18 @@ const verify = async (req, res) => {
       txData: user.badges[0]?.accountName, // txDescription : "Incentive for adding badges"
     });
 
-    await createLedger({
-      uuid: user.uuid,
-      txUserAction: "accountLogin",
-      txID: crypto.randomBytes(11).toString("hex"),
-      txAuth: "User",
-      txFrom: user.uuid,
-      txTo: "dao",
-      txAmount: "0",
-      txData: user.badges[0]?.accountName, // txDescription : "user logs in"
-    });
+    if(user.email.includes("@gmail.com")){
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountLogin",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "User",
+        txFrom: user.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: user.badges[0]?.accountName, // txDescription : "user logs in"
+      });
+    }
     //
     // Decrement the Treasury
     await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
@@ -2556,7 +2630,7 @@ const verify = async (req, res) => {
 
     res.cookie("uuid", req.user.uuid, cookieConfiguration());
     res.cookie("jwt", generateToken, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token: generateToken });
+    res.status(200).json({ ...user._doc, token: generateToken, isGoogleEmail:  user.email.includes("@gmail.com") ? true : false});
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -2837,7 +2911,8 @@ const getFacebookUserInfo = async (req, res) => {
     // if token found
     // // Second Axios request to get user info using the access token
     const response = await axios.get(
-      `https://graph.facebook.com/v19.0/me?access_token=${responseAccessToken.data.access_token
+      `https://graph.facebook.com/v19.0/me?access_token=${
+        responseAccessToken.data.access_token
       }&fields=${"id,first_name,last_name,middle_name,name,name_format,picture,short_name,email,gender,age_range,friends,link,birthday"}`,
       {
         // headers: {
