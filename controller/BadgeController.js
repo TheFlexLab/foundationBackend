@@ -34,6 +34,7 @@ const {
 
 const Treasury = require("../models/Treasury");
 const { type } = require("os");
+const { EmptyBatchRequestException } = require("@aws-sdk/client-sns");
 
 const update = async (req, res) => {
   try {
@@ -256,8 +257,10 @@ const addContactBadge = async (req, res) => {
           },
         });
       }
-      if (usersWithBadge.length !== 0) {
-        throw new Error("Oops! This account is already linked.");
+      if (!req.body.otp) {
+        if (usersWithBadge.length !== 0) {
+          throw new Error("Oops! This account is already linked.");
+        }
       }
       const userBadges = User.badges;
       let updatedUserBadges;
@@ -282,12 +285,12 @@ const addContactBadge = async (req, res) => {
           },
         ];
       }
-
       // Update the user badges
       User.badges = updatedUserBadges;
       // Update the action
       await User.save();
-
+      if (req.body.otp) return true;
+      
       res.status(200).json({ message: "Badge Added Successfully" });
       return;
     }

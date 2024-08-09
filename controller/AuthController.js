@@ -1705,7 +1705,8 @@ const updateUserSettings = async (req, res) => {
 
 const userInfo = async (req, res) => {
   try {
-    const password = req.query.infoc;
+    let password;
+    if(!req.params.otp) password = req.query.infoc;
     const userUuid = req.params.userUuid;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     if(req.socket.remoteAddress){
@@ -1960,6 +1961,8 @@ const userInfo = async (req, res) => {
         ? totalSharedListsParticipentsCount[0].totalParticipents
         : 0;
 
+    const questIds = await InfoQuestQuestions.find({ uuid: userUuid }).select('_id').lean();
+
     const resUser = {
       ...user._doc,
       sharedQuestsStatistics: {
@@ -1980,6 +1983,10 @@ const userInfo = async (req, res) => {
           feedbackMessage: { $ne: "" },
           uuid: userUuid,
         }),
+        feedbackReceived: await UserQuestSetting.countDocuments({
+          questForeignKey: { $in: questIds.map(q => q._id) },
+          feedbackMessage: { $ne: "" }
+        }),
         myCreatedQuestsCount: await InfoQuestQuestions.countDocuments({
           uuid: userUuid,
           isActive: true,
@@ -1994,6 +2001,8 @@ const userInfo = async (req, res) => {
         totalSharedListsParticipentsCount: participentsCount,
       },
     };
+
+    if(req.params.otp) return resUser ? resUser : false;
 
     res.status(200).json(resUser);
   } catch (error) {
