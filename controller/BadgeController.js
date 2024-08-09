@@ -257,11 +257,10 @@ const addContactBadge = async (req, res) => {
           },
         });
       }
-      if (!req.body.otp) {
         if (usersWithBadge.length !== 0) {
           throw new Error("Oops! This account is already linked.");
         }
-      }
+
       const userBadges = User.badges;
       let updatedUserBadges;
       if (User.isPasswordEncryption) {
@@ -289,7 +288,6 @@ const addContactBadge = async (req, res) => {
       User.badges = updatedUserBadges;
       // Update the action
       await User.save();
-      if (req.body.otp) return true;
       
       res.status(200).json({ message: "Badge Added Successfully" });
       return;

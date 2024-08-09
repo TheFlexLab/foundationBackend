@@ -76,6 +76,16 @@ const verifyOtp = async (req, res) => {
     if (!savedOTP || savedOTP.otp !== otp) throw new Error("Invalid OTP");
 
     if (req.body.legacyEmail && req.body.userUuid) {
+      const badge = {
+        body: {
+          uuid: req.body.userUuid,
+          type: "cell-phone",
+          data: phoneNumber,
+          otp: true
+        }
+      }
+      // const otpBadge = await addContactBadge(badge);
+      // if(!otpBadge) throw new Error("Can't add badge from OTP");
       await User.findOneAndUpdate(
         {
           uuid: req.body.userUuid,
