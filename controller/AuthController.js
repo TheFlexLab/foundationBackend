@@ -2592,16 +2592,18 @@ const verify = async (req, res) => {
       txData: user.badges[0]?.accountName, // txDescription : "Incentive for adding badges"
     });
 
-    await createLedger({
-      uuid: user.uuid,
-      txUserAction: "accountLogin",
-      txID: crypto.randomBytes(11).toString("hex"),
-      txAuth: "User",
-      txFrom: user.uuid,
-      txTo: "dao",
-      txAmount: "0",
-      txData: user.badges[0]?.accountName, // txDescription : "user logs in"
-    });
+    if(user.email.includes("@gmail.com")){
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountLogin",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "User",
+        txFrom: user.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: user.badges[0]?.accountName, // txDescription : "user logs in"
+      });
+    }
     //
     // Decrement the Treasury
     await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
