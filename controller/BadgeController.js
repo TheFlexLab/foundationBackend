@@ -51,6 +51,8 @@ const update = async (req, res) => {
         }
         return { ...item, type: req.body.type, primary: req.body.primary };
         // return item.type = req.body.type;
+      } else {
+        return item;
       }
     });
     // Update the user badges
