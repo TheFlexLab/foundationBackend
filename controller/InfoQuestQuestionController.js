@@ -1845,6 +1845,7 @@ const getQuestById = async (req, res) => {
 
     res.status(200).json({
       data: desiredArray,
+      hiddenOptions: hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null
     });
   } catch (error) {
     //console.log(error);
@@ -2759,7 +2760,8 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray, resu
 
     return {
       ...result,
-      desiredArray
+      desiredArray,
+      hiddenOptions: hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null,
     }
 
   } catch (error) {
