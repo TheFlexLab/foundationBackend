@@ -107,10 +107,10 @@ const getPercentageHiddenOption = (document, page, quest, hiddenOptionsArray) =>
   }
 
   if (document.whichTypeQuestion === "ranked choise" && result) {
-    const totalOptionCount = Object.values(result[0].selected).reduce(
-      (acc, value) => acc + value,
-      0
-    );
+    const totalOptionCount = Object.entries(result[0].selected)
+    .filter(([key]) => !hiddenOptionsArray.includes(key))
+    .reduce((acc, [key, value]) => acc + value, 0);
+  
     const selectedPercentage = result?.map((item) => {
       const selectedKeys = Object.keys(item?.selected);
       const totalSelected = selectedKeys.reduce(
@@ -132,16 +132,16 @@ const getPercentageHiddenOption = (document, page, quest, hiddenOptionsArray) =>
       contendedPercentage = result?.map((item) => {
         if (!item?.contended) return;
         const contendedKeys = Object.keys(item?.contended);
-        const totalSelected = contendedKeys.reduce(
-          (sum, key) => sum + item.contended[key],
-          0
-        );
+        const totalContended = contendedKeys
+        .filter(([key]) => !hiddenOptionsArray.includes(key))
+        .reduce((sum, key) => sum + item.contended[key],0);
+
         const percentageObject = {};
 
         contendedKeys.forEach((key) => {
           if (!hiddenOptionsArray.includes(key)) {
             percentageObject[key] =
-              ((item.contended[key] / totalStartQuest) * 100).toFixed(0) + "%";
+              ((item.contended[key] / totalContended) * 100).toFixed(0) + "%";
           }
         });
 
@@ -151,17 +151,17 @@ const getPercentageHiddenOption = (document, page, quest, hiddenOptionsArray) =>
     return { ...document, selectedPercentage, contendedPercentage };
   } else {
     const selectedPercentage = result?.map((item) => {
-      const selectedKeys = Object.keys(item?.selected);
-      const totalSelected = selectedKeys.reduce(
-        (sum, key) => sum + item.selected[key],
-        0
-      );
+      const selectedKeys = Object.keys(item?.selected).filter(key => !hiddenOptionsArray.includes(key));;
+      const totalSelected = selectedKeys
+      .reduce((sum, key) => sum + item.selected[key],0);
       const percentageObject = {};
+
+      console.log(selectedKeys)
 
       selectedKeys.forEach((key) => {
         if (!hiddenOptionsArray.includes(key)) {
           percentageObject[key] =
-            ((item.selected[key] / totalStartQuest) * 100).toFixed(0) + "%";
+            ((item.selected[key] / totalSelected) * 100).toFixed(0) + "%";
         }
       });
 
@@ -174,17 +174,15 @@ const getPercentageHiddenOption = (document, page, quest, hiddenOptionsArray) =>
     ) {
       contendedPercentage = result?.map((item) => {
         if (!item?.contended) return;
-        const contendedKeys = Object.keys(item?.contended);
-        const totalSelected = contendedKeys.reduce(
-          (sum, key) => sum + item.contended[key],
-          0
-        );
+        const contendedKeys = Object.keys(item?.contended).filter(key => !hiddenOptionsArray.includes(key));;
+        const totalContended = contendedKeys
+        .reduce((sum, key) => sum + item.contended[key],0);
         const percentageObject = {};
 
         contendedKeys.forEach((key) => {
           if (!hiddenOptionsArray.includes(key)) {
             percentageObject[key] =
-              ((item.contended[key] / totalStartQuest) * 100).toFixed(0) + "%";
+              ((item.contended[key] / totalContended) * 100).toFixed(0) + "%";
           }
         });
 

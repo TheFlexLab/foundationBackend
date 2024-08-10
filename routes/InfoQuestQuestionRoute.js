@@ -629,6 +629,22 @@ router.post(
    *         schema:
    *           type: boolean
    *         description: Option to include badges in the result.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               someKey:
+   *                 type: string
+   *                 description: A description of the data being sent in the request body.
+   *               anotherKey:
+   *                 type: integer
+   *                 description: Another piece of data in the request body.
+   *             example:
+   *               someKey: "example value"
+   *               anotherKey: 123
    *     responses:
    *       '200':
    *         description: Successfully retrieved all info quest questions with result.

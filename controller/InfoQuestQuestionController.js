@@ -1817,7 +1817,20 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    const resultArray = result1.map((item) => getPercentage(item, page, quest));
+    const hiddenOptions = await HiddenOptions.findOne(
+      {
+        userUuid: uuid,
+        questForeignKey: id,
+      }
+    )
+
+    let resultArray;
+    if(hiddenOptions && hiddenOptions.hiddenOptionsArray.length !== 0){
+      resultArray = result1.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+    }
+    else {
+      resultArray = result1.map((item) => getPercentage(item, page, quest));
+    }
 
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
