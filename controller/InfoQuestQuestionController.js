@@ -1891,16 +1891,23 @@ const getQuestById = async (req, res) => {
     }));
 
     const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
-    const withHiddenOptions = {
-      ...desiredArray,
-      0: {
-        ...desiredArray[0],
-        hiddenAnswers
+    let finalDoc = null;
+    if(hiddenAnswers) {
+      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+      finalDoc = {
+        ...desiredArray,
+        0: {
+          ...desiredArray[0],
+          QuestAnswers,
+          hiddenAnswers
+        }
       }
     }
 
     res.status(200).json({
-      data: withHiddenOptions,
+      data: finalDoc ? finalDoc : desiredArray,
     });
   } catch (error) {
     //console.log(error);
@@ -2814,12 +2821,23 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
     }));
 
     hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
-    return {
-      ...desiredArray,
-      0: {
-        ...desiredArray[0],
-        hiddenAnswers
+    let finalDoc = null;
+    if(hiddenAnswers) {
+      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+      finalDoc = {
+        ...desiredArray,
+        0: {
+          ...desiredArray[0],
+          QuestAnswers,
+          hiddenAnswers
+        }
       }
+    }
+
+    return {
+      result : finalDoc ? finalDoc : desiredArray
     }
 
   } catch (error) {
