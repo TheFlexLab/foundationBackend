@@ -1551,6 +1551,20 @@ const getQuestsAll = async (req, res) => {
     uuid: uuid,
   });
 
+  for (const item of result1) {
+    const hiddenOptions = await HiddenOptions.findOne({
+      userUuid: uuid,
+      questForeignKey: item._id.toString(),
+    });
+  
+    if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+      // Filter out the QuestAnswers based on hiddenOptions.hiddenOptionsArray
+      item.QuestAnswers = item.QuestAnswers.filter(
+        (doc) => !hiddenOptions.hiddenOptionsArray.includes(doc.question)
+      );
+    }
+  }
+
   if (result1.length !== 0) {
     if (!terms) {
       if (user?.notificationSettings?.systemNotifications) {
