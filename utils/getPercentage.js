@@ -156,8 +156,6 @@ const getPercentageHiddenOption = (document, page, quest, hiddenOptionsArray) =>
       .reduce((sum, key) => sum + item.selected[key],0);
       const percentageObject = {};
 
-      console.log(selectedKeys)
-
       selectedKeys.forEach((key) => {
         if (!hiddenOptionsArray.includes(key)) {
           percentageObject[key] =
