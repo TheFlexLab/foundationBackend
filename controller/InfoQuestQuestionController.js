@@ -1825,8 +1825,10 @@ const getQuestById = async (req, res) => {
     )
 
     let resultArray;
+    let hiddenOptionsUi
     if(hiddenOptions && hiddenOptions.hiddenOptionsArray.length !== 0){
       resultArray = result1.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+      hiddenOptionsUi = hiddenOptions.hiddenOptionsArray;
     }
     else {
       resultArray = result1.map((item) => getPercentage(item, page, quest));
@@ -1845,7 +1847,7 @@ const getQuestById = async (req, res) => {
 
     res.status(200).json({
       data: desiredArray,
-      hiddenOptions: hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null
+      hiddenOptions: hiddenOptionsUi ? hiddenOptionsUi : null
     });
   } catch (error) {
     //console.log(error);
