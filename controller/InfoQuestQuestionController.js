@@ -2807,7 +2807,7 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray, resu
 
     return {
       ...result,
-      desiredArray,
+      ...desiredArray,
       hiddenOptions: hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null,
     }
 
