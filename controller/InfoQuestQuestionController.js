@@ -1890,9 +1890,14 @@ const getQuestById = async (req, res) => {
       userQuestSetting: item.userQuestSetting,
     }));
 
+    const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
+    const withHiddenOptions = {
+      ...desiredArray,
+      hiddenAnswers
+    }
+
     res.status(200).json({
-      data: desiredArray,
-      hiddenOptions: hiddenOptionsUi ? hiddenOptionsUi : null
+      data: withHiddenOptions,
     });
   } catch (error) {
     //console.log(error);
@@ -2758,7 +2763,7 @@ const getFlickerUrl = async (req, res) => {
   }
 };
 
-const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray, result) => {
+const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
   try {
     const docAlreadyExists = await HiddenOptions.findOne(
       {
@@ -2805,10 +2810,10 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray, resu
       userQuestSetting: item.userQuestSetting,
     }));
 
+    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
     return {
-      ...result,
       ...desiredArray,
-      hiddenOptions: hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null,
+      hiddenAnswers
     }
 
   } catch (error) {
@@ -2823,7 +2828,7 @@ const analyze = async (req, res) => {
     let result = {};
 
     if (req.query.hide) {
-      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray, result);
+      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray);
     }
 
     res.status(200).json(
