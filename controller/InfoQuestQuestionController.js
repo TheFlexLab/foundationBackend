@@ -1893,7 +1893,10 @@ const getQuestById = async (req, res) => {
     const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
     const withHiddenOptions = {
       ...desiredArray,
-      hiddenAnswers
+      0: {
+        ...desiredArray[0],
+        hiddenAnswers
+      }
     }
 
     res.status(200).json({
@@ -2813,7 +2816,10 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
     hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
     return {
       ...desiredArray,
-      hiddenAnswers
+      0: {
+        ...desiredArray[0],
+        hiddenAnswers
+      }
     }
 
   } catch (error) {
