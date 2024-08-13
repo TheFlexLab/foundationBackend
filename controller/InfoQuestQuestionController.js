@@ -11,6 +11,7 @@ const BookmarkQuests = require("../models/BookmarkQuests");
 const {
   getPercentage,
   getPercentageQuestForeignKey,
+  getPercentageHiddenOption,
 } = require("../utils/getPercentage");
 const shortLink = require("shortlink");
 const { execSync } = require("child_process");
@@ -37,6 +38,7 @@ const {
   notification11,
   notification12,
 } = require("../notifications/home");
+const { HiddenOptions } = require("../models/Analyze");
 
 const createInfoQuestQuest = async (req, res) => {
   try {
@@ -465,10 +467,10 @@ const getAllQuestsWithOpenInfoQuestStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -644,10 +646,10 @@ const getAllQuestsWithAnsweredStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -907,10 +909,10 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-          ? { lastInteractedAt: -1 }
-          : sort === "Most Popular"
-          ? { interactingCounter: -1 }
-          : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : sort === "Most Popular"
+              ? { interactingCounter: -1 }
+              : "createdAt"
       )
       .skip(skip)
       .limit(pageSize)
@@ -928,21 +930,21 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.selectedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.selectedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.contendedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.contendedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1270,12 +1272,12 @@ const getQuestsAll = async (req, res) => {
       sort === "Oldest First"
         ? { createdAt: 1, _id: 1 }
         : sort === "Newest First"
-        ? { createdAt: -1, _id: 1 }
-        : sort === "Last Updated"
-        ? { lastInteractedAt: -1, _id: 1 }
-        : sort === "Most Popular"
-        ? { interactingCounter: -1, _id: 1 }
-        : { createdAt: -1, _id: 1 }
+          ? { createdAt: -1, _id: 1 }
+          : sort === "Last Updated"
+            ? { lastInteractedAt: -1, _id: 1 }
+            : sort === "Most Popular"
+              ? { interactingCounter: -1, _id: 1 }
+              : { createdAt: -1, _id: 1 }
     );
     // query = query.sort(
     //   sort === "Newest First"
@@ -1359,7 +1361,22 @@ const getQuestsAll = async (req, res) => {
 
     nextPage = end < Result.length;
 
-    resultArray = Result?.slice(start, end).map(getPercentage);
+    resultArray = await Promise.all(
+      Result?.slice(start, end).map(async (item) => {
+        const hiddenOptions = await HiddenOptions.findOne(
+          {
+            userUuid: uuid,
+            questForeignKey: item._id.toString(),
+          }
+        )
+        if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+          return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
+        }
+        else {
+          return getPercentage(item)
+        }
+      })
+    )
   } else if (participated === "Not") {
     //console.log("Inside resultArray participated Not");
 
@@ -1383,12 +1400,42 @@ const getQuestsAll = async (req, res) => {
     // const start = req.body.start;
     // const end = req.body.end;
     //console.log("Start" + start + "end" + end);
-    resultArray = Result.slice(start, end).map(getPercentage);
+    resultArray = await Promise.all(
+      Result.slice(start, end).map(async (item) => {
+        const hiddenOptions = await HiddenOptions.findOne(
+          {
+            userUuid: uuid,
+            questForeignKey: item._id.toString(),
+          }
+        )
+        if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+          return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
+        }
+        else {
+          return getPercentage(item)
+        }
+      })
+    )
     nextPage = end < Result.length;
   } else {
     //console.log("Inside resultArray else");
     nextPage = skip + pageSize < totalQuestionsCount;
-    resultArray = allQuestions?.map((item) => getPercentage(item));
+    resultArray = await Promise.all(
+      allQuestions?.map(async (item) => {
+        const hiddenOptions = await HiddenOptions.findOne(
+          {
+            userUuid: uuid,
+            questForeignKey: item._id.toString(),
+          }
+        )
+        if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+          return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
+        }
+        else {
+          return getPercentage(item)
+        }
+      })
+    )
   }
 
   for (let i = 0; i < resultArray.length; i++) {
@@ -1477,21 +1524,21 @@ const getQuestsAll = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.selectedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.selectedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.contendedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.contendedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1503,6 +1550,20 @@ const getQuestsAll = async (req, res) => {
   const user = await UserModel.findOne({
     uuid: uuid,
   });
+
+  for (const item of result1) {
+    const hiddenOptions = await HiddenOptions.findOne({
+      userUuid: uuid,
+      questForeignKey: item._id.toString(),
+    });
+  
+    if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+      // Filter out the QuestAnswers based on hiddenOptions.hiddenOptionsArray
+      item.QuestAnswers = item.QuestAnswers.filter(
+        (doc) => !hiddenOptions.hiddenOptionsArray.includes(doc.question)
+      );
+    }
+  }
 
   if (result1.length !== 0) {
     if (!terms) {
@@ -1771,10 +1832,10 @@ const getAllQuestsWithResult = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-          ? { lastInteractedAt: -1 }
-          : sort === "Most Popular"
-          ? { interactingCounter: -1 }
-          : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : sort === "Most Popular"
+              ? { interactingCounter: -1 }
+              : "createdAt"
       ) // Sort by createdAt field in descending order
       .skip(skip)
       .limit(pageSize);
@@ -1815,7 +1876,22 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    const resultArray = result1.map((item) => getPercentage(item, page, quest));
+    const hiddenOptions = await HiddenOptions.findOne(
+      {
+        userUuid: uuid,
+        questForeignKey: id,
+      }
+    )
+
+    let resultArray;
+    let hiddenOptionsUi
+    if(hiddenOptions && hiddenOptions.hiddenOptionsArray.length !== 0){
+      resultArray = result1.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+      hiddenOptionsUi = hiddenOptions.hiddenOptionsArray;
+    }
+    else {
+      resultArray = result1.map((item) => getPercentage(item, page, quest));
+    }
 
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
@@ -1828,8 +1904,24 @@ const getQuestById = async (req, res) => {
       userQuestSetting: item.userQuestSetting,
     }));
 
+    const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
+    let finalDoc = null;
+    if(hiddenAnswers) {
+      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+      finalDoc = {
+        ...desiredArray,
+        0: {
+          ...desiredArray[0],
+          QuestAnswers,
+          hiddenAnswers
+        }
+      }
+    }
+
     res.status(200).json({
-      data: desiredArray,
+      data: finalDoc ? finalDoc : desiredArray,
     });
   } catch (error) {
     //console.log(error);
@@ -2152,10 +2244,10 @@ const getAllQuestsWithCompletedStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -2336,10 +2428,10 @@ const getAllQuestsWithChangeAnsStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -2695,6 +2787,101 @@ const getFlickerUrl = async (req, res) => {
   }
 };
 
+const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
+  try {
+    const docAlreadyExists = await HiddenOptions.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+    if (docAlreadyExists) {
+      docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
+      await docAlreadyExists.save();
+    }
+    else {
+      const hiddenOptions = new HiddenOptions();
+      hiddenOptions.userUuid = userUuid;
+      hiddenOptions.questForeignKey = questForeignKey;
+      hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
+      await hiddenOptions.save();
+    }
+
+    const hiddenOptions = await HiddenOptions.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+
+    const infoQuest = await InfoQuestQuestions.find({
+      _id: questForeignKey,
+    }).populate("getUserBadge", "badges");
+    if (!infoQuest) throw new Error("No Quest Exist!");
+
+    const resultStartQuest = await getQuestionsWithStatus(infoQuest, userUuid);
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+
+    const desiredArray = resultArray.map((item) => ({
+      ...item._doc,
+      selectedPercentage: item.selectedPercentage
+        ? item.selectedPercentage
+        : [],
+      contendedPercentage: item.contendedPercentage
+        ? item.contendedPercentage
+        : [],
+      userQuestSetting: item.userQuestSetting,
+    }));
+
+    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
+    let finalDoc = null;
+    if(hiddenAnswers) {
+      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+      finalDoc = {
+        ...desiredArray,
+        0: {
+          ...desiredArray[0],
+          QuestAnswers,
+          hiddenAnswers
+        }
+      }
+    }
+
+    return {
+      result : finalDoc ? finalDoc : desiredArray
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const analyze = async (req, res) => {
+  try {
+
+    const { userUuid, questForeignKey, hiddenOptionsArray } = req.body;
+    let result = {};
+
+    if (req.query.hide) {
+      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray);
+    }
+
+    res.status(200).json(
+      {
+        message: "Advance analytics applied configured successfully.",
+        result: result,
+      }
+    )
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `${error.message}` });
+  }
+}
+
 module.exports = {
   createInfoQuestQuest,
   deleteInfoQuestQuest,
@@ -2721,4 +2908,5 @@ module.exports = {
   getQuestionsWithStatusQuestForeignKey,
   getQuestionsWithUserSettingsQuestForeignKey,
   getEmbededPostByUniqueId,
+  analyze,
 };

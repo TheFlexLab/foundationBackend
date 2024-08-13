@@ -492,6 +492,7 @@ const viewListAll = async (req, res) => {
 
       updatedPosts.push({
         ...post.toObject(),
+        type: req.query.embed ? "embed" : null,
         questForeginKey: questForeginKeyWithStartQuestDataR,
       });
     }
@@ -1814,6 +1815,7 @@ const viewList = async (req, res) => {
         // Add the updated post to the array
         updatedPosts.push({
           ...post.toObject(), // Convert Mongoose document to plain JS object
+          type: req.query.embed ? "embed" : null,
           questForeginKey: questForeginKeyWithStartQuestData,
         });
       } else {
@@ -1827,6 +1829,7 @@ const viewList = async (req, res) => {
         };
         updatedPosts.push({
           ...post.toObject(),
+          type: req.query.embed ? "embed" : null,
           questForeginKey: questForeginKeyWithStartQuestData,
         });
       }
