@@ -67,7 +67,7 @@
     },
     {
         "name": "BACKEND_URL",
-        "value": "https://api-v2.development.on.foundation"
+        "value": "https://api-v2-development.on.foundation"
     },
     {
         "name": "INSTAGRAM_CLIENT_ID",
