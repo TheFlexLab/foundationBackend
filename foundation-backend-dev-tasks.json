@@ -155,7 +155,7 @@
     },
     {
         "name": "rpID",
-        "value": "api-v2.development.on.foundation"
+        "value": "api-v2-development.on.foundation"
     },
     {
         "name": "OPEN_AI_URL",
