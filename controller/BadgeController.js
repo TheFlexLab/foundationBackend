@@ -51,6 +51,8 @@ const update = async (req, res) => {
         }
         return { ...item, type: req.body.type, primary: req.body.primary };
         // return item.type = req.body.type;
+      } else {
+        return item;
       }
     });
     // Update the user badges
@@ -257,11 +259,10 @@ const addContactBadge = async (req, res) => {
           },
         });
       }
-      if (!req.body.otp) {
         if (usersWithBadge.length !== 0) {
           throw new Error("Oops! This account is already linked.");
         }
-      }
+
       const userBadges = User.badges;
       let updatedUserBadges;
       if (User.isPasswordEncryption) {
@@ -289,7 +290,6 @@ const addContactBadge = async (req, res) => {
       User.badges = updatedUserBadges;
       // Update the action
       await User.save();
-      if (req.body.otp) return true;
       
       res.status(200).json({ message: "Badge Added Successfully" });
       return;
@@ -413,6 +413,24 @@ const addBadge = async (req, res) => {
     if (usersWithBadge.length !== 0)
       throw new Error("Oops! This account is already linked.");
 
+    let followers, followings;
+
+    if(req.body.provider === "linkedin"){
+      followers = req.body.data._json.connects ? req.body.data._json.connects : "null";
+      followings = req.body.data._json.connects ? req.body.data._json.connects : "null";
+    }
+
+    if(req.body.provider === "twitter"){
+      followers = req.body.data._json.followers_count ? req.body.data._json.followers_count : "null";
+      followings = req.body.data._json.friends_count ? req.body.data._json.friends_count : "null";
+    }
+
+    if(req.body.provider === "github"){
+      followers = req.body.data._json.followers ? req.body.data._json.followers : "null";
+      followings = req.body.data._json.following ? req.body.data._json.following : "null";
+      console.log(followings, followers)
+    }
+
     const userBadges = User.badges;
     let updatedUserBadges;
     if (User.isPasswordEncryption) {
@@ -425,6 +443,8 @@ const addBadge = async (req, res) => {
         {
           accountId: req.body.badgeAccountId,
           accountName: req.body.provider,
+          followers: followers,
+          followings: followings,
           details: userCustomizedEncryptData(encryptData(req.body.data), eyk),
           isVerified: true,
           type: "default",
@@ -436,6 +456,8 @@ const addBadge = async (req, res) => {
         {
           accountId: req.body.badgeAccountId,
           accountName: req.body.provider,
+          followers: followers,
+          followings: followings,
           details: encryptData(req.body.data),
           isVerified: true,
           type: "default",

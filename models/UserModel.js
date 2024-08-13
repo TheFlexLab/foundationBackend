@@ -281,6 +281,8 @@ const userSchema = mongoose.Schema(
         accountId: { type: String },
         accountName: { type: String },
         details: { type: Object },
+        followers: { type: Number, default: null},
+        followings: { type: Number, default: null},
         email: { type: String },
         isVerified: { type: Boolean },
         type: { type: String },

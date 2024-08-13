@@ -598,4 +598,60 @@ router.get(
   InfoQuestQuestionController.getQuestsAll
 );
 
+router.post(
+  "/analyze/:hide?",
+  /**
+   * @swagger
+   * /infoquestions/analyze:
+   *   post:
+   *     tags:
+   *       - Info Quest Question
+   *     summary: Get all quests with result
+   *     description: This endpoint supports four optional boolean query parameters hide, contributions, target, and badges.
+   *     parameters:
+   *       - in: query
+   *         name: hide
+   *         schema:
+   *           type: boolean
+   *         description: Option to hide certain questions.
+   *       - in: query
+   *         name: contributions
+   *         schema:
+   *           type: boolean
+   *         description: Option to include contributions in the analysis.
+   *       - in: query
+   *         name: target
+   *         schema:
+   *           type: boolean
+   *         description: Option to target specific questions.
+   *       - in: query
+   *         name: badges
+   *         schema:
+   *           type: boolean
+   *         description: Option to include badges in the result.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               someKey:
+   *                 type: string
+   *                 description: A description of the data being sent in the request body.
+   *               anotherKey:
+   *                 type: integer
+   *                 description: Another piece of data in the request body.
+   *             example:
+   *               someKey: "example value"
+   *               anotherKey: 123
+   *     responses:
+   *       '200':
+   *         description: Successfully retrieved all info quest questions with result.
+   *       '500':
+   *         description: Internal server error.
+   */
+  InfoQuestQuestionController.analyze
+);
+
 module.exports = router;

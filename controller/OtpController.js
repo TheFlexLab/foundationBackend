@@ -64,7 +64,7 @@ const sendOtp = async (req, res) => {
   }
 };
 
-const addCellPhoneBadge = async (data) => {};
+const addCellPhoneBadge = async (data) => { };
 
 const verifyOtp = async (req, res) => {
   const { phoneNumber, otp } = req.body;
@@ -76,6 +76,16 @@ const verifyOtp = async (req, res) => {
     if (!savedOTP || savedOTP.otp !== otp) throw new Error("Invalid OTP");
 
     if (req.body.legacyEmail && req.body.userUuid) {
+      // const badge = {
+      //   body: {
+      //     uuid: req.body.userUuid,
+      //     type: "cell-phone",
+      //     data: phoneNumber,
+      //     otp: true
+      //   }
+      // }
+      // const otpBadge = await addContactBadge(badge);
+      // if(!otpBadge) throw new Error("Can't add badge from OTP");
       await User.findOneAndUpdate(
         {
           uuid: req.body.userUuid,
@@ -91,6 +101,18 @@ const verifyOtp = async (req, res) => {
         },
       };
       const user = await userInfo(request);
+
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountLogin",
+        txID: crypto.randomBytes(11).toString("hex"),
+        txAuth: "User",
+        txFrom: user.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: user.badges[0]?.accountName,
+      });
+
       return res
         .status(200)
         .json({ message: "OTP verification successful", user: user });
