@@ -1360,23 +1360,23 @@ const getQuestsAll = async (req, res) => {
     //console.log("Start" + start + "end" + end);
 
     nextPage = end < Result.length;
-
-    resultArray = await Promise.all(
-      Result?.slice(start, end).map(async (item) => {
-        const hiddenOptions = await HiddenOptions.findOne(
-          {
-            userUuid: uuid,
-            questForeignKey: item._id.toString(),
-          }
-        )
-        if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
-          return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
-        }
-        else {
-          return getPercentage(item)
-        }
-      })
-    )
+    resultArray = Result?.slice(start, end).map(getPercentage);
+    // resultArray = await Promise.all(
+    //   Result?.slice(start, end).map(async (item) => {
+    //     const hiddenOptions = await HiddenOptions.findOne(
+    //       {
+    //         userUuid: uuid,
+    //         questForeignKey: item._id.toString(),
+    //       }
+    //     )
+    //     if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+    //       return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
+    //     }
+    //     else {
+    //       return getPercentage(item)
+    //     }
+    //   })
+    // )
   } else if (participated === "Not") {
     //console.log("Inside resultArray participated Not");
 
@@ -1400,42 +1400,44 @@ const getQuestsAll = async (req, res) => {
     // const start = req.body.start;
     // const end = req.body.end;
     //console.log("Start" + start + "end" + end);
-    resultArray = await Promise.all(
-      Result.slice(start, end).map(async (item) => {
-        const hiddenOptions = await HiddenOptions.findOne(
-          {
-            userUuid: uuid,
-            questForeignKey: item._id.toString(),
-          }
-        )
-        if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
-          return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
-        }
-        else {
-          return getPercentage(item)
-        }
-      })
-    )
+    // resultArray = await Promise.all(
+    //   Result.slice(start, end).map(async (item) => {
+    //     const hiddenOptions = await HiddenOptions.findOne(
+    //       {
+    //         userUuid: uuid,
+    //         questForeignKey: item._id.toString(),
+    //       }
+    //     )
+    //     if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+    //       return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
+    //     }
+    //     else {
+    //       return getPercentage(item)
+    //     }
+    //   })
+    // )
+    resultArray = Result.slice(start, end).map(getPercentage);
     nextPage = end < Result.length;
   } else {
     //console.log("Inside resultArray else");
     nextPage = skip + pageSize < totalQuestionsCount;
-    resultArray = await Promise.all(
-      allQuestions?.map(async (item) => {
-        const hiddenOptions = await HiddenOptions.findOne(
-          {
-            userUuid: uuid,
-            questForeignKey: item._id.toString(),
-          }
-        )
-        if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
-          return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
-        }
-        else {
-          return getPercentage(item)
-        }
-      })
-    )
+    resultArray = allQuestions?.map((item) => getPercentage(item));
+    // resultArray = await Promise.all(
+    //   allQuestions?.map(async (item) => {
+    //     const hiddenOptions = await HiddenOptions.findOne(
+    //       {
+    //         userUuid: uuid,
+    //         questForeignKey: item._id.toString(),
+    //       }
+    //     )
+    //     if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+    //       return getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray);
+    //     }
+    //     else {
+    //       return getPercentage(item)
+    //     }
+    //   })
+    // )
   }
 
   for (let i = 0; i < resultArray.length; i++) {
@@ -1551,19 +1553,19 @@ const getQuestsAll = async (req, res) => {
     uuid: uuid,
   });
 
-  for (const item of result1) {
-    const hiddenOptions = await HiddenOptions.findOne({
-      userUuid: uuid,
-      questForeignKey: item._id.toString(),
-    });
+  // for (const item of result1) {
+  //   const hiddenOptions = await HiddenOptions.findOne({
+  //     userUuid: uuid,
+  //     questForeignKey: item._id.toString(),
+  //   });
   
-    if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
-      // Filter out the QuestAnswers based on hiddenOptions.hiddenOptionsArray
-      item.QuestAnswers = item.QuestAnswers.filter(
-        (doc) => !hiddenOptions.hiddenOptionsArray.includes(doc.question)
-      );
-    }
-  }
+  //   if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
+  //     // Filter out the QuestAnswers based on hiddenOptions.hiddenOptionsArray
+  //     item.QuestAnswers = item.QuestAnswers.filter(
+  //       (doc) => !hiddenOptions.hiddenOptionsArray.includes(doc.question)
+  //     );
+  //   }
+  // }
 
   if (result1.length !== 0) {
     if (!terms) {
@@ -1876,22 +1878,24 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    const hiddenOptions = await HiddenOptions.findOne(
-      {
-        userUuid: uuid,
-        questForeignKey: id,
-      }
-    )
+    // const hiddenOptions = await HiddenOptions.findOne(
+    //   {
+    //     userUuid: uuid,
+    //     questForeignKey: id,
+    //   }
+    // )
 
-    let resultArray;
-    let hiddenOptionsUi
-    if(hiddenOptions && hiddenOptions.hiddenOptionsArray.length !== 0){
-      resultArray = result1.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
-      hiddenOptionsUi = hiddenOptions.hiddenOptionsArray;
-    }
-    else {
-      resultArray = result1.map((item) => getPercentage(item, page, quest));
-    }
+    // let resultArray;
+    // let hiddenOptionsUi
+    // if(hiddenOptions && hiddenOptions.hiddenOptionsArray.length !== 0){
+    //   resultArray = result1.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+    //   hiddenOptionsUi = hiddenOptions.hiddenOptionsArray;
+    // }
+    // else {
+    //   resultArray = result1.map((item) => getPercentage(item, page, quest));
+    // }
+
+    resultArray = result1.map((item) => getPercentage(item, page, quest));
 
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
@@ -1904,24 +1908,24 @@ const getQuestById = async (req, res) => {
       userQuestSetting: item.userQuestSetting,
     }));
 
-    const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
-    let finalDoc = null;
-    if(hiddenAnswers) {
-      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
-        (doc) => !hiddenAnswers.includes(doc.question)
-      );
-      finalDoc = {
-        ...desiredArray,
-        0: {
-          ...desiredArray[0],
-          QuestAnswers,
-          hiddenAnswers
-        }
-      }
-    }
+    // const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
+    // let finalDoc = null;
+    // if(hiddenAnswers) {
+    //   const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+    //     (doc) => !hiddenAnswers.includes(doc.question)
+    //   );
+    //   finalDoc = {
+    //     ...desiredArray,
+    //     0: {
+    //       ...desiredArray[0],
+    //       QuestAnswers,
+    //       hiddenAnswers
+    //     }
+    //   }
+    // }
 
     res.status(200).json({
-      data: finalDoc ? finalDoc : desiredArray,
+      data: desiredArray,
     });
   } catch (error) {
     //console.log(error);
