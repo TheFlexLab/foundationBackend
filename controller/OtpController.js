@@ -155,7 +155,7 @@ const verifyOtp = async (req, res) => {
 
       res.cookie("uuid", req.body.userUuid, cookieConfiguration());
       res.cookie("jwt", generateToken, cookieConfiguration());
-      res.status(200).json({ userAccount, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false });
+      res.status(200).json({ user: userAccount, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false });
     }
     else {
       return res.status(200).json({ message: "OTP verification successful" });
