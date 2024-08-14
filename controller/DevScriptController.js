@@ -7,6 +7,10 @@ const UserQuestSetting = require('../models/UserQuestSetting');
 const StartQuests = require('../models/StartQuests');
 const InfoQuestQuestions = require('../models/InfoQuestQuestions');
 const Ledgers = require('../models/Ledgers');
+const { updateUserBalance } = require("../utils/userServices");
+const { updateTreasury } = require("../utils/treasuryService");
+const crypto = require("crypto");
+const { createLedger } = require("../utils/createLedger");
 
 
 // const excep = async (req, res) => {
@@ -491,6 +495,29 @@ const setPostCounters = async (req, res) => {
     }
 };
 
+const createGuestLedger = async (req, res) => {
+    try {
+
+        const totalBalance = await User.aggregate([
+            {
+                $group: {
+                    _id: null, // Group by null to sum across all documents
+                    totalBalance: { $sum: "$balance" } // Sum the balance field
+                }
+            }
+        ]);
+        
+        const sum = totalBalance.length > 0 ? totalBalance[0].totalBalance : 0;
+        res.status(200).json({message: sum});
+                
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while updating the feedback: ${error.message}`,
+        });
+    }
+}
+
 module.exports = {
     createUserListForAllUsers,
     dbReset,
@@ -498,4 +525,5 @@ module.exports = {
     userPostSeoSetting,
     setFeedback,
     setPostCounters,
+    createGuestLedger,
 };
