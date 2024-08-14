@@ -290,6 +290,45 @@ const addContactBadge = async (req, res) => {
       User.badges = updatedUserBadges;
       // Update the action
       await User.save();
+
+      const txID = crypto.randomBytes(11).toString("hex");
+      // Create Ledger
+      await createLedger({
+        uuid: User.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "User",
+        txFrom: User.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: req.body.type,
+        // txDescription : "User adds a verification badge"
+      });
+      await createLedger({
+        uuid: User.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "DAO",
+        txFrom: "DAO Treasury",
+        txTo: User.uuid,
+        txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        txData: req.body.type,
+        // txDescription : "Incentive for adding badges"
+      });
+      // Decrement the Treasury
+      await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
+  
+      // Increment the UserBalance
+      await updateUserBalance({
+        uuid: User.uuid,
+        amount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        inc: true,
+      });
+  
+      User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+      User.rewardSchedual.addingBadgeFdx =
+        User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+      await User.save();
       
       res.status(200).json({ message: "Badge Added Successfully" });
       return;
