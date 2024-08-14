@@ -146,21 +146,12 @@ const verifyOtp = async (req, res) => {
       user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
       await user.save();
 
-      // UserInfo
-      const request = {
-        params: {
-          userUuid: req.body.userUuid,
-          otp: true,
-        },
-      };
-      const userAccount = await userInfo(request);
-
       // Generate a token
       const generateToken = createToken({ uuid: req.body.userUuid });
 
       res.cookie("uuid", req.body.userUuid, cookieConfiguration());
       res.cookie("jwt", generateToken, cookieConfiguration());
-      res.status(200).json({ user: userAccount, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false, message: "OTP verification successful" });
+      res.status(200).json({ user: user, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false, message: "OTP verification successful" });
     }
     else {
       return res.status(200).json({ message: "OTP verification successful" });
