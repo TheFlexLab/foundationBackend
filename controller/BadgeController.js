@@ -288,6 +288,11 @@ const addContactBadge = async (req, res) => {
       }
       // Update the user badges
       User.badges = updatedUserBadges;
+      if(req.body.legacyVerification){
+        User.role = "user",
+        User.isGuestMode = false,
+        User.ip = ""
+      }
       // Update the action
       await User.save();
       

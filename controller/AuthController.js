@@ -748,9 +748,6 @@ const signUpGuestMode = async (req, res) => {
         $set: {
           email: req.body.email,
           password: hashPassword,
-          role: "user",
-          isGuestMode: false,
-          ip: ""
         },
       }
     );
@@ -2563,6 +2560,11 @@ const verify = async (req, res) => {
       });
     }
     // Step 3 - Update user verification status to true
+    if(user.email.includes("@gmail.com")){
+      user.role = "user",
+      user.isGuestMode = false,
+      user.ip = ""
+    }
     user.requiredAction = true;
     user.gmailVerified = true;
     user.verification = true;
