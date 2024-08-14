@@ -154,7 +154,7 @@ const verifyOtp = async (req, res) => {
       res.status(200).json({ user: user, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false, message: "OTP verification successful" });
     }
     else {
-      return res.status(200).json({ message: "OTP verification successful" });
+      res.status(200).json({ message: "OTP verification successful" });
     }
   } catch (error) {
     console.error(error);
