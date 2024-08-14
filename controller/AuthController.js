@@ -2671,6 +2671,16 @@ const logout = async (req, res) => {
     // const uuid = req.cookies.uuid;
     const uuid = req.body.uuid;
 
+    const user = await User.findOne(
+      {
+        uuid: req.body.uuid
+      }
+    );
+    if(user.tempLogout){
+      user.tempLogout = false;
+      await user.save();
+    }
+
     // Create Ledger
     await createLedger({
       uuid: uuid,
