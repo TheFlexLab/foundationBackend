@@ -7,6 +7,10 @@ const { createToken, cookieConfiguration } = require("../service/auth");
 const { createLedger } = require("../utils/createLedger");
 const crypto = require("crypto");
 const { userInfo } = require("./AuthController");
+const { ACCOUNT_BADGE_ADDED_AMOUNT } = require("../constants");
+const { updateTreasury } = require("../utils/treasuryService");
+const { updateUserBalance } = require("../utils/userServices");
+
 
 // Generate OTP
 function generateOTP() {
@@ -64,8 +68,6 @@ const sendOtp = async (req, res) => {
   }
 };
 
-const addCellPhoneBadge = async (data) => { };
-
 const verifyOtp = async (req, res) => {
   const { phoneNumber, otp } = req.body;
   try {
@@ -76,31 +78,43 @@ const verifyOtp = async (req, res) => {
     if (!savedOTP || savedOTP.otp !== otp) throw new Error("Invalid OTP");
 
     if (req.body.legacyEmail && req.body.userUuid) {
-      // const badge = {
-      //   body: {
-      //     uuid: req.body.userUuid,
-      //     type: "cell-phone",
-      //     data: phoneNumber,
-      //     otp: true
-      //   }
-      // }
-      // const otpBadge = await addContactBadge(badge);
-      // if(!otpBadge) throw new Error("Can't add badge from OTP");
-      await User.findOneAndUpdate(
+      const user = await User.findOne(
         {
           uuid: req.body.userUuid,
-        },
-        {
-          isLegacyEmailContactVerified: true,
         }
-      ).exec();
-      const request = {
-        params: {
-          userUuid: req.body.userUuid,
-          otp: true,
-        },
-      };
-      const user = await userInfo(request);
+      );
+      user.role = "user",
+      user.isGuestMode = false,
+      user.ip = "",
+      user.requiredAction = true,
+      user.gmailVerified = true,
+      user.verification = true,
+      user.isLegacyEmailContactVerified = true,
+      await user.save();
+
+      const txID = crypto.randomBytes(11).toString("hex");
+      // Create Ledger
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "User",
+        txFrom: user.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: user.badges[0]?.accountName,
+        // txDescription : "User adds a verification badge"
+      });
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "DAO",
+        txFrom: "DAO Treasury",
+        txTo: user.uuid,
+        txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        txData: user.badges[0]?.accountName, // txDescription : "Incentive for adding badges"
+      });
 
       await createLedger({
         uuid: user.uuid,
@@ -110,15 +124,42 @@ const verifyOtp = async (req, res) => {
         txFrom: user.uuid,
         txTo: "dao",
         txAmount: "0",
-        txData: user.badges[0]?.accountName,
+        txData: user.badges[0]?.accountName, // txDescription : "user logs in"
       });
 
-      return res
-        .status(200)
-        .json({ message: "OTP verification successful", user: user });
-    }
+      // Decrement the Treasury
+      await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
 
-    return res.status(200).json({ message: "OTP verification successful" });
+      // Increment the UserBalance
+      await updateUserBalance({
+        uuid: user.uuid,
+        amount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        inc: true,
+      });
+
+      user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+      user.rewardSchedual.addingBadgeFdx = user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+      await user.save();
+
+      // UserInfo
+      const request = {
+        params: {
+          userUuid: req.body.userUuid,
+          otp: true,
+        },
+      };
+      const userAccount = await userInfo(request);
+
+      // Generate a token
+      const generateToken = createToken({ uuid: req.body.userUuid });
+
+      res.cookie("uuid", req.body.userUuid, cookieConfiguration());
+      res.cookie("jwt", generateToken, cookieConfiguration());
+      res.status(200).json({ userAccount, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false });
+    }
+    else {
+      return res.status(200).json({ message: "OTP verification successful" });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({
