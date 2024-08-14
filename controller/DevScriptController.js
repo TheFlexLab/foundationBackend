@@ -498,17 +498,51 @@ const setPostCounters = async (req, res) => {
 const createGuestLedger = async (req, res) => {
     try {
 
-        const totalBalance = await User.aggregate([
-            {
-                $group: {
-                    _id: null, // Group by null to sum across all documents
-                    totalBalance: { $sum: "$balance" } // Sum the balance field
-                }
-            }
-        ]);
-        
-        const sum = totalBalance.length > 0 ? totalBalance[0].totalBalance : 0;
-        res.status(200).json({message: sum});
+        const users = await User.find({
+            role: "user",
+            badges: []
+        });
+
+        for (const doc of users){
+            const txID = crypto.randomBytes(11).toString("hex");
+            // Create Ledger
+            await createLedger({
+              uuid: doc.uuid,
+              txUserAction: "accountAddedGuestExpired",
+              txID: txID,
+              txAuth: "User",
+              txFrom: doc.uuid,
+              txTo: "DAO",
+              txAmount: 0,
+              txData: "",
+              txDate: Date.now(),
+              txDescription: "Guest User Expired",
+            });
+            // Create Ledger
+            await createLedger({
+              uuid: doc.uuid,
+              txUserAction: "accountAddedGuestExpired",
+              txID: txID,
+              txAuth: "DAO",
+              txFrom: doc.uuid,
+              txTo: "DAO Treasury",
+              txAmount: doc.balance,
+              txDate: Date.now(),
+              txDescription: "Guest User Expired",
+              txData: "",
+              // txDescription : "Incentive for creating a quest"
+            });
+            // Increment the Treasury
+            await updateTreasury({ amount: doc.balance, inc: true });
+            // Decrement the UserBalance
+            await updateUserBalance({
+              uuid: doc.uuid,
+              amount: doc.balance,
+              dec: true,
+            });
+        }
+
+        res.status(200).json({message: "done"});
                 
     } catch (error) {
         console.error(error.message);
