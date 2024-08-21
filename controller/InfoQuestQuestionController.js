@@ -2297,9 +2297,8 @@ const getQuestById = async (req, res) => {
       }
     )
 
-    let resultArray;
     if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
-      result = await hiddenOptions(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+      let result = await hiddenOptions(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
       return res.status(200).json(
         {
           message: "Advance analytics configured successfully.",
@@ -2308,7 +2307,7 @@ const getQuestById = async (req, res) => {
       )
     }
     else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-      result = await badgeCount(uuid, id, badgeCount.oprend, badgeCount.range);
+      let result = await badgeCount(uuid, id, badgeCount.oprend, badgeCount.range);
       return res.status(200).json(
         {
           message: "Advance analytics configured successfully.",
@@ -2317,7 +2316,7 @@ const getQuestById = async (req, res) => {
       )
     }
     else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend !== 0) {
-      result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
+      let result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
       return res.status(200).json(
         {
           message: "Advance analytics configured successfully.",
@@ -2326,7 +2325,7 @@ const getQuestById = async (req, res) => {
       )
     }
     else {
-      resultArray = result1.map((item) => getPercentage(item, page, quest));
+      let resultArray = result1.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
         ...item._doc,
         selectedPercentage: item.selectedPercentage
