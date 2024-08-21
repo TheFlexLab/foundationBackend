@@ -607,7 +607,7 @@ router.post(
    *     tags:
    *       - Info Quest Question
    *     summary: Get all quests with result
-   *     description: This endpoint supports four optional boolean query parameters hide, contributions, target, and badges.
+   *     description: This endpoint supports four optional boolean query parameters hide, badgeCount, target, and badges.
    *     parameters:
    *       - in: query
    *         name: hide
@@ -615,10 +615,10 @@ router.post(
    *           type: boolean
    *         description: Option to hide certain questions.
    *       - in: query
-   *         name: contributions
+   *         name: badgeCount
    *         schema:
    *           type: boolean
-   *         description: Option to include contributions in the analysis.
+   *         description: Option to include badgeCount in the analysis.
    *       - in: query
    *         name: target
    *         schema:
