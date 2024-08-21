@@ -48,7 +48,7 @@ const operators = {
   4: '$ne'   // Not equal to
 };
 
-const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray, infoQuest) => {
+const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, infoQuest) => {
   try {
     const docAlreadyExists = await HiddenOptions.findOne(
       {
@@ -323,7 +323,7 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
         _id: questForeignKey,
       }).populate("getUserBadge", "badges");
       if (!infoQuest) throw new Error("No Quest Exist!");
-      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptions.hiddenOptionsArray, infoQuest);
+      result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptions.hiddenOptionsArray, infoQuest);
       return result;
     }
     else if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
@@ -2296,7 +2296,7 @@ const getQuestById = async (req, res) => {
     )
 
     if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
-      let result = await hiddenOptions(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
       return res.status(200).json(
         {
           message: "Advance analytics configured successfully.",
@@ -3230,7 +3230,7 @@ const analyze = async (req, res) => {
           _id: questForeignKey,
         }).populate("getUserBadge", "badges");
         if (!infoQuest) throw new Error("No Quest Exist!");
-        result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
+        result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
