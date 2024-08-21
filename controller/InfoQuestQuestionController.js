@@ -106,9 +106,7 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray, info
       }
     }
 
-    return {
-      result: finalDoc ? finalDoc : desiredArray
-    }
+    return finalDoc ? finalDoc : desiredArray;
 
   } catch (error) {
     throw error;
@@ -248,7 +246,7 @@ const badgeCount = async (userUuid, questForeignKey, oprend, range) => {
     const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
     const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
 
-    return { result: { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } } };
+    return { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } };
 
   } catch (error) {
     throw error;
@@ -439,7 +437,7 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
         (doc) => !hiddenAnswers.includes(doc.question)
       );
 
-      return { result: { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range } } };
+      return { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range }};
     }
 
   } catch (error) {
