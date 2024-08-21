@@ -2980,8 +2980,14 @@ const badgeCount = async (userUuid, questForeignKey, oprend, range) => {
     const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
     const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
     const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+    const badgeCountDoc = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
 
-    return {result: resultArray};
+    return {result: {...resultArray, oprend: badgeCountDoc.oprend, range: badgeCountDoc.range}};
 
   } catch (error) {
     throw error;
