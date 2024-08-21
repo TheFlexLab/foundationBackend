@@ -2987,7 +2987,7 @@ const badgeCount = async (userUuid, questForeignKey, oprend, range) => {
       }
     )
 
-    return {result: {...resultArray, oprend: badgeCountDoc.oprend, range: badgeCountDoc.range}};
+    return {result: {...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range}}};
 
   } catch (error) {
     throw error;
