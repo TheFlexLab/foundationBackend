@@ -437,7 +437,7 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
         (doc) => !hiddenAnswers.includes(doc.question)
       );
 
-      return { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range }};
+      return { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range } };
     }
 
   } catch (error) {
@@ -3210,27 +3210,62 @@ const analyze = async (req, res) => {
     let result = {};
 
     if (Object.keys(req.query).length === 1 && req.query.hide) {
-      const infoQuest = await InfoQuestQuestions.find({
-        _id: questForeignKey,
-      }).populate("getUserBadge", "badges");
-      if (!infoQuest) throw new Error("No Quest Exist!");
-      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
-      return res.status(200).json(
+      const badgeCountExist = await BadgeCount.findOne(
         {
-          message: "Advance analytics configured successfully.",
-          result: result,
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
         }
       )
+      if (badgeCountExist && badgeCountExist.oprend !== 0) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountExist.oprend, badgeCountExist.range);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
+      else {
+        const infoQuest = await InfoQuestQuestions.find({
+          _id: questForeignKey,
+        }).populate("getUserBadge", "badges");
+        if (!infoQuest) throw new Error("No Quest Exist!");
+        result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
     }
 
     if (Object.keys(req.query).length === 1 && req.query.badgeCount) {
-      result = await badgeCount(userUuid, questForeignKey, oprend, range);
-      return res.status(200).json(
+      const hiddenOptionsExist = await HiddenOptions.findOne(
         {
-          message: "Advance analytics configured successfully.",
-          result: result,
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
         }
       )
+
+      if (hiddenOptionsExist && hiddenOptionsExist.hiddenOptionsArray.length > 0) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsExist.hiddenOptionsArray, oprend, range);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
+      else {
+        result = await badgeCount(userUuid, questForeignKey, oprend, range);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
     }
 
     if (req.query.hide && req.query.badgeCount) {
