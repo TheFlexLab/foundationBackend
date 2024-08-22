@@ -467,10 +467,10 @@ const getAllQuestsWithOpenInfoQuestStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -646,10 +646,10 @@ const getAllQuestsWithAnsweredStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -909,10 +909,10 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : sort === "Most Popular"
-              ? { interactingCounter: -1 }
-              : "createdAt"
+          ? { lastInteractedAt: -1 }
+          : sort === "Most Popular"
+          ? { interactingCounter: -1 }
+          : "createdAt"
       )
       .skip(skip)
       .limit(pageSize)
@@ -930,21 +930,21 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.selectedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.selectedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.contendedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.contendedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1017,7 +1017,9 @@ const getQuestsAll = async (req, res) => {
     filterObj.whichTypeQuestion = type;
   }
 
-  if (media !== "All") {
+  if (media === "None") {
+    filterObj.url = { $exists: true, $size: 0 };
+  } else if (media !== "All") {
     if (media === "Video") {
       filterObj.$or = [
         { url: { $regex: "youtube.com", $options: "i" } },
@@ -1272,12 +1274,12 @@ const getQuestsAll = async (req, res) => {
       sort === "Oldest First"
         ? { createdAt: 1, _id: 1 }
         : sort === "Newest First"
-          ? { createdAt: -1, _id: 1 }
-          : sort === "Last Updated"
-            ? { lastInteractedAt: -1, _id: 1 }
-            : sort === "Most Popular"
-              ? { interactingCounter: -1, _id: 1 }
-              : { createdAt: -1, _id: 1 }
+        ? { createdAt: -1, _id: 1 }
+        : sort === "Last Updated"
+        ? { lastInteractedAt: -1, _id: 1 }
+        : sort === "Most Popular"
+        ? { interactingCounter: -1, _id: 1 }
+        : { createdAt: -1, _id: 1 }
     );
     // query = query.sort(
     //   sort === "Newest First"
@@ -1526,21 +1528,21 @@ const getQuestsAll = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.selectedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.selectedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.contendedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.contendedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1558,7 +1560,7 @@ const getQuestsAll = async (req, res) => {
   //     userUuid: uuid,
   //     questForeignKey: item._id.toString(),
   //   });
-  
+
   //   if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
   //     // Filter out the QuestAnswers based on hiddenOptions.hiddenOptionsArray
   //     item.QuestAnswers = item.QuestAnswers.filter(
@@ -1834,10 +1836,10 @@ const getAllQuestsWithResult = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : sort === "Most Popular"
-              ? { interactingCounter: -1 }
-              : "createdAt"
+          ? { lastInteractedAt: -1 }
+          : sort === "Most Popular"
+          ? { interactingCounter: -1 }
+          : "createdAt"
       ) // Sort by createdAt field in descending order
       .skip(skip)
       .limit(pageSize);
@@ -2248,10 +2250,10 @@ const getAllQuestsWithCompletedStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -2432,10 +2434,10 @@ const getAllQuestsWithChangeAnsStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -2793,17 +2795,14 @@ const getFlickerUrl = async (req, res) => {
 
 const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
   try {
-    const docAlreadyExists = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const docAlreadyExists = await HiddenOptions.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
     if (docAlreadyExists) {
       docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
       await docAlreadyExists.save();
-    }
-    else {
+    } else {
       const hiddenOptions = new HiddenOptions();
       hiddenOptions.userUuid = userUuid;
       hiddenOptions.questForeignKey = questForeignKey;
@@ -2811,12 +2810,10 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
       await hiddenOptions.save();
     }
 
-    const hiddenOptions = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const hiddenOptions = await HiddenOptions.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
 
     const infoQuest = await InfoQuestQuestions.find({
       _id: questForeignKey,
@@ -2824,8 +2821,18 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
     if (!infoQuest) throw new Error("No Quest Exist!");
 
     const resultStartQuest = await getQuestionsWithStatus(infoQuest, userUuid);
-    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(
+      resultStartQuest,
+      userUuid
+    );
+    const resultArray = resultUserQuestSetting.map((item) =>
+      getPercentageHiddenOption(
+        item,
+        null,
+        null,
+        hiddenOptions.hiddenOptionsArray
+      )
+    );
 
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
@@ -2838,9 +2845,12 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
       userQuestSetting: item.userQuestSetting,
     }));
 
-    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
+    hiddenAnswers =
+      hiddenOptions.hiddenOptionsArray.length !== 0
+        ? hiddenOptions.hiddenOptionsArray
+        : null;
     let finalDoc = null;
-    if(hiddenAnswers) {
+    if (hiddenAnswers) {
       const QuestAnswers = desiredArray[0].QuestAnswers.filter(
         (doc) => !hiddenAnswers.includes(doc.question)
       );
@@ -2849,42 +2859,41 @@ const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
         0: {
           ...desiredArray[0],
           QuestAnswers,
-          hiddenAnswers
-        }
-      }
+          hiddenAnswers,
+        },
+      };
     }
 
     return {
-      result : finalDoc ? finalDoc : desiredArray
-    }
-
+      result: finalDoc ? finalDoc : desiredArray,
+    };
   } catch (error) {
     throw error;
   }
-}
+};
 
 const analyze = async (req, res) => {
   try {
-
     const { userUuid, questForeignKey, hiddenOptionsArray } = req.body;
     let result = {};
 
     if (req.query.hide) {
-      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray);
+      result = await hiddenOptions(
+        userUuid,
+        questForeignKey,
+        hiddenOptionsArray
+      );
     }
 
-    res.status(200).json(
-      {
-        message: "Advance analytics applied configured successfully.",
-        result: result,
-      }
-    )
-
+    res.status(200).json({
+      message: "Advance analytics applied configured successfully.",
+      result: result,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `${error.message}` });
   }
-}
+};
 
 module.exports = {
   createInfoQuestQuest,
