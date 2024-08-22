@@ -280,18 +280,42 @@ const getAllDeletedMessage = async (req, res) => {
 
 const draft = async (req, res) => {
   try {
-    const { from, to, subject, message } = req.body;
+    const { from, to, subject, message, id } = req.body;
 
     // check user exist Sender
     const senderUser = await UserModel.findOne({ email: from });
     if (!senderUser) throw new Error("No such User!");
 
-    const sendMessage = await new SendMessage({ ...req.body, type: "draft" });
-    const savedDraftedMessage = await sendMessage.save();
-    if (!savedDraftedMessage)
-      throw new Error("Message Not drafted Successfully!");
+    let draftExist = null;
+    if(id && id !== ""){
+      draftExist = await SendMessage.findOne(
+        {
+          _id: id
+        }
+      );
+    }
 
-    res.status(201).json({ data: savedDraftedMessage });
+    if (draftExist) {
+      draftExist.from = from;
+      draftExist.to = to;
+      draftExist.subject = subject;
+      draftExist.message = message;
+      await draftExist.save();
+      const updatedDraft = await SendMessage.findOne(
+        {
+          _id: id
+        }
+      );
+      return res.status(201).json({ data: updatedDraft });
+    }
+    else {
+      const sendMessage = await new SendMessage({ ...req.body, type: "draft" });
+      const savedDraftedMessage = await sendMessage.save();
+      if (!savedDraftedMessage)
+        throw new Error("Message Not drafted Successfully!");
+
+      return res.status(201).json({ data: savedDraftedMessage });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({

@@ -22,6 +22,7 @@ const noEncDecPersonalKeys = [
   "currentCity",
   "homeTown",
   "relationshipStatus",
+  "sex",
 ];
 
 // Encryption/Decryption Security Purposes.
@@ -259,9 +260,9 @@ const addContactBadge = async (req, res) => {
           },
         });
       }
-        if (usersWithBadge.length !== 0) {
-          throw new Error("Oops! This account is already linked.");
-        }
+      if (usersWithBadge.length !== 0) {
+        throw new Error("Oops! This account is already linked.");
+      }
 
       const userBadges = User.badges;
       let updatedUserBadges;
@@ -295,7 +296,46 @@ const addContactBadge = async (req, res) => {
       }
       // Update the action
       await User.save();
-      
+
+      const txID = crypto.randomBytes(11).toString("hex");
+      // Create Ledger
+      await createLedger({
+        uuid: User.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "User",
+        txFrom: User.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: req.body.type,
+        // txDescription : "User adds a verification badge"
+      });
+      await createLedger({
+        uuid: User.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "DAO",
+        txFrom: "DAO Treasury",
+        txTo: User.uuid,
+        txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        txData: req.body.type,
+        // txDescription : "Incentive for adding badges"
+      });
+      // Decrement the Treasury
+      await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
+
+      // Increment the UserBalance
+      await updateUserBalance({
+        uuid: User.uuid,
+        amount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        inc: true,
+      });
+
+      User.fdxEarned = User.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+      User.rewardSchedual.addingBadgeFdx =
+        User.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+      await User.save();
+
       res.status(200).json({ message: "Badge Added Successfully" });
       return;
     }
@@ -420,20 +460,32 @@ const addBadge = async (req, res) => {
 
     let followers, followings;
 
-    if(req.body.provider === "linkedin"){
-      followers = req.body.data._json.connects ? req.body.data._json.connects : "null";
-      followings = req.body.data._json.connects ? req.body.data._json.connects : "null";
+    if (req.body.provider === "linkedin") {
+      followers = req.body.data._json.connects
+        ? req.body.data._json.connects
+        : "null";
+      followings = req.body.data._json.connects
+        ? req.body.data._json.connects
+        : "null";
     }
 
-    if(req.body.provider === "twitter"){
-      followers = req.body.data._json.followers_count ? req.body.data._json.followers_count : "null";
-      followings = req.body.data._json.friends_count ? req.body.data._json.friends_count : "null";
+    if (req.body.provider === "twitter") {
+      followers = req.body.data._json.followers_count
+        ? req.body.data._json.followers_count
+        : "null";
+      followings = req.body.data._json.friends_count
+        ? req.body.data._json.friends_count
+        : "null";
     }
 
-    if(req.body.provider === "github"){
-      followers = req.body.data._json.followers ? req.body.data._json.followers : "null";
-      followings = req.body.data._json.following ? req.body.data._json.following : "null";
-      console.log(followings, followers)
+    if (req.body.provider === "github") {
+      followers = req.body.data._json.followers
+        ? req.body.data._json.followers
+        : "null";
+      followings = req.body.data._json.following
+        ? req.body.data._json.following
+        : "null";
+      console.log(followings, followers);
     }
 
     const userBadges = User.badges;

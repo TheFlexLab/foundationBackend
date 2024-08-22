@@ -38,7 +38,453 @@ const {
   notification11,
   notification12,
 } = require("../notifications/home");
-const { HiddenOptions } = require("../models/Analyze");
+const { HiddenOptions, BadgeCount } = require("../models/Analyze");
+
+// Badge Count Operators
+const operators = {
+  1: '$gt',  // Greater than
+  2: '$lt',  // Less than
+  3: '$eq',  // Equal to
+  4: '$ne'   // Not equal to
+};
+
+const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, infoQuest) => {
+  try {
+    const docAlreadyExists = await HiddenOptions.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+    if (docAlreadyExists) {
+      docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
+      await docAlreadyExists.save();
+    }
+    else {
+      const hiddenOptions = new HiddenOptions();
+      hiddenOptions.userUuid = userUuid;
+      hiddenOptions.questForeignKey = questForeignKey;
+      hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
+      await hiddenOptions.save();
+    }
+
+    const hiddenOptions = await HiddenOptions.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+
+    const resultStartQuest = await getQuestionsWithStatus(infoQuest, userUuid);
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+
+    const desiredArray = resultArray.map((item) => ({
+      ...item._doc,
+      selectedPercentage: item.selectedPercentage
+        ? item.selectedPercentage
+        : [],
+      contendedPercentage: item.contendedPercentage
+        ? item.contendedPercentage
+        : [],
+      userQuestSetting: item.userQuestSetting,
+    }));
+
+    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
+    let finalDoc = null;
+    if (hiddenAnswers) {
+      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+      finalDoc = {
+        ...desiredArray,
+        0: {
+          ...desiredArray[0],
+          QuestAnswers,
+          hiddenAnswers
+        }
+      }
+    }
+
+    return finalDoc ? finalDoc : desiredArray;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
+  try {
+
+    // If not exist create the analyze settings
+    const docAlreadyExists = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+    if (docAlreadyExists) {
+      docAlreadyExists.oprend = oprend;
+      docAlreadyExists.range = range;
+      await docAlreadyExists.save();
+    }
+    else {
+      const badgeCount = new BadgeCount();
+      badgeCount.userUuid = userUuid;
+      badgeCount.questForeignKey = questForeignKey;
+      badgeCount.oprend = oprend;
+      badgeCount.range = range;
+      await badgeCount.save();
+    }
+
+    const badgeCountDoc = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    );
+
+    const quest = await InfoQuestQuestions.findOne(
+      {
+        _id: questForeignKey
+      }
+    );
+
+    if (badgeCountDoc.oprend === 0) {
+      const resultStartQuest = await getQuestionsWithStatus([quest], userUuid);
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+      return { result: { ...resultArray } };
+    }
+
+    // Assuming `oprend` and `range` are defined
+    const operator = operators[oprend];
+    const startQuests = await StartQuests.aggregate([
+      {
+        $match: {
+          questForeignKey: questForeignKey, // Match the specific questForeignKey
+          $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
+        }
+      },
+      {
+        $lookup: {
+          from: 'users', // The name of the User collection
+          localField: 'uuid', // The field in StartQuests that matches User
+          foreignField: 'uuid', // The field in User to match
+          as: 'userDetails' // The name of the array field to hold matching documents
+        }
+      },
+      {
+        $unwind: '$userDetails' // Unwind the array to deconstruct the documents
+      },
+      {
+        $match: {
+          'userDetails.badges': { $exists: true }, // Ensure the badges field exists
+          $expr: { [operator]: [{ $size: '$userDetails.badges' }, range] } // Match based on badges array length
+        }
+      },
+      {
+        $project: {
+          userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
+        }
+      }
+    ]);
+
+    let result = [
+      {
+        selected: {},
+        contended: {}
+      }
+    ];
+
+    startQuests.forEach(doc => {
+      // Find the most recent `data` object based on the `created` field
+      let recentData = doc.data.reduce((latest, current) => {
+        return new Date(latest.created) > new Date(current.created) ? latest : current;
+      });
+
+      // Handle the first structure (where `selected` is a string)
+      if (typeof recentData.selected === 'string') {
+        if (result[0].selected[recentData.selected]) {
+          result[0].selected[recentData.selected]++;
+        } else {
+          result[0].selected[recentData.selected] = 1;
+        }
+      }
+
+      // Handle the second structure (where `selected` and `contended` are arrays of objects)
+      if (Array.isArray(recentData.selected)) {
+        recentData.selected.forEach(selection => {
+          if (selection && typeof selection === 'object') {
+            Object.keys(selection).forEach(key => {
+              if (key === 'question') {
+                if (result[0].selected[selection[key]]) {
+                  result[0].selected[selection[key]]++;
+                } else {
+                  result[0].selected[selection[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(recentData.contended)) {
+        recentData.contended.forEach(contention => {
+          if (contention && typeof contention === 'object') {
+            Object.keys(contention).forEach(key => {
+              if (key === 'question') {
+                if (result[0].contended[contention[key]]) {
+                  result[0].contended[contention[key]]++;
+                } else {
+                  result[0].contended[contention[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    const questWithFilteredResults = [
+      {
+        ...quest._doc,
+        totalStartQuest: startQuests.length,
+        result
+      }
+    ]
+
+    const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+
+    return { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } };
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsArray, oprend, range) => {
+  try {
+
+    // If Hide Options Doc exist
+    const hiddenOptionsDocAlreadyExists = await HiddenOptions.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+    if (hiddenOptionsDocAlreadyExists) {
+      hiddenOptionsDocAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
+      await hiddenOptionsDocAlreadyExists.save();
+    }
+    else {
+      const hiddenOptions = new HiddenOptions();
+      hiddenOptions.userUuid = userUuid;
+      hiddenOptions.questForeignKey = questForeignKey;
+      hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
+      await hiddenOptions.save();
+    }
+
+    // If Badge Count Doc exist
+    const badgeCountDocAlreadyExists = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+    if (badgeCountDocAlreadyExists) {
+      badgeCountDocAlreadyExists.oprend = oprend;
+      badgeCountDocAlreadyExists.range = range;
+      await badgeCountDocAlreadyExists.save();
+    }
+    else {
+      const badgeCount = new BadgeCount();
+      badgeCount.userUuid = userUuid;
+      badgeCount.questForeignKey = questForeignKey;
+      badgeCount.oprend = oprend;
+      badgeCount.range = range;
+      await badgeCount.save();
+    }
+
+
+    // Filter Setting for Analytics
+    const hiddenOptions = await HiddenOptions.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    );
+
+    const badgeCount = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    );
+
+    const quest = await InfoQuestQuestions.findOne(
+      {
+        _id: questForeignKey
+      }
+    );
+
+    if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
+      const infoQuest = await InfoQuestQuestions.find({
+        _id: questForeignKey,
+      }).populate("getUserBadge", "badges");
+      if (!infoQuest) throw new Error("No Quest Exist!");
+      result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptions.hiddenOptionsArray, infoQuest);
+      return result;
+    }
+    else if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
+      result = await badgeCountfx(userUuid, questForeignKey, badgeCount.oprend, badgeCount.range);
+      return result;
+    }
+    else {
+      // Assuming `oprend` and `range` are defined
+      const operator = operators[badgeCount.oprend];
+      let startQuests = await StartQuests.aggregate([
+        {
+          $match: {
+            questForeignKey: questForeignKey, // Match the specific questForeignKey
+            $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
+          }
+        },
+        {
+          $lookup: {
+            from: 'users', // The name of the User collection
+            localField: 'uuid', // The field in StartQuests that matches User
+            foreignField: 'uuid', // The field in User to match
+            as: 'userDetails' // The name of the array field to hold matching documents
+          }
+        },
+        {
+          $unwind: '$userDetails' // Unwind the array to deconstruct the documents
+        },
+        {
+          $match: {
+            'userDetails.badges': { $exists: true }, // Ensure the badges field exists
+            $expr: { [operator]: [{ $size: '$userDetails.badges' }, badgeCount.range] } // Match based on badges array length
+          }
+        },
+        {
+          $project: {
+            userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
+          }
+        }
+      ]);
+
+      startQuests = startQuests.map(quest => {
+        // Exclude userDetails
+        const { userDetails, ...rest } = quest;
+
+        // Perform additional filtering on 'data' if needed
+        rest.data = rest.data.map(item => {
+          // Handle the first structure (where `selected` is a string)
+          if (typeof item.selected === 'string') {
+            // If selected is a string and matches any in hiddenOptionsArray, remove it
+            if (hiddenOptions.hiddenOptionsArray.includes(item.selected)) {
+              item.selected = null; // or you can remove the property entirely
+            }
+          }
+
+          // Handle the second structure (where `selected` and `contended` are arrays of objects)
+          if (Array.isArray(item.selected)) {
+            item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
+          }
+
+          if (Array.isArray(item.contended)) {
+            item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
+          }
+
+          return item;
+        });
+
+        return rest;
+      });
+
+      let result = [
+        {
+          selected: {},
+          contended: {}
+        }
+      ];
+
+      startQuests.forEach(doc => {
+        // Find the most recent `data` object based on the `created` field
+        let recentData = doc.data.reduce((latest, current) => {
+          return new Date(latest.created) > new Date(current.created) ? latest : current;
+        });
+
+        // Handle the first structure (where `selected` is a string)
+        if (typeof recentData.selected === 'string') {
+          if (result[0].selected[recentData.selected]) {
+            result[0].selected[recentData.selected]++;
+          } else {
+            result[0].selected[recentData.selected] = 1;
+          }
+        }
+
+        // Handle the second structure (where `selected` and `contended` are arrays of objects)
+        if (Array.isArray(recentData.selected)) {
+          recentData.selected.forEach(selection => {
+            if (selection && typeof selection === 'object') {
+              Object.keys(selection).forEach(key => {
+                if (key === 'question') {
+                  if (result[0].selected[selection[key]]) {
+                    result[0].selected[selection[key]]++;
+                  } else {
+                    result[0].selected[selection[key]] = 1;
+                  }
+                }
+              });
+            }
+          });
+        }
+
+        if (Array.isArray(recentData.contended)) {
+          recentData.contended.forEach(contention => {
+            if (contention && typeof contention === 'object') {
+              Object.keys(contention).forEach(key => {
+                if (key === 'question') {
+                  if (result[0].contended[contention[key]]) {
+                    result[0].contended[contention[key]]++;
+                  } else {
+                    result[0].contended[contention[key]] = 1;
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+
+      const questWithFilteredResults = [
+        {
+          ...quest._doc,
+          totalStartQuest: startQuests.length,
+          result
+        }
+      ]
+
+      const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+
+      const hiddenAnswers = hiddenOptions.hiddenOptionsArray;
+      const QuestAnswers = resultArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+
+      return { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range } };
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
 
 const createInfoQuestQuest = async (req, res) => {
   try {
@@ -467,10 +913,10 @@ const getAllQuestsWithOpenInfoQuestStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -646,10 +1092,10 @@ const getAllQuestsWithAnsweredStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -909,10 +1355,10 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : sort === "Most Popular"
-              ? { interactingCounter: -1 }
-              : "createdAt"
+          ? { lastInteractedAt: -1 }
+          : sort === "Most Popular"
+          ? { interactingCounter: -1 }
+          : "createdAt"
       )
       .skip(skip)
       .limit(pageSize)
@@ -930,21 +1376,21 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.selectedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.selectedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.contendedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.contendedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1017,7 +1463,9 @@ const getQuestsAll = async (req, res) => {
     filterObj.whichTypeQuestion = type;
   }
 
-  if (media !== "All") {
+  if (media === "None") {
+    filterObj.url = { $exists: true, $size: 0 };
+  } else if (media !== "All") {
     if (media === "Video") {
       filterObj.$or = [
         { url: { $regex: "youtube.com", $options: "i" } },
@@ -1272,12 +1720,12 @@ const getQuestsAll = async (req, res) => {
       sort === "Oldest First"
         ? { createdAt: 1, _id: 1 }
         : sort === "Newest First"
-          ? { createdAt: -1, _id: 1 }
-          : sort === "Last Updated"
-            ? { lastInteractedAt: -1, _id: 1 }
-            : sort === "Most Popular"
-              ? { interactingCounter: -1, _id: 1 }
-              : { createdAt: -1, _id: 1 }
+        ? { createdAt: -1, _id: 1 }
+        : sort === "Last Updated"
+        ? { lastInteractedAt: -1, _id: 1 }
+        : sort === "Most Popular"
+        ? { interactingCounter: -1, _id: 1 }
+        : { createdAt: -1, _id: 1 }
     );
     // query = query.sort(
     //   sort === "Newest First"
@@ -1526,21 +1974,21 @@ const getQuestsAll = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.selectedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.selectedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-        Object.fromEntries(
-          Object.entries(item.contendedPercentage[0]).sort(
-            (a, b) => parseInt(b[1]) - parseInt(a[1])
-          )
-        ),
-      ]
+          Object.fromEntries(
+            Object.entries(item.contendedPercentage[0]).sort(
+              (a, b) => parseInt(b[1]) - parseInt(a[1])
+            )
+          ),
+        ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -1558,7 +2006,7 @@ const getQuestsAll = async (req, res) => {
   //     userUuid: uuid,
   //     questForeignKey: item._id.toString(),
   //   });
-  
+
   //   if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0) {
   //     // Filter out the QuestAnswers based on hiddenOptions.hiddenOptionsArray
   //     item.QuestAnswers = item.QuestAnswers.filter(
@@ -1834,10 +2282,10 @@ const getAllQuestsWithResult = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : sort === "Most Popular"
-              ? { interactingCounter: -1 }
-              : "createdAt"
+          ? { lastInteractedAt: -1 }
+          : sort === "Most Popular"
+          ? { interactingCounter: -1 }
+          : "createdAt"
       ) // Sort by createdAt field in descending order
       .skip(skip)
       .limit(pageSize);
@@ -1878,55 +2326,82 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    // const hiddenOptions = await HiddenOptions.findOne(
-    //   {
-    //     userUuid: uuid,
-    //     questForeignKey: id,
-    //   }
-    // )
+    const hiddenOptionsDoc = await HiddenOptions.findOne(
+      {
+        userUuid: uuid,
+        questForeignKey: id,
+      }
+    )
 
-    // let resultArray;
-    // let hiddenOptionsUi
-    // if(hiddenOptions && hiddenOptions.hiddenOptionsArray.length !== 0){
-    //   resultArray = result1.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
-    //   hiddenOptionsUi = hiddenOptions.hiddenOptionsArray;
-    // }
-    // else {
-    //   resultArray = result1.map((item) => getPercentage(item, page, quest));
-    // }
+    const badgeCount = await BadgeCount.findOne(
+      {
+        userUuid: uuid,
+        questForeignKey: id,
+      }
+    )
 
-    resultArray = result1.map((item) => getPercentage(item, page, quest));
+    if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && !badgeCount) {
+      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
+      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
+      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
+      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend !== 0) {
+      let result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else {
+      let resultArray = result1.map((item) => getPercentage(item, page, quest));
+      const desiredArray = resultArray.map((item) => ({
+        ...item._doc,
+        selectedPercentage: item.selectedPercentage
+          ? item.selectedPercentage
+          : [],
+        contendedPercentage: item.contendedPercentage
+          ? item.contendedPercentage
+          : [],
+        userQuestSetting: item.userQuestSetting,
+      }));
+      res.status(200).json({
+        data: desiredArray,
+      });
+    }
 
-    const desiredArray = resultArray.map((item) => ({
-      ...item._doc,
-      selectedPercentage: item.selectedPercentage
-        ? item.selectedPercentage
-        : [],
-      contendedPercentage: item.contendedPercentage
-        ? item.contendedPercentage
-        : [],
-      userQuestSetting: item.userQuestSetting,
-    }));
-
-    // const hiddenAnswers = hiddenOptionsUi ? hiddenOptionsUi : null;
-    // let finalDoc = null;
-    // if(hiddenAnswers) {
-    //   const QuestAnswers = desiredArray[0].QuestAnswers.filter(
-    //     (doc) => !hiddenAnswers.includes(doc.question)
-    //   );
-    //   finalDoc = {
-    //     ...desiredArray,
-    //     0: {
-    //       ...desiredArray[0],
-    //       QuestAnswers,
-    //       hiddenAnswers
-    //     }
-    //   }
-    // }
-
-    res.status(200).json({
-      data: desiredArray,
-    });
   } catch (error) {
     //console.log(error);
     res.status(500).json({
@@ -2248,10 +2723,10 @@ const getAllQuestsWithCompletedStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -2432,10 +2907,10 @@ const getAllQuestsWithChangeAnsStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-              ? { lastInteractedAt: -1 }
-              : req.body.sort === "Most Popular"
-                ? { interactingCounter: -1 }
-                : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : req.body.sort === "Most Popular"
+            ? { interactingCounter: -1 }
+            : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -2791,100 +3266,85 @@ const getFlickerUrl = async (req, res) => {
   }
 };
 
-const hiddenOptions = async (userUuid, questForeignKey, hiddenOptionsArray) => {
-  try {
-    const docAlreadyExists = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
-    if (docAlreadyExists) {
-      docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
-      await docAlreadyExists.save();
-    }
-    else {
-      const hiddenOptions = new HiddenOptions();
-      hiddenOptions.userUuid = userUuid;
-      hiddenOptions.questForeignKey = questForeignKey;
-      hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
-      await hiddenOptions.save();
-    }
-
-    const hiddenOptions = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
-
-    const infoQuest = await InfoQuestQuestions.find({
-      _id: questForeignKey,
-    }).populate("getUserBadge", "badges");
-    if (!infoQuest) throw new Error("No Quest Exist!");
-
-    const resultStartQuest = await getQuestionsWithStatus(infoQuest, userUuid);
-    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
-
-    const desiredArray = resultArray.map((item) => ({
-      ...item._doc,
-      selectedPercentage: item.selectedPercentage
-        ? item.selectedPercentage
-        : [],
-      contendedPercentage: item.contendedPercentage
-        ? item.contendedPercentage
-        : [],
-      userQuestSetting: item.userQuestSetting,
-    }));
-
-    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
-    let finalDoc = null;
-    if(hiddenAnswers) {
-      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
-        (doc) => !hiddenAnswers.includes(doc.question)
-      );
-      finalDoc = {
-        ...desiredArray,
-        0: {
-          ...desiredArray[0],
-          QuestAnswers,
-          hiddenAnswers
-        }
-      }
-    }
-
-    return {
-      result : finalDoc ? finalDoc : desiredArray
-    }
-
-  } catch (error) {
-    throw error;
-  }
-}
-
 const analyze = async (req, res) => {
   try {
 
-    const { userUuid, questForeignKey, hiddenOptionsArray } = req.body;
+    const { userUuid, questForeignKey, hiddenOptionsArray, oprend, range } = req.body;
     let result = {};
 
-    if (req.query.hide) {
-      result = await hiddenOptions(userUuid, questForeignKey, hiddenOptionsArray);
+    if (Object.keys(req.query).length === 1 && req.query.hide) {
+      const badgeCountDoc = await BadgeCount.findOne(
+        {
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
+        }
+      );
+      if (badgeCountDoc) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
+      else {
+        const infoQuest = await InfoQuestQuestions.find({
+          _id: questForeignKey,
+        }).populate("getUserBadge", "badges");
+        if (!infoQuest) throw new Error("No Quest Exist!");
+        result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
     }
 
-    res.status(200).json(
-      {
-        message: "Advance analytics applied configured successfully.",
-        result: result,
+    if (Object.keys(req.query).length === 1 && req.query.badgeCount) {
+      const hiddenOptionsDoc = await HiddenOptions.findOne(
+        {
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
+        }
+      )
+      if (hiddenOptionsDoc) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
       }
-    )
+      else {
+        result = await badgeCountfx(userUuid, questForeignKey, oprend, range);
+        return res.status(200).json(
+          {
+            message: "Advance analytics configured successfully.",
+            result: result,
+          }
+        )
+      }
+    }
+
+    if (req.query.hide && req.query.badgeCount) {
+      result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          result: result,
+        }
+      )
+    }
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `${error.message}` });
   }
-}
+};
 
 module.exports = {
   createInfoQuestQuest,
