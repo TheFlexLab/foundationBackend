@@ -748,9 +748,6 @@ const signUpGuestMode = async (req, res) => {
         $set: {
           email: req.body.email,
           password: hashPassword,
-          role: "user",
-          isGuestMode: false,
-          ip: ""
         },
       }
     );
@@ -2243,9 +2240,8 @@ const sendVerifyEmailGuest = async (req, res) => {
     );
 
     // Step 3 - Email the user a unique verification link
-    const url = `${
-      FRONTEND_URL.split(",")[0]
-    }/VerifyCode/?${verificationTokenFull}`;
+    const url = `${FRONTEND_URL.split(",")[0]
+      }/VerifyCode/?${verificationTokenFull}`;
     // console.log("url", url);
     // return res.status(200).json({ url });
 
@@ -2326,9 +2322,8 @@ const sendVerifyEmail = async (req, res) => {
     //console.log("verificationToken", verificationToken);
 
     // Step 3 - Email the user a unique verification link
-    const url = `${
-      FRONTEND_URL.split(",")[0]
-    }/VerifyCode/?${verificationTokenFull}`;
+    const url = `${FRONTEND_URL.split(",")[0]
+      }/VerifyCode/?${verificationTokenFull}`;
     // console.log("url", url);
     // return res.status(200).json({ url });
     // //console.log("url", url);
@@ -2554,45 +2549,39 @@ const verify = async (req, res) => {
         isVerified: true,
         type: type,
       });
-    } else {
-      // Create a Badge
-      user.badges.unshift({
-        accountId: user.email,
-        accountName: "Email",
-        isVerified: true,
+      // Step 3 - Update user verification status to true
+      user.role = "user",
+      user.isGuestMode = false,
+      user.ip = ""
+      user.requiredAction = true;
+      user.gmailVerified = true;
+      user.verification = true;
+      await user.save();
+
+      const txID = crypto.randomBytes(11).toString("hex");
+      // Create Ledger
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "User",
+        txFrom: user.uuid,
+        txTo: "dao",
+        txAmount: "0",
+        txData: user.badges[0]?.accountName,
+        // txDescription : "User adds a verification badge"
       });
-    }
-    // Step 3 - Update user verification status to true
-    user.requiredAction = true;
-    user.gmailVerified = true;
-    user.verification = true;
-    await user.save();
+      await createLedger({
+        uuid: user.uuid,
+        txUserAction: "accountBadgeAdded",
+        txID: txID,
+        txAuth: "DAO",
+        txFrom: "DAO Treasury",
+        txTo: user.uuid,
+        txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        txData: user.badges[0]?.accountName, // txDescription : "Incentive for adding badges"
+      });
 
-    const txID = crypto.randomBytes(11).toString("hex");
-    // Create Ledger
-    await createLedger({
-      uuid: user.uuid,
-      txUserAction: "accountBadgeAdded",
-      txID: txID,
-      txAuth: "User",
-      txFrom: user.uuid,
-      txTo: "dao",
-      txAmount: "0",
-      txData: user.badges[0]?.accountName,
-      // txDescription : "User adds a verification badge"
-    });
-    await createLedger({
-      uuid: user.uuid,
-      txUserAction: "accountBadgeAdded",
-      txID: txID,
-      txAuth: "DAO",
-      txFrom: "DAO Treasury",
-      txTo: user.uuid,
-      txAmount: ACCOUNT_BADGE_ADDED_AMOUNT,
-      txData: user.badges[0]?.accountName, // txDescription : "Incentive for adding badges"
-    });
-
-    if(user.email.includes("@gmail.com")){
       await createLedger({
         uuid: user.uuid,
         txUserAction: "accountLogin",
@@ -2603,34 +2592,38 @@ const verify = async (req, res) => {
         txAmount: "0",
         txData: user.badges[0]?.accountName, // txDescription : "user logs in"
       });
+
+      // Decrement the Treasury
+      await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
+
+      // Increment the UserBalance
+      await updateUserBalance({
+        uuid: user.uuid,
+        amount: ACCOUNT_BADGE_ADDED_AMOUNT,
+        inc: true,
+      });
+
+      user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
+      user.rewardSchedual.addingBadgeFdx =
+        user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
+      // return res.status(200).send({
+      //   message: "Gmail Account verified",
+      //   uuid: req.user.uuid,
+      // });
+      user.verification = true;
+      await user.save();
+      // Generate a token
+      console.log("userUUID", req.user.uuid);
+      const generateToken = createToken({ uuid: req.user.uuid });
+
+      res.cookie("uuid", req.user.uuid, cookieConfiguration());
+      res.cookie("jwt", generateToken, cookieConfiguration());
+      res.status(200).json({ ...user._doc, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false });
     }
-    //
-    // Decrement the Treasury
-    await updateTreasury({ amount: ACCOUNT_BADGE_ADDED_AMOUNT, dec: true });
-
-    // Increment the UserBalance
-    await updateUserBalance({
-      uuid: user.uuid,
-      amount: ACCOUNT_BADGE_ADDED_AMOUNT,
-      inc: true,
-    });
-
-    user.fdxEarned = user.fdxEarned + ACCOUNT_BADGE_ADDED_AMOUNT;
-    user.rewardSchedual.addingBadgeFdx =
-      user.rewardSchedual.addingBadgeFdx + ACCOUNT_BADGE_ADDED_AMOUNT;
-    // return res.status(200).send({
-    //   message: "Gmail Account verified",
-    //   uuid: req.user.uuid,
-    // });
-    user.verification = true;
-    await user.save();
-    // Generate a token
-    console.log("userUUID", req.user.uuid);
-    const generateToken = createToken({ uuid: req.user.uuid });
-
-    res.cookie("uuid", req.user.uuid, cookieConfiguration());
-    res.cookie("jwt", generateToken, cookieConfiguration());
-    res.status(200).json({ ...user._doc, token: generateToken, isGoogleEmail:  user.email.includes("@gmail.com") ? true : false});
+    else {
+      const generateToken = createToken({ uuid: req.user.uuid });
+      res.status(200).json({ ...user._doc, token: generateToken, isGoogleEmail: user.email.includes("@gmail.com") ? true : false });
+    }
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -2677,6 +2670,16 @@ const logout = async (req, res) => {
   try {
     // const uuid = req.cookies.uuid;
     const uuid = req.body.uuid;
+
+    const user = await User.findOne(
+      {
+        uuid: req.body.uuid
+      }
+    );
+    if(user.tempLogout){
+      user.tempLogout = false;
+      await user.save();
+    }
 
     // Create Ledger
     await createLedger({
@@ -2911,8 +2914,7 @@ const getFacebookUserInfo = async (req, res) => {
     // if token found
     // // Second Axios request to get user info using the access token
     const response = await axios.get(
-      `https://graph.facebook.com/v19.0/me?access_token=${
-        responseAccessToken.data.access_token
+      `https://graph.facebook.com/v19.0/me?access_token=${responseAccessToken.data.access_token
       }&fields=${"id,first_name,last_name,middle_name,name,name_format,picture,short_name,email,gender,age_range,friends,link,birthday"}`,
       {
         // headers: {

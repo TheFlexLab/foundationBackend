@@ -7,6 +7,10 @@ const UserQuestSetting = require('../models/UserQuestSetting');
 const StartQuests = require('../models/StartQuests');
 const InfoQuestQuestions = require('../models/InfoQuestQuestions');
 const Ledgers = require('../models/Ledgers');
+const { updateUserBalance } = require("../utils/userServices");
+const { updateTreasury } = require("../utils/treasuryService");
+const crypto = require("crypto");
+const { createLedger } = require("../utils/createLedger");
 
 
 // const excep = async (req, res) => {
@@ -491,6 +495,63 @@ const setPostCounters = async (req, res) => {
     }
 };
 
+const createGuestLedger = async (req, res) => {
+    try {
+
+        const users = await User.find({
+            role: "user",
+            badges: []
+        });
+
+        for (const doc of users){
+            const txID = crypto.randomBytes(11).toString("hex");
+            // Create Ledger
+            await createLedger({
+              uuid: doc.uuid,
+              txUserAction: "accountAddedGuestExpired",
+              txID: txID,
+              txAuth: "User",
+              txFrom: doc.uuid,
+              txTo: "DAO",
+              txAmount: 0,
+              txData: "",
+              txDate: Date.now(),
+              txDescription: "Guest User Expired",
+            });
+            // Create Ledger
+            await createLedger({
+              uuid: doc.uuid,
+              txUserAction: "accountAddedGuestExpired",
+              txID: txID,
+              txAuth: "DAO",
+              txFrom: doc.uuid,
+              txTo: "DAO Treasury",
+              txAmount: doc.balance,
+              txDate: Date.now(),
+              txDescription: "Guest User Expired",
+              txData: "",
+              // txDescription : "Incentive for creating a quest"
+            });
+            // Increment the Treasury
+            await updateTreasury({ amount: doc.balance, inc: true });
+            // Decrement the UserBalance
+            await updateUserBalance({
+              uuid: doc.uuid,
+              amount: doc.balance,
+              dec: true,
+            });
+        }
+
+        res.status(200).json({message: "done"});
+                
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: `An error occurred while updating the feedback: ${error.message}`,
+        });
+    }
+}
+
 module.exports = {
     createUserListForAllUsers,
     dbReset,
@@ -498,4 +559,5 @@ module.exports = {
     userPostSeoSetting,
     setFeedback,
     setPostCounters,
+    createGuestLedger,
 };
