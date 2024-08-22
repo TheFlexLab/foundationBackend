@@ -2348,7 +2348,25 @@ const getQuestById = async (req, res) => {
       }
     )
 
-    if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
+    if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && !badgeCount) {
+      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
+      let result = await badgeCount(uuid, id, badgeCount.oprend, badgeCount.range);
+      return res.status(200).json(
+        {
+          message: "Advance analytics configured successfully.",
+          data: result,
+        }
+      )
+    }
+    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
       let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
       return res.status(200).json(
         {
