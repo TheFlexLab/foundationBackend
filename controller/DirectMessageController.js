@@ -286,11 +286,14 @@ const draft = async (req, res) => {
     const senderUser = await UserModel.findOne({ email: from });
     if (!senderUser) throw new Error("No such User!");
 
-    const draftExist = await SendMessage.findOne(
-      {
-        _id: id
-      }
-    );
+    let draftExist = null;
+    if(id && id !== ""){
+      draftExist = await SendMessage.findOne(
+        {
+          _id: id
+        }
+      );
+    }
 
     if (draftExist) {
       draftExist.from = from;
