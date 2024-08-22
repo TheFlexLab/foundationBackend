@@ -57,14 +57,7 @@ const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, in
       }
     )
     if (docAlreadyExists) {
-      const oldHiddenOption = docAlreadyExists.hiddenOptionsArray;
-      // Add the new element to the oldHiddenOption array
-      const updatedHiddenOptionsArray = [
-        ...oldHiddenOption,
-        hiddenOptionsArray[0]
-      ];
-      // Now, you can assign the updated array back to the object or save it
-      docAlreadyExists.hiddenOptionsArray = updatedHiddenOptionsArray;
+      docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
       await docAlreadyExists.save();
     }
     else {
@@ -283,14 +276,7 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
       }
     )
     if (hiddenOptionsDocAlreadyExists) {
-      const oldHiddenOption = hiddenOptionsDocAlreadyExists.hiddenOptionsArray;
-      // Add the new element to the oldHiddenOption array
-      const updatedHiddenOptionsArray = [
-        ...oldHiddenOption,
-        hiddenOptionsArray[0]
-      ];
-      // Now, you can assign the updated array back to the object or save it
-      hiddenOptionsDocAlreadyExists.hiddenOptionsArray = updatedHiddenOptionsArray;
+      hiddenOptionsDocAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
       await hiddenOptionsDocAlreadyExists.save();
     }
     else {
