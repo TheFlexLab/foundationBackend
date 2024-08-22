@@ -203,35 +203,47 @@ const badgeCount = async (userUuid, questForeignKey, oprend, range) => {
         return new Date(latest.created) > new Date(current.created) ? latest : current;
       });
 
-      // Count the `question` values in `selected`
-      recentData.selected.forEach(selection => {
-        if (selection && typeof selection === 'object') {
-          Object.keys(selection).forEach(key => {
-            if (key === 'question') {
-              if (result[0].selected[selection[key]]) {
-                result[0].selected[selection[key]]++;
-              } else {
-                result[0].selected[selection[key]] = 1;
-              }
-            }
-          });
+      // Handle the first structure (where `selected` is a string)
+      if (typeof recentData.selected === 'string') {
+        if (result[0].selected[recentData.selected]) {
+          result[0].selected[recentData.selected]++;
+        } else {
+          result[0].selected[recentData.selected] = 1;
         }
-      });
+      }
 
-      // Count the `question` values in `contended`
-      recentData.contended.forEach(contention => {
-        if (contention && typeof contention === 'object') {
-          Object.keys(contention).forEach(key => {
-            if (key === 'question') {
-              if (result[0].contended[contention[key]]) {
-                result[0].contended[contention[key]]++;
-              } else {
-                result[0].contended[contention[key]] = 1;
+      // Handle the second structure (where `selected` and `contended` are arrays of objects)
+      if (Array.isArray(recentData.selected)) {
+        recentData.selected.forEach(selection => {
+          if (selection && typeof selection === 'object') {
+            Object.keys(selection).forEach(key => {
+              if (key === 'question') {
+                if (result[0].selected[selection[key]]) {
+                  result[0].selected[selection[key]]++;
+                } else {
+                  result[0].selected[selection[key]] = 1;
+                }
               }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(recentData.contended)) {
+        recentData.contended.forEach(contention => {
+          if (contention && typeof contention === 'object') {
+            Object.keys(contention).forEach(key => {
+              if (key === 'question') {
+                if (result[0].contended[contention[key]]) {
+                  result[0].contended[contention[key]]++;
+                } else {
+                  result[0].contended[contention[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
     });
 
     const questWithFilteredResults = [
@@ -363,16 +375,45 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
           }
         }
       ]);
-      // Exclude the 'userDetails' field manually after retrieving the results
+      // // Exclude the 'userDetails' field manually after retrieving the results
+      // startQuests = startQuests.map(quest => {
+      //   // Exclude userDetails
+      //   const { userDetails, ...rest } = quest;
+      //   // Perform additional filtering on 'data' if needed
+      //   rest.data = rest.data.map(item => {
+      //     item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
+      //     item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
+      //     return item;
+      //   });
+      //   return rest;
+      // });
+
       startQuests = startQuests.map(quest => {
         // Exclude userDetails
         const { userDetails, ...rest } = quest;
+
         // Perform additional filtering on 'data' if needed
         rest.data = rest.data.map(item => {
-          item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
-          item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
+          // Handle the first structure (where `selected` is a string)
+          if (typeof item.selected === 'string') {
+            // If selected is a string and matches any in hiddenOptionsArray, remove it
+            if (hiddenOptions.hiddenOptionsArray.includes(item.selected)) {
+              item.selected = null; // or you can remove the property entirely
+            }
+          }
+
+          // Handle the second structure (where `selected` and `contended` are arrays of objects)
+          if (Array.isArray(item.selected)) {
+            item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
+          }
+
+          if (Array.isArray(item.contended)) {
+            item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
+          }
+
           return item;
         });
+
         return rest;
       });
 
@@ -389,35 +430,47 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
           return new Date(latest.created) > new Date(current.created) ? latest : current;
         });
 
-        // Count the `question` values in `selected`
-        recentData.selected.forEach(selection => {
-          if (selection && typeof selection === 'object') {
-            Object.keys(selection).forEach(key => {
-              if (key === 'question') {
-                if (result[0].selected[selection[key]]) {
-                  result[0].selected[selection[key]]++;
-                } else {
-                  result[0].selected[selection[key]] = 1;
-                }
-              }
-            });
+        // Handle the first structure (where `selected` is a string)
+        if (typeof recentData.selected === 'string') {
+          if (result[0].selected[recentData.selected]) {
+            result[0].selected[recentData.selected]++;
+          } else {
+            result[0].selected[recentData.selected] = 1;
           }
-        });
+        }
 
-        // Count the `question` values in `contended`
-        recentData.contended.forEach(contention => {
-          if (contention && typeof contention === 'object') {
-            Object.keys(contention).forEach(key => {
-              if (key === 'question') {
-                if (result[0].contended[contention[key]]) {
-                  result[0].contended[contention[key]]++;
-                } else {
-                  result[0].contended[contention[key]] = 1;
+        // Handle the second structure (where `selected` and `contended` are arrays of objects)
+        if (Array.isArray(recentData.selected)) {
+          recentData.selected.forEach(selection => {
+            if (selection && typeof selection === 'object') {
+              Object.keys(selection).forEach(key => {
+                if (key === 'question') {
+                  if (result[0].selected[selection[key]]) {
+                    result[0].selected[selection[key]]++;
+                  } else {
+                    result[0].selected[selection[key]] = 1;
+                  }
                 }
-              }
-            });
-          }
-        });
+              });
+            }
+          });
+        }
+
+        if (Array.isArray(recentData.contended)) {
+          recentData.contended.forEach(contention => {
+            if (contention && typeof contention === 'object') {
+              Object.keys(contention).forEach(key => {
+                if (key === 'question') {
+                  if (result[0].contended[contention[key]]) {
+                    result[0].contended[contention[key]]++;
+                  } else {
+                    result[0].contended[contention[key]] = 1;
+                  }
+                }
+              });
+            }
+          });
+        }
       });
 
       const questWithFilteredResults = [
@@ -3210,14 +3263,8 @@ const analyze = async (req, res) => {
     let result = {};
 
     if (Object.keys(req.query).length === 1 && req.query.hide) {
-      const badgeCountExist = await BadgeCount.findOne(
-        {
-          userUuid: userUuid,
-          questForeignKey: questForeignKey,
-        }
-      )
-      if (badgeCountExist && badgeCountExist.oprend !== 0) {
-        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountExist.oprend, badgeCountExist.range);
+      if ((oprend !== undefined && oprend !== null) && (range !== undefined && range !== null)) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
@@ -3241,15 +3288,8 @@ const analyze = async (req, res) => {
     }
 
     if (Object.keys(req.query).length === 1 && req.query.badgeCount) {
-      const hiddenOptionsExist = await HiddenOptions.findOne(
-        {
-          userUuid: userUuid,
-          questForeignKey: questForeignKey,
-        }
-      )
-
-      if (hiddenOptionsExist && hiddenOptionsExist.hiddenOptionsArray.length > 0) {
-        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsExist.hiddenOptionsArray, oprend, range);
+      if (hiddenOptionsArray && hiddenOptionsArray.length > 0) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
