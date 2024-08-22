@@ -57,7 +57,14 @@ const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, in
       }
     )
     if (docAlreadyExists) {
-      docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
+      const oldHiddenOption = docAlreadyExists.hiddenOptionsArray;
+      // Add the new element to the oldHiddenOption array
+      const updatedHiddenOptionsArray = [
+        ...oldHiddenOption,
+        hiddenOptionsArray[0]
+      ];
+      // Now, you can assign the updated array back to the object or save it
+      docAlreadyExists.hiddenOptionsArray = updatedHiddenOptionsArray;
       await docAlreadyExists.save();
     }
     else {
@@ -113,7 +120,7 @@ const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, in
   }
 }
 
-const badgeCount = async (userUuid, questForeignKey, oprend, range) => {
+const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
   try {
 
     // If not exist create the analyze settings
@@ -276,7 +283,14 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
       }
     )
     if (hiddenOptionsDocAlreadyExists) {
-      hiddenOptionsDocAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
+      const oldHiddenOption = hiddenOptionsDocAlreadyExists.hiddenOptionsArray;
+      // Add the new element to the oldHiddenOption array
+      const updatedHiddenOptionsArray = [
+        ...oldHiddenOption,
+        hiddenOptionsArray[0]
+      ];
+      // Now, you can assign the updated array back to the object or save it
+      hiddenOptionsDocAlreadyExists.hiddenOptionsArray = updatedHiddenOptionsArray;
       await hiddenOptionsDocAlreadyExists.save();
     }
     else {
@@ -339,7 +353,7 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
       return result;
     }
     else if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-      result = await badgeCount(userUuid, questForeignKey, badgeCount.oprend, badgeCount.range);
+      result = await badgeCountfx(userUuid, questForeignKey, badgeCount.oprend, badgeCount.range);
       return result;
     }
     else {
@@ -375,18 +389,6 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
           }
         }
       ]);
-      // // Exclude the 'userDetails' field manually after retrieving the results
-      // startQuests = startQuests.map(quest => {
-      //   // Exclude userDetails
-      //   const { userDetails, ...rest } = quest;
-      //   // Perform additional filtering on 'data' if needed
-      //   rest.data = rest.data.map(item => {
-      //     item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
-      //     item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
-      //     return item;
-      //   });
-      //   return rest;
-      // });
 
       startQuests = startQuests.map(quest => {
         // Exclude userDetails
@@ -2358,7 +2360,7 @@ const getQuestById = async (req, res) => {
       )
     }
     else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
-      let result = await badgeCount(uuid, id, badgeCount.oprend, badgeCount.range);
+      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
       return res.status(200).json(
         {
           message: "Advance analytics configured successfully.",
@@ -2376,7 +2378,7 @@ const getQuestById = async (req, res) => {
       )
     }
     else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-      let result = await badgeCount(uuid, id, badgeCount.oprend, badgeCount.range);
+      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
       return res.status(200).json(
         {
           message: "Advance analytics configured successfully.",
@@ -3328,7 +3330,7 @@ const analyze = async (req, res) => {
         )
       }
       else {
-        result = await badgeCount(userUuid, questForeignKey, oprend, range);
+        result = await badgeCountfx(userUuid, questForeignKey, oprend, range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
