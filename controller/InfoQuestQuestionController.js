@@ -3281,8 +3281,14 @@ const analyze = async (req, res) => {
     let result = {};
 
     if (Object.keys(req.query).length === 1 && req.query.hide) {
-      if ((oprend !== undefined && oprend !== null) && (range !== undefined && range !== null)) {
-        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
+      const badgeCountDoc = await BadgeCount.findOne(
+        {
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
+        }
+      );
+      if (badgeCountDoc) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
@@ -3306,8 +3312,14 @@ const analyze = async (req, res) => {
     }
 
     if (Object.keys(req.query).length === 1 && req.query.badgeCount) {
-      if (hiddenOptionsArray && hiddenOptionsArray.length > 0) {
-        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
+      const hiddenOptionsDoc = await HiddenOptions.findOne(
+        {
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
+        }
+      )
+      if (hiddenOptionsDoc) {
+        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
