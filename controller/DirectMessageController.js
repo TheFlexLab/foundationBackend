@@ -309,7 +309,7 @@ const draft = async (req, res) => {
       return res.status(201).json({ data: updatedDraft });
     }
     else {
-      const sendMessage = await new SendMessage({ ...req.body, type: "draft" });
+      const sendMessage = await new SendMessage({ from: from, to: to, subject: subject, message: message, type: "draft" });
       const savedDraftedMessage = await sendMessage.save();
       if (!savedDraftedMessage)
         throw new Error("Message Not drafted Successfully!");
