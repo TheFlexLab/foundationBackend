@@ -7,7 +7,7 @@ const crypto = require("crypto");
 
 const send = async (req, res) => {
   try {
-    const { from, to, subject, message } = req.body;
+    const { from, to, subject, message, draftId } = req.body;
 
     // check user exist Sender
     const senderUser = await UserModel.findOne({ email: from });
@@ -40,8 +40,22 @@ const send = async (req, res) => {
     //   dec: true,
     // });
 
-    const sendMessage = await new SendMessage({ ...req.body });
-    const savedSendMessage = await sendMessage.save();
+    let savedSendMessage;
+    if(draftId === "") {
+      const sendMessage = await new SendMessage({ from: from, to: to, subject: subject, message: message, type: "sent" });
+      savedSendMessage = await sendMessage.save();
+    }
+    else {
+      savedSendMessage = await SendMessage.findOneAndUpdate(
+        {
+          _id: draftId,
+        },
+        {
+          type: "sent"
+        }
+      );
+    }
+
     if (!savedSendMessage) throw new Error("Message Not Send Successfully!");
 
     const receiveMessage = await new ReceiveMessage({
@@ -215,7 +229,13 @@ const trashMessage = async (req, res) => {
         { $set: { isDeleted: true } },
         { new: true }
       );
-      if (!message) throw new Error("Trash failed!");
+      const sentId = message.senderMessageId;
+      const sentMessageDeleteCount = await SendMessage.findOneAndUpdate(
+        { _id: sentId },
+        { $inc: { deleteCount: 1 } },
+        { new: true }
+      );
+      if (!message || !sentMessageDeleteCount ) throw new Error("Trash failed!");
     }
     res.status(200).json({ data: message, msg: "Successfully trashed!" });
   } catch (error) {
@@ -287,10 +307,11 @@ const draft = async (req, res) => {
     if (!senderUser) throw new Error("No such User!");
 
     let draftExist = null;
-    if(id && id !== ""){
+    if (id && id !== "") {
       draftExist = await SendMessage.findOne(
         {
-          _id: id
+          _id: id,
+          type: "draft"
         }
       );
     }
@@ -300,6 +321,7 @@ const draft = async (req, res) => {
       draftExist.to = to;
       draftExist.subject = subject;
       draftExist.message = message;
+      draftExist.type = "draft"
       await draftExist.save();
       const updatedDraft = await SendMessage.findOne(
         {
