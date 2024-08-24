@@ -208,10 +208,6 @@
     {
         "name":" REDIS_URL",
         "value":"rediss://foundation-backend-dev-cache-1msxlb.serverless.use2.cache.amazonaws.com:6379"
-    },
-    {
-        "name": "MAINTENANCE",
-        "value": "true"
     }
 ],
             "environmentFiles": [],
