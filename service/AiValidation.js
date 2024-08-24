@@ -32,6 +32,28 @@ module.exports.removeTrailingPeriods = (sentence) => {
   return sentence.replace(regex, "");
 };
 
+module.exports.replacePeriods = (sentence) => {
+  // Check if the sentence contains periods
+  if (!sentence.includes('.')) {
+    return sentence; // No periods to replace
+  }
+
+  // Define the fullwidth full stop character
+  const fullwidthFullStop = '．';
+  
+  // Replace '.' with '．' and handle trailing spaces
+  const replacedSentence = sentence.replace(/(\.\s?)/g, (match, p1) => {
+    // If there is a space after the period, replace both the period and space
+    if (p1.endsWith(' ')) {
+      return fullwidthFullStop;
+    }
+    // If there's no space after the period, replace only the period
+    return fullwidthFullStop;
+  });
+  
+  return replacedSentence;
+};
+
 module.exports.removeCorrected = (inputString) => {
   const regex = /Corrected: /gi;
   return inputString.replace(regex, "");

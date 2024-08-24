@@ -20,6 +20,7 @@ const {
   extractAndSanitizeDollar,
   capitalizeSentence,
   checkTopicMasterArray,
+  replacePeriods,
 } = require("../service/AiValidation");
 const QuestTopics = require("../models/QuestTopics");
 const OpenAI = require("openai");
@@ -73,6 +74,7 @@ async function handleRequest(
 
     if (callType == 1 || callType == 2 || callType == 10) {
       userMessage = removeTrailingPeriods(userMessage);
+      userMessage = replacePeriods(userMessage);
       userMessage = removeTrailingQuestionMarks(userMessage);
       userMessage = userMessage.toLowerCase();
     }
@@ -154,6 +156,7 @@ function checkResponse(responseData, userMessage, callType, req, res) {
     if (filtered == "Correct.") filtered = userMessage;
     filtered = capitalizeFirstLetter(filtered);
     filtered = removeTrailingPeriods(filtered);
+    filtered = replacePeriods(filtered);
     filtered = removeTrailingQuestionMarks(filtered);
     // filtered = extractAndSanitizeDollar(filtered);
     // filtered = numberToWords(filtered)
@@ -161,6 +164,7 @@ function checkResponse(responseData, userMessage, callType, req, res) {
 
   if (callType == 3) {
     filtered = removeTrailingPeriods(filtered);
+    filtered = replacePeriods(filtered);
     filtered = capitalizeSentence(filtered);
     filtered = checkTopicMasterArray(filtered);
     const found = checkNonsenseInTopics(filtered);
