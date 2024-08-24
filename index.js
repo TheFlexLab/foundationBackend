@@ -34,5 +34,5 @@ app.listen(port, "0.0.0.0", () => {
 });
 
 app.get("/", (req, res) => {
-  res.status(200).send("Everything is OK");
+  res.status(200).send("Everything is OK-v1");
 });
