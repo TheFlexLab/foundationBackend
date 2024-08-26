@@ -4192,7 +4192,7 @@ const analyze = async (req, res) => {
           questForeignKey: questForeignKey,
         }
       );
-      if (badgeCountDoc && badgeCountDoc.oprend > 0) {
+      if (badgeCountDoc) {
         result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
         return res.status(200).json(
           {
@@ -4223,7 +4223,7 @@ const analyze = async (req, res) => {
           questForeignKey: questForeignKey,
         }
       )
-      if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0) {
+      if (hiddenOptionsDoc) {
         result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
         return res.status(200).json(
           {
