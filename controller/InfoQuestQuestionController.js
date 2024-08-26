@@ -4307,7 +4307,7 @@ const analyze = async (req, res) => {
         )
       }
       else if (badgeCountDoc && badgeCountDoc.oprend !== 0) {
-        result = await badgeCountTarget(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
+        result = await badgeCountTarget(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, oprend, range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
