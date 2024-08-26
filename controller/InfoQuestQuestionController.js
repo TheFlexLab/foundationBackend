@@ -863,7 +863,7 @@ const hiddenOptionsTarget = async (userUuid, questForeignKey, hiddenOptionsArray
   }
 }
 
-const badgeCountTarget = async (userUuid, questForeignKey, oprend, range, targetedQuestForeignKey, targetedOptionsArray) => {
+const badgeCountTarget = async (userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, oprend, range) => {
   try {
 
     const infoQuest = await InfoQuestQuestions.findOne({
@@ -4192,7 +4192,7 @@ const analyze = async (req, res) => {
           questForeignKey: questForeignKey,
         }
       );
-      if (badgeCountDoc) {
+      if (badgeCountDoc && badgeCountDoc.oprend > 0) {
         result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
         return res.status(200).json(
           {
@@ -4223,7 +4223,7 @@ const analyze = async (req, res) => {
           questForeignKey: questForeignKey,
         }
       )
-      if (hiddenOptionsDoc) {
+      if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0) {
         result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
         return res.status(200).json(
           {
@@ -4306,8 +4306,9 @@ const analyze = async (req, res) => {
           }
         )
       }
-      else if (badgeCountDoc && badgeCountDoc.oprend !== 0) {
-        result = await badgeCountTarget(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, oprend, range);
+      else if (badgeCountDoc && badgeCountDoc.oprend > 0) {
+        console.log(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, oprend, range);
+        result = await badgeCountTarget(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
         return res.status(200).json(
           {
             message: "Advance analytics configured successfully.",
