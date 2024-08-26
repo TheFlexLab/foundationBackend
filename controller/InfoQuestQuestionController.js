@@ -42,25 +42,27 @@ const { HiddenOptions, BadgeCount } = require("../models/Analyze");
 
 // Badge Count Operators
 const operators = {
-  1: '$gt',  // Greater than
-  2: '$lt',  // Less than
-  3: '$eq',  // Equal to
-  4: '$ne'   // Not equal to
+  1: "$gt", // Greater than
+  2: "$lt", // Less than
+  3: "$eq", // Equal to
+  4: "$ne", // Not equal to
 };
 
-const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, infoQuest) => {
+const hiddenOptionsfx = async (
+  userUuid,
+  questForeignKey,
+  hiddenOptionsArray,
+  infoQuest
+) => {
   try {
-    const docAlreadyExists = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const docAlreadyExists = await HiddenOptions.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
     if (docAlreadyExists) {
       docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
       await docAlreadyExists.save();
-    }
-    else {
+    } else {
       const hiddenOptions = new HiddenOptions();
       hiddenOptions.userUuid = userUuid;
       hiddenOptions.questForeignKey = questForeignKey;
@@ -68,16 +70,24 @@ const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, in
       await hiddenOptions.save();
     }
 
-    const hiddenOptions = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const hiddenOptions = await HiddenOptions.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
 
     const resultStartQuest = await getQuestionsWithStatus(infoQuest, userUuid);
-    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(
+      resultStartQuest,
+      userUuid
+    );
+    const resultArray = resultUserQuestSetting.map((item) =>
+      getPercentageHiddenOption(
+        item,
+        null,
+        null,
+        hiddenOptions.hiddenOptionsArray
+      )
+    );
 
     const desiredArray = resultArray.map((item) => ({
       ...item._doc,
@@ -90,7 +100,10 @@ const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, in
       userQuestSetting: item.userQuestSetting,
     }));
 
-    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
+    hiddenAnswers =
+      hiddenOptions.hiddenOptionsArray.length !== 0
+        ? hiddenOptions.hiddenOptionsArray
+        : null;
     let finalDoc = null;
     if (hiddenAnswers) {
       const QuestAnswers = desiredArray[0].QuestAnswers.filter(
@@ -101,34 +114,29 @@ const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, in
         0: {
           ...desiredArray[0],
           QuestAnswers,
-          hiddenAnswers
-        }
-      }
+          hiddenAnswers,
+        },
+      };
     }
 
     return finalDoc ? finalDoc : desiredArray;
-
   } catch (error) {
     throw error;
   }
-}
+};
 
 const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
   try {
-
     // If not exist create the analyze settings
-    const docAlreadyExists = await BadgeCount.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const docAlreadyExists = await BadgeCount.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
     if (docAlreadyExists) {
       docAlreadyExists.oprend = oprend;
       docAlreadyExists.range = range;
       await docAlreadyExists.save();
-    }
-    else {
+    } else {
       const badgeCount = new BadgeCount();
       badgeCount.userUuid = userUuid;
       badgeCount.questForeignKey = questForeignKey;
@@ -137,23 +145,24 @@ const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
       await badgeCount.save();
     }
 
-    const badgeCountDoc = await BadgeCount.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    );
+    const badgeCountDoc = await BadgeCount.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
 
-    const quest = await InfoQuestQuestions.findOne(
-      {
-        _id: questForeignKey
-      }
-    );
+    const quest = await InfoQuestQuestions.findOne({
+      _id: questForeignKey,
+    });
 
     if (badgeCountDoc.oprend === 0) {
       const resultStartQuest = await getQuestionsWithStatus([quest], userUuid);
-      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(
+        resultStartQuest,
+        userUuid
+      );
+      const resultArray = resultUserQuestSetting.map((item) =>
+        getPercentageHiddenOption(item, null, null, [])
+      );
       return { result: { ...resultArray } };
     }
 
@@ -163,48 +172,50 @@ const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
       {
         $match: {
           questForeignKey: questForeignKey, // Match the specific questForeignKey
-          $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
-        }
+          $expr: { $gt: [{ $size: "$data" }, 0] }, // Ensure the data array length is greater than 0
+        },
       },
       {
         $lookup: {
-          from: 'users', // The name of the User collection
-          localField: 'uuid', // The field in StartQuests that matches User
-          foreignField: 'uuid', // The field in User to match
-          as: 'userDetails' // The name of the array field to hold matching documents
-        }
+          from: "users", // The name of the User collection
+          localField: "uuid", // The field in StartQuests that matches User
+          foreignField: "uuid", // The field in User to match
+          as: "userDetails", // The name of the array field to hold matching documents
+        },
       },
       {
-        $unwind: '$userDetails' // Unwind the array to deconstruct the documents
+        $unwind: "$userDetails", // Unwind the array to deconstruct the documents
       },
       {
         $match: {
-          'userDetails.badges': { $exists: true }, // Ensure the badges field exists
-          $expr: { [operator]: [{ $size: '$userDetails.badges' }, range] } // Match based on badges array length
-        }
+          "userDetails.badges": { $exists: true }, // Ensure the badges field exists
+          $expr: { [operator]: [{ $size: "$userDetails.badges" }, range] }, // Match based on badges array length
+        },
       },
       {
         $project: {
-          userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
-        }
-      }
+          userDetails: 0, // Optionally exclude userDetails if you don't need it in the result
+        },
+      },
     ]);
 
     let result = [
       {
         selected: {},
-        contended: {}
-      }
+        contended: {},
+      },
     ];
 
-    startQuests.forEach(doc => {
+    startQuests.forEach((doc) => {
       // Find the most recent `data` object based on the `created` field
       let recentData = doc.data.reduce((latest, current) => {
-        return new Date(latest.created) > new Date(current.created) ? latest : current;
+        return new Date(latest.created) > new Date(current.created)
+          ? latest
+          : current;
       });
 
       // Handle the first structure (where `selected` is a string)
-      if (typeof recentData.selected === 'string') {
+      if (typeof recentData.selected === "string") {
         if (result[0].selected[recentData.selected]) {
           result[0].selected[recentData.selected]++;
         } else {
@@ -214,10 +225,10 @@ const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
 
       // Handle the second structure (where `selected` and `contended` are arrays of objects)
       if (Array.isArray(recentData.selected)) {
-        recentData.selected.forEach(selection => {
-          if (selection && typeof selection === 'object') {
-            Object.keys(selection).forEach(key => {
-              if (key === 'question') {
+        recentData.selected.forEach((selection) => {
+          if (selection && typeof selection === "object") {
+            Object.keys(selection).forEach((key) => {
+              if (key === "question") {
                 if (result[0].selected[selection[key]]) {
                   result[0].selected[selection[key]]++;
                 } else {
@@ -230,10 +241,10 @@ const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
       }
 
       if (Array.isArray(recentData.contended)) {
-        recentData.contended.forEach(contention => {
-          if (contention && typeof contention === 'object') {
-            Object.keys(contention).forEach(key => {
-              if (key === 'question') {
+        recentData.contended.forEach((contention) => {
+          if (contention && typeof contention === "object") {
+            Object.keys(contention).forEach((key) => {
+              if (key === "question") {
                 if (result[0].contended[contention[key]]) {
                   result[0].contended[contention[key]]++;
                 } else {
@@ -250,36 +261,52 @@ const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
       {
         ...quest._doc,
         totalStartQuest: startQuests.length,
-        result
-      }
-    ]
+        result,
+      },
+    ];
 
-    const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+    const resultStartQuest = await getQuestionsWithStatus(
+      questWithFilteredResults,
+      userUuid
+    );
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(
+      resultStartQuest,
+      userUuid
+    );
+    const resultArray = resultUserQuestSetting.map((item) =>
+      getPercentageHiddenOption(item, null, null, [])
+    );
 
-    return { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } };
-
+    return {
+      ...resultArray,
+      0: {
+        ...resultArray[0],
+        oprend: badgeCountDoc.oprend,
+        range: badgeCountDoc.range,
+      },
+    };
   } catch (error) {
     throw error;
   }
-}
+};
 
-const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsArray, oprend, range) => {
+const hiddenOptionsBadgeCount = async (
+  userUuid,
+  questForeignKey,
+  hiddenOptionsArray,
+  oprend,
+  range
+) => {
   try {
-
     // If Hide Options Doc exist
-    const hiddenOptionsDocAlreadyExists = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const hiddenOptionsDocAlreadyExists = await HiddenOptions.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
     if (hiddenOptionsDocAlreadyExists) {
       hiddenOptionsDocAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
       await hiddenOptionsDocAlreadyExists.save();
-    }
-    else {
+    } else {
       const hiddenOptions = new HiddenOptions();
       hiddenOptions.userUuid = userUuid;
       hiddenOptions.questForeignKey = questForeignKey;
@@ -288,18 +315,15 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
     }
 
     // If Badge Count Doc exist
-    const badgeCountDocAlreadyExists = await BadgeCount.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
+    const badgeCountDocAlreadyExists = await BadgeCount.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
     if (badgeCountDocAlreadyExists) {
       badgeCountDocAlreadyExists.oprend = oprend;
       badgeCountDocAlreadyExists.range = range;
       await badgeCountDocAlreadyExists.save();
-    }
-    else {
+    } else {
       const badgeCount = new BadgeCount();
       badgeCount.userUuid = userUuid;
       badgeCount.questForeignKey = questForeignKey;
@@ -308,82 +332,95 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
       await badgeCount.save();
     }
 
-
     // Filter Setting for Analytics
-    const hiddenOptions = await HiddenOptions.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    );
+    const hiddenOptions = await HiddenOptions.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
 
-    const badgeCount = await BadgeCount.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    );
+    const badgeCount = await BadgeCount.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
 
-    const quest = await InfoQuestQuestions.findOne(
-      {
-        _id: questForeignKey
-      }
-    );
+    const quest = await InfoQuestQuestions.findOne({
+      _id: questForeignKey,
+    });
 
-    if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
+    if (
+      hiddenOptions &&
+      hiddenOptions.hiddenOptionsArray.length > 0 &&
+      badgeCount &&
+      badgeCount.oprend === 0
+    ) {
       const infoQuest = await InfoQuestQuestions.find({
         _id: questForeignKey,
       }).populate("getUserBadge", "badges");
       if (!infoQuest) throw new Error("No Quest Exist!");
-      result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptions.hiddenOptionsArray, infoQuest);
+      result = await hiddenOptionsfx(
+        userUuid,
+        questForeignKey,
+        hiddenOptions.hiddenOptionsArray,
+        infoQuest
+      );
       return result;
-    }
-    else if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-      result = await badgeCountfx(userUuid, questForeignKey, badgeCount.oprend, badgeCount.range);
+    } else if (
+      hiddenOptions &&
+      hiddenOptions.hiddenOptionsArray.length === 0 &&
+      badgeCount &&
+      badgeCount.oprend !== 0
+    ) {
+      result = await badgeCountfx(
+        userUuid,
+        questForeignKey,
+        badgeCount.oprend,
+        badgeCount.range
+      );
       return result;
-    }
-    else {
+    } else {
       // Assuming `oprend` and `range` are defined
       const operator = operators[badgeCount.oprend];
       let startQuests = await StartQuests.aggregate([
         {
           $match: {
             questForeignKey: questForeignKey, // Match the specific questForeignKey
-            $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
-          }
+            $expr: { $gt: [{ $size: "$data" }, 0] }, // Ensure the data array length is greater than 0
+          },
         },
         {
           $lookup: {
-            from: 'users', // The name of the User collection
-            localField: 'uuid', // The field in StartQuests that matches User
-            foreignField: 'uuid', // The field in User to match
-            as: 'userDetails' // The name of the array field to hold matching documents
-          }
+            from: "users", // The name of the User collection
+            localField: "uuid", // The field in StartQuests that matches User
+            foreignField: "uuid", // The field in User to match
+            as: "userDetails", // The name of the array field to hold matching documents
+          },
         },
         {
-          $unwind: '$userDetails' // Unwind the array to deconstruct the documents
+          $unwind: "$userDetails", // Unwind the array to deconstruct the documents
         },
         {
           $match: {
-            'userDetails.badges': { $exists: true }, // Ensure the badges field exists
-            $expr: { [operator]: [{ $size: '$userDetails.badges' }, badgeCount.range] } // Match based on badges array length
-          }
+            "userDetails.badges": { $exists: true }, // Ensure the badges field exists
+            $expr: {
+              [operator]: [{ $size: "$userDetails.badges" }, badgeCount.range],
+            }, // Match based on badges array length
+          },
         },
         {
           $project: {
-            userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
-          }
-        }
+            userDetails: 0, // Optionally exclude userDetails if you don't need it in the result
+          },
+        },
       ]);
 
-      startQuests = startQuests.map(quest => {
+      startQuests = startQuests.map((quest) => {
         // Exclude userDetails
         const { userDetails, ...rest } = quest;
 
         // Perform additional filtering on 'data' if needed
-        rest.data = rest.data.map(item => {
+        rest.data = rest.data.map((item) => {
           // Handle the first structure (where `selected` is a string)
-          if (typeof item.selected === 'string') {
+          if (typeof item.selected === "string") {
             // If selected is a string and matches any in hiddenOptionsArray, remove it
             if (hiddenOptions.hiddenOptionsArray.includes(item.selected)) {
               item.selected = null; // or you can remove the property entirely
@@ -392,11 +429,15 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
 
           // Handle the second structure (where `selected` and `contended` are arrays of objects)
           if (Array.isArray(item.selected)) {
-            item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
+            item.selected = item.selected.filter(
+              (sel) => !hiddenOptions.hiddenOptionsArray.includes(sel.question)
+            );
           }
 
           if (Array.isArray(item.contended)) {
-            item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
+            item.contended = item.contended.filter(
+              (con) => !hiddenOptions.hiddenOptionsArray.includes(con.question)
+            );
           }
 
           return item;
@@ -408,18 +449,20 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
       let result = [
         {
           selected: {},
-          contended: {}
-        }
+          contended: {},
+        },
       ];
 
-      startQuests.forEach(doc => {
+      startQuests.forEach((doc) => {
         // Find the most recent `data` object based on the `created` field
         let recentData = doc.data.reduce((latest, current) => {
-          return new Date(latest.created) > new Date(current.created) ? latest : current;
+          return new Date(latest.created) > new Date(current.created)
+            ? latest
+            : current;
         });
 
         // Handle the first structure (where `selected` is a string)
-        if (typeof recentData.selected === 'string') {
+        if (typeof recentData.selected === "string") {
           if (result[0].selected[recentData.selected]) {
             result[0].selected[recentData.selected]++;
           } else {
@@ -429,10 +472,10 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
 
         // Handle the second structure (where `selected` and `contended` are arrays of objects)
         if (Array.isArray(recentData.selected)) {
-          recentData.selected.forEach(selection => {
-            if (selection && typeof selection === 'object') {
-              Object.keys(selection).forEach(key => {
-                if (key === 'question') {
+          recentData.selected.forEach((selection) => {
+            if (selection && typeof selection === "object") {
+              Object.keys(selection).forEach((key) => {
+                if (key === "question") {
                   if (result[0].selected[selection[key]]) {
                     result[0].selected[selection[key]]++;
                   } else {
@@ -445,10 +488,10 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
         }
 
         if (Array.isArray(recentData.contended)) {
-          recentData.contended.forEach(contention => {
-            if (contention && typeof contention === 'object') {
-              Object.keys(contention).forEach(key => {
-                if (key === 'question') {
+          recentData.contended.forEach((contention) => {
+            if (contention && typeof contention === "object") {
+              Object.keys(contention).forEach((key) => {
+                if (key === "question") {
                   if (result[0].contended[contention[key]]) {
                     result[0].contended[contention[key]]++;
                   } else {
@@ -465,26 +508,42 @@ const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsA
         {
           ...quest._doc,
           totalStartQuest: startQuests.length,
-          result
-        }
-      ]
+          result,
+        },
+      ];
 
-      const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+      const resultStartQuest = await getQuestionsWithStatus(
+        questWithFilteredResults,
+        userUuid
+      );
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(
+        resultStartQuest,
+        userUuid
+      );
+      const resultArray = resultUserQuestSetting.map((item) =>
+        getPercentageHiddenOption(item, null, null, [])
+      );
 
       const hiddenAnswers = hiddenOptions.hiddenOptionsArray;
       const QuestAnswers = resultArray[0].QuestAnswers.filter(
         (doc) => !hiddenAnswers.includes(doc.question)
       );
 
-      return { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range } };
+      return {
+        ...resultArray,
+        0: {
+          ...resultArray[0],
+          hiddenAnswers,
+          QuestAnswers,
+          oprend: badgeCount.oprend,
+          range: badgeCount.range,
+        },
+      };
     }
-
   } catch (error) {
     throw error;
   }
-}
+};
 
 const createInfoQuestQuest = async (req, res) => {
   try {
@@ -2326,66 +2385,92 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    const hiddenOptionsDoc = await HiddenOptions.findOne(
-      {
-        userUuid: uuid,
-        questForeignKey: id,
-      }
-    )
+    const hiddenOptionsDoc = await HiddenOptions.findOne({
+      userUuid: uuid,
+      questForeignKey: id,
+    });
 
-    const badgeCount = await BadgeCount.findOne(
-      {
-        userUuid: uuid,
-        questForeignKey: id,
-      }
-    )
+    const badgeCount = await BadgeCount.findOne({
+      userUuid: uuid,
+      questForeignKey: id,
+    });
 
-    if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && !badgeCount) {
-      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
-      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
-      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend !== 0) {
-      let result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else {
+    if (
+      hiddenOptionsDoc &&
+      hiddenOptionsDoc.hiddenOptionsArray.length > 0 &&
+      !badgeCount
+    ) {
+      let result = await hiddenOptionsfx(
+        uuid,
+        id,
+        hiddenOptionsDoc.hiddenOptionsArray,
+        infoQuest
+      );
+      return res.status(200).json({
+        message: "Advance analytics configured successfully.",
+        data: result,
+      });
+    } else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
+      let result = await badgeCountfx(
+        uuid,
+        id,
+        badgeCount.oprend,
+        badgeCount.range
+      );
+      return res.status(200).json({
+        message: "Advance analytics configured successfully.",
+        data: result,
+      });
+    } else if (
+      hiddenOptionsDoc &&
+      hiddenOptionsDoc.hiddenOptionsArray.length > 0 &&
+      badgeCount &&
+      badgeCount.oprend === 0
+    ) {
+      let result = await hiddenOptionsfx(
+        uuid,
+        id,
+        hiddenOptionsDoc.hiddenOptionsArray,
+        infoQuest
+      );
+      return res.status(200).json({
+        message: "Advance analytics configured successfully.",
+        data: result,
+      });
+    } else if (
+      hiddenOptionsDoc &&
+      hiddenOptionsDoc.hiddenOptionsArray.length === 0 &&
+      badgeCount &&
+      badgeCount.oprend !== 0
+    ) {
+      let result = await badgeCountfx(
+        uuid,
+        id,
+        badgeCount.oprend,
+        badgeCount.range
+      );
+      return res.status(200).json({
+        message: "Advance analytics configured successfully.",
+        data: result,
+      });
+    } else if (
+      hiddenOptionsDoc &&
+      hiddenOptionsDoc.hiddenOptionsArray.length > 0 &&
+      badgeCount &&
+      badgeCount.oprend !== 0
+    ) {
+      let result = await hiddenOptionsBadgeCount(
+        uuid,
+        id,
+        hiddenOptionsDoc.hiddenOptionsArray,
+        badgeCount.oprend,
+        badgeCount.range
+      );
+      return res.status(200).json({
+        message: "Advance analytics configured successfully.",
+        data: result,
+      });
+    } else {
       let resultArray = result1.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
         ...item._doc,
@@ -2401,7 +2486,6 @@ const getQuestById = async (req, res) => {
         data: desiredArray,
       });
     }
-
   } catch (error) {
     //console.log(error);
     res.status(500).json({
@@ -2576,9 +2660,7 @@ const getQuestByUniqueId = async (req, res) => {
 
 const getEmbededPostByUniqueId = async (req, res) => {
   try {
-    const { link, resultsMode } = req.params;
-    console.log("mode", resultsMode);
-
+    const { link } = req.params;
     const post = await await UserQuestSetting.findOne({
       link: link,
     });
@@ -2595,7 +2677,7 @@ const getEmbededPostByUniqueId = async (req, res) => {
       ...item._doc,
       selectedPercentage: item.selectedPercentage,
       contendedPercentage: item.contendedPercentage,
-      startStatus: resultsMode === "true" ? "completed" : "",
+      startStatus: "completed",
       type: "embed",
     }));
 
@@ -3268,78 +3350,84 @@ const getFlickerUrl = async (req, res) => {
 
 const analyze = async (req, res) => {
   try {
-
-    const { userUuid, questForeignKey, hiddenOptionsArray, oprend, range } = req.body;
+    const { userUuid, questForeignKey, hiddenOptionsArray, oprend, range } =
+      req.body;
     let result = {};
 
     if (Object.keys(req.query).length === 1 && req.query.hide) {
-      const badgeCountDoc = await BadgeCount.findOne(
-        {
-          userUuid: userUuid,
-          questForeignKey: questForeignKey,
-        }
-      );
+      const badgeCountDoc = await BadgeCount.findOne({
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      });
       if (badgeCountDoc) {
-        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
-        return res.status(200).json(
-          {
-            message: "Advance analytics configured successfully.",
-            result: result,
-          }
-        )
-      }
-      else {
+        result = await hiddenOptionsBadgeCount(
+          userUuid,
+          questForeignKey,
+          hiddenOptionsArray,
+          badgeCountDoc.oprend,
+          badgeCountDoc.range
+        );
+        return res.status(200).json({
+          message: "Advance analytics configured successfully.",
+          result: result,
+        });
+      } else {
         const infoQuest = await InfoQuestQuestions.find({
           _id: questForeignKey,
         }).populate("getUserBadge", "badges");
         if (!infoQuest) throw new Error("No Quest Exist!");
-        result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
-        return res.status(200).json(
-          {
-            message: "Advance analytics configured successfully.",
-            result: result,
-          }
-        )
+        result = await hiddenOptionsfx(
+          userUuid,
+          questForeignKey,
+          hiddenOptionsArray,
+          infoQuest
+        );
+        return res.status(200).json({
+          message: "Advance analytics configured successfully.",
+          result: result,
+        });
       }
     }
 
     if (Object.keys(req.query).length === 1 && req.query.badgeCount) {
-      const hiddenOptionsDoc = await HiddenOptions.findOne(
-        {
-          userUuid: userUuid,
-          questForeignKey: questForeignKey,
-        }
-      )
+      const hiddenOptionsDoc = await HiddenOptions.findOne({
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      });
       if (hiddenOptionsDoc) {
-        result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
-        return res.status(200).json(
-          {
-            message: "Advance analytics configured successfully.",
-            result: result,
-          }
-        )
-      }
-      else {
+        result = await hiddenOptionsBadgeCount(
+          userUuid,
+          questForeignKey,
+          hiddenOptionsDoc.hiddenOptionsArray,
+          oprend,
+          range
+        );
+        return res.status(200).json({
+          message: "Advance analytics configured successfully.",
+          result: result,
+        });
+      } else {
         result = await badgeCountfx(userUuid, questForeignKey, oprend, range);
-        return res.status(200).json(
-          {
-            message: "Advance analytics configured successfully.",
-            result: result,
-          }
-        )
+        return res.status(200).json({
+          message: "Advance analytics configured successfully.",
+          result: result,
+        });
       }
     }
 
     if (req.query.hide && req.query.badgeCount) {
-      result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          result: result,
-        }
-      )
+      result = await hiddenOptionsBadgeCount(
+        userUuid,
+        questForeignKey,
+        hiddenOptionsArray,
+        oprend,
+        range
+      );
+      return res.status(200).json({
+        message: "Advance analytics configured successfully.",
+        result: result,
+      });
     }
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `${error.message}` });
