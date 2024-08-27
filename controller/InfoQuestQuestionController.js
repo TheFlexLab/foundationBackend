@@ -2051,8 +2051,19 @@ const getQuestsAll = async (req, res) => {
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
-  const result = await getQuestionsWithStatus(desiredArray, uuid);
-
+  let result = await getQuestionsWithStatus(desiredArray, uuid);
+  if (sort === "Wow") {
+    result = result.filter((item) => {
+      const hasHighPercentage = item.selectedPercentage?.some(
+        (percentageObj) => {
+          // Extract the percentage value and convert it to a number
+          const percentageValue = parseFloat(Object.values(percentageObj)[0]);
+          return percentageValue > 75;
+        }
+      );
+      return hasHighPercentage;
+    });
+  }
   // getQuestionsWithUserSettings
   const result1 = await getQuestionsWithUserSettings(result, uuid);
 
