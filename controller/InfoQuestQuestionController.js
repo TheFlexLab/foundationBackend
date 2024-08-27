@@ -3256,66 +3256,66 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    const hiddenOptionsDoc = await HiddenOptions.findOne(
-      {
-        userUuid: uuid,
-        questForeignKey: id,
-      }
-    )
+    // const hiddenOptionsDoc = await HiddenOptions.findOne(
+    //   {
+    //     userUuid: uuid,
+    //     questForeignKey: id,
+    //   }
+    // )
 
-    const badgeCount = await BadgeCount.findOne(
-      {
-        userUuid: uuid,
-        questForeignKey: id,
-      }
-    )
+    // const badgeCount = await BadgeCount.findOne(
+    //   {
+    //     userUuid: uuid,
+    //     questForeignKey: id,
+    //   }
+    // )
 
-    if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && !badgeCount) {
-      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
-      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
-      let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-      let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend !== 0) {
-      let result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
-      return res.status(200).json(
-        {
-          message: "Advance analytics configured successfully.",
-          data: result,
-        }
-      )
-    }
-    else {
+    // if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && !badgeCount) {
+    //   let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+    //   return res.status(200).json(
+    //     {
+    //       message: "Advance analytics configured successfully.",
+    //       data: result,
+    //     }
+    //   )
+    // }
+    // else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
+    //   let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
+    //   return res.status(200).json(
+    //     {
+    //       message: "Advance analytics configured successfully.",
+    //       data: result,
+    //     }
+    //   )
+    // }
+    // else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
+    //   let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
+    //   return res.status(200).json(
+    //     {
+    //       message: "Advance analytics configured successfully.",
+    //       data: result,
+    //     }
+    //   )
+    // }
+    // else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
+    //   let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
+    //   return res.status(200).json(
+    //     {
+    //       message: "Advance analytics configured successfully.",
+    //       data: result,
+    //     }
+    //   )
+    // }
+    // else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend !== 0) {
+    //   let result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
+    //   return res.status(200).json(
+    //     {
+    //       message: "Advance analytics configured successfully.",
+    //       data: result,
+    //     }
+    //   )
+    // }
+    // else {
       let resultArray = result1.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
         ...item._doc,
@@ -3330,7 +3330,7 @@ const getQuestById = async (req, res) => {
       res.status(200).json({
         data: desiredArray,
       });
-    }
+    // }
 
   } catch (error) {
     //console.log(error);
