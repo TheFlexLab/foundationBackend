@@ -3316,6 +3316,14 @@ const getQuestById = async (req, res) => {
     //   )
     // }
     // else {
+
+    const advanceAnalyticsDoc = await AdvanceAnalytics.findOne(
+      {
+        userUuid: uuid,
+        questForeignKey: id,
+      }
+    );
+
       let resultArray = result1.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
         ...item._doc,
@@ -3329,6 +3337,7 @@ const getQuestById = async (req, res) => {
       }));
       res.status(200).json({
         data: desiredArray,
+        advanceAnalytics: advanceAnalyticsDoc ? advanceAnalyticsDoc.advanceAnalytics : null
       });
     // }
 
