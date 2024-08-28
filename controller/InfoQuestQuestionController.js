@@ -544,8 +544,8 @@ const targetfx = async (data, userUuid, questForeignKey, targetedOptionsArray, t
     return {
       ...data,
       result,
-      QuestAnswers: filteredQuestAnswers,
       totalStartQuest: startQuests.length,
+      QuestAnswers: filteredQuestAnswers,
 
     };
     // }
@@ -4715,16 +4715,37 @@ const advanceAnalytics = async (req, res) => {
             0
           );
 
-          // Create new documents for each element in targetedOptionsArray
-          const newAnalytics = req.body.targetedOptionsArray.map((option, index) => ({
+          // // Create new documents for each element in targetedOptionsArray
+          // const newAnalytics = req.body.targetedOptionsArray.map((option, index) => ({
+          //   ...req.body,
+          //   _id: new mongoose.Types.ObjectId(),
+          //   order: maxOrder + index + 1, // Increment order for each new document
+          //   targetedOptionsArray: [option] // Assuming you want to store the option or adjust as needed
+          // }));
+
+          // // Push new documents to the advanceAnalytics array
+          // advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
+
+          // Extract existing options from advanceAnalyticsDoc
+          const existingOptions = advanceAnalyticsDoc.advanceAnalytics.map((item) => item.targetedOptionsArray[0]);
+
+          // Filter targetedOptionsArray to exclude options that already exist
+          const filteredOptions = req.body.targetedOptionsArray.filter(option => !existingOptions.includes(option));
+
+          // Create new documents for each element in filteredOptions
+          const newAnalytics = filteredOptions.map((option, index) => ({
             ...req.body,
             _id: new mongoose.Types.ObjectId(),
             order: maxOrder + index + 1, // Increment order for each new document
-            targetedOptionsArray: [option] // Assuming you want to store the option or adjust as needed
+            targetedOptionsArray: [option] // Set the current option
           }));
 
-          // Push new documents to the advanceAnalytics array
-          advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
+          // Push the new analytics if there are any new entries
+          if (newAnalytics.length > 0) {
+            advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
+            await advanceAnalyticsDoc.save();
+          }
+
         }
         else {
           // Find the current maximum order value in the advanceAnalytics array
