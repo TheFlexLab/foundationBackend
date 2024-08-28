@@ -86,7 +86,7 @@ const hiddenOptionsfx = async (data, userUuid, questForeignKey, hiddenOptionsArr
     }
 
     // Return the modified data
-    return data;
+    return data._doc;
 
   } catch (error) {
     throw error;

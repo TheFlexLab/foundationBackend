@@ -710,10 +710,10 @@ router.post(
 );
 
 router.delete(
-  "/deleteAdvanceAnalytics/:userUuid/:questForeignKey/:type",
+  "/deleteAdvanceAnalytics/:userUuid/:questForeignKey/:type/:id",
   /**
    * @swagger
-   * /infoquestions/deleteAdvanceAnalytics/{userUuid}/{questForeignKey}/{type}:
+   * /infoquestions/deleteAdvanceAnalytics/{userUuid}/{questForeignKey}/{type}/{id}:
    *   delete:
    *     tags:
    *       - Info Quest Question
