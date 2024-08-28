@@ -63,48 +63,37 @@ const operators = {
 //   return {...data, target: "target"};
 // }
 
-const hiddenOptionsfx = async (data, userUuid, questForeignKey) => {
+const hiddenOptionsfx = async (data, userUuid, questForeignKey, hiddenOptionsArray) => {
   try {
+    // Check if 'result' exists in data
+    if (data.result) {
+      // Destructure selected and contended from result
+      const { selected, contended } = data.result;
 
-    return data;
-
-    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
-
-    const desiredArray = resultArray.map((item) => ({
-      ...item._doc,
-      selectedPercentage: item.selectedPercentage
-        ? item.selectedPercentage
-        : [],
-      contendedPercentage: item.contendedPercentage
-        ? item.contendedPercentage
-        : [],
-      userQuestSetting: item.userQuestSetting,
-    }));
-
-    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
-    let finalDoc = null;
-    if (hiddenAnswers) {
-      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
-        (doc) => !hiddenAnswers.includes(doc.question)
-      );
-      finalDoc = {
-        ...desiredArray,
-        0: {
-          ...desiredArray[0],
-          QuestAnswers,
-          hiddenAnswers
+      // Remove keys from 'selected' if they exist in hiddenOptionsArray
+      hiddenOptionsArray.forEach((option) => {
+        if (selected && option in selected) {
+          delete selected[option];
         }
-      }
+      });
+
+      // Remove keys from 'contended' if they exist in hiddenOptionsArray
+      hiddenOptionsArray.forEach((option) => {
+        if (contended && option in contended) {
+          delete contended[option];
+        }
+      });
     }
 
-    return finalDoc ? finalDoc : desiredArray;
+    // Return the modified data
+    return data;
 
   } catch (error) {
     throw error;
   }
-}
+};
 
-const badgeCountfx = async (data, userUuid, questForeignKey) => {
+const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
   try {
 
     return data;
@@ -258,7 +247,7 @@ const badgeCountfx = async (data, userUuid, questForeignKey) => {
   }
 }
 
-const targetfx = async (data, userUuid, questForeignKey) => {
+const targetfx = async (data, userUuid, questForeignKey, targetedOptionsArray, targetedQuestForeignKey) => {
   try {
 
     return data;
@@ -3336,41 +3325,55 @@ const getQuestById = async (req, res) => {
 
     console.log(advanceAnalyticsDoc);
 
-    // if (advanceAnalyticsDoc && advanceAnalyticsDoc.advanceAnalytics.length > 0) {
-    //   // Global function map
-    //   const functionMap = {
-    //     hide: hiddenOptionsfx,
-    //     badgeCount: badgeCountfx,
-    //     target: targetfx,
-    //     // forthAA: forthAAfx, Replace with actual one
-    //     // fifthAA: fifthAAfx, Replace with actual one
-    //     // Add other function mappings as needed
-    //   };
-    //   // Sort the advanceAnalytics array by the order field
-    //   const sortedAnalytics = advanceAnalyticsDoc.advanceAnalytics
-    //     .sort((a, b) => a.order - b.order);
+    if (advanceAnalyticsDoc && advanceAnalyticsDoc.advanceAnalytics.length > 0) {
+      // Global function map
+      const functionMap = {
+        hide: hiddenOptionsfx,
+        badgeCount: badgeCountfx,
+        target: targetfx,
+        // forthAA: forthAAfx, Replace with actual one
+        // fifthAA: fifthAAfx, Replace with actual one
+        // Add other function mappings as needed
+      };
+      // Sort the advanceAnalytics array by the order field
+      const sortedAnalytics = advanceAnalyticsDoc.advanceAnalytics
+        .sort((a, b) => a.order - b.order);
 
-    //   // Initialize the result variable
-    //   let currentResult = result1[0];
+      // Initialize the result variable
+      let currentResult = { ...result1[0], optionsRemoved: [] };
 
-    //   console.log(JSON.stringify(result1[0], null, 2));
+      // console.log(JSON.stringify(result1[0], null, 2));
 
-    //   // Call functions based on type in sorted order
-    //   for (const analyticsItem of sortedAnalytics) {
-    //     const func = functionMap[analyticsItem.type];
-    //     if (func) {
-    //       // Call the function with currentResult, userUuid, and questForeignKey
-    //       currentResult = await func(currentResult, uuid, id);
-    //     } else {
-    //       console.warn(`No function found for type: ${analyticsItem.type}`);
-    //     }
-    //   }
+      // Call functions based on type in sorted order
+      for (const analyticsItem of sortedAnalytics) {
+        const func = functionMap[analyticsItem.type];
+        if (func) {
+          let params = [currentResult, uuid, id]; // Common parameters for all functions
+          // Add specific parameters based on the type of analyticsItem
+          switch (analyticsItem.type) {
+            case 'hide':
+              params.push(analyticsItem.hiddenOptionsArray); // Add hiddenOptionsArray for hide type
+              break;
+            case 'badgeCount':
+              params.push(analyticsItem.oprend, analyticsItem.range); // Add oprend and range for badgeCount type
+              break;
+            case 'target':
+              params.push(analyticsItem.targetedOptionsArray, analyticsItem.targetedQuestForeignKey); // Add parameters for target type
+              break;
+            // Add more cases for other types as needed
+            default:
+              console.warn(`Unhandled type: ${analyticsItem.type}`);
+              break;
+          }
+          // Call the function with the dynamic parameters
+          currentResult = await func(...params);
+        } else {
+          console.warn(`No function found for type: ${analyticsItem.type}`);
+        }
+      }
 
-    //   res.status(200).json({
-    //     data: currentResult,
-    //   });
-    // }
-    // else {
+      const arrayResult = [currentResult];
+
       let resultArray = result1.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
         ...item._doc,
@@ -3392,7 +3395,30 @@ const getQuestById = async (req, res) => {
       res.status(200).json({
         data: desiredArray,
       });
-    // }
+    }
+    else {
+      let resultArray = result1.map((item) => getPercentage(item, page, quest));
+      const desiredArray = resultArray.map((item) => ({
+        ...item._doc,
+        selectedPercentage: item.selectedPercentage
+          ? item.selectedPercentage
+          : [],
+        contendedPercentage: item.contendedPercentage
+          ? item.contendedPercentage
+          : [],
+        userQuestSetting: item.userQuestSetting,
+      }));
+
+      if (desiredArray[0]) {
+        desiredArray[0].advanceAnalytics = advanceAnalyticsDoc
+          ? advanceAnalyticsDoc.advanceAnalytics
+          : null;
+      }
+  
+      res.status(200).json({
+        data: desiredArray,
+      });
+    }
 
   } catch (error) {
     //console.log(error);
@@ -4635,8 +4661,8 @@ const advanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey } = req.params;
 
-    if(!req.body.type) return res.status(403).json({message: "Type is not Provided"});
-    if(!userUuid || !questForeignKey) return res.status(403).json({message: "Invalid request, Please provide references userUuid and questForeignKey in params"});
+    if (!req.body.type) return res.status(403).json({ message: "Type is not Provided" });
+    if (!userUuid || !questForeignKey) return res.status(403).json({ message: "Invalid request, Please provide references userUuid and questForeignKey in params" });
 
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne(
       {
@@ -4650,7 +4676,7 @@ const advanceAnalytics = async (req, res) => {
       const existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
         (item) => item.type === req.body.type && item._id.toString() === req.body.id
       );
-    
+
       if (existingAnalytics) {
         // If an object with the same 'type' exists, update it with the new data from req.body
         for (let key in req.body) {
@@ -4664,7 +4690,7 @@ const advanceAnalytics = async (req, res) => {
           (max, item) => (item.order > max ? item.order : max),
           0
         );
-    
+
         // If no such object exists, push the new object with order greater than the existing ones
         const newAnalytics = {
           ...req.body,
@@ -4673,7 +4699,7 @@ const advanceAnalytics = async (req, res) => {
         };
         advanceAnalyticsDoc.advanceAnalytics.push(newAnalytics);
       }
-    
+
       // Save the updated document
       await advanceAnalyticsDoc.save();
     } else {
@@ -4686,7 +4712,7 @@ const advanceAnalytics = async (req, res) => {
         ],
       });
       await newDoc.save();
-    }    
+    }
 
     const recentAdvanceAnalytics = await AdvanceAnalytics.findOne(
       {
@@ -4708,8 +4734,8 @@ const deleteAdvanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey, type, id } = req.params;
 
-    if(!type || !id) return res.status(403).json({message: "Type or Id is not Provided"});
-    if(!userUuid || !questForeignKey) return res.status(403).json({message: "Invalid request, Please provide references userUuid and questForeignKey in params"});
+    if (!type || !id) return res.status(403).json({ message: "Type or Id is not Provided" });
+    if (!userUuid || !questForeignKey) return res.status(403).json({ message: "Invalid request, Please provide references userUuid and questForeignKey in params" });
 
     // Update the document by removing the object with the specified type from the advanceAnalytics array
     const result = await AdvanceAnalytics.findOneAndUpdate(
