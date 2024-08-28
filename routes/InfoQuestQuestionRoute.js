@@ -598,37 +598,86 @@ router.get(
   InfoQuestQuestionController.getQuestsAll
 );
 
+// router.post(
+//   "/analyze/:hide?",
+//   /**
+//    * @swagger
+//    * /infoquestions/analyze:
+//    *   post:
+//    *     tags:
+//    *       - Info Quest Question
+//    *     summary: Get all quests with result
+//    *     description: This endpoint supports four optional boolean query parameters hide, badgeCount, target, and badges.
+//    *     parameters:
+//    *       - in: query
+//    *         name: hide
+//    *         schema:
+//    *           type: boolean
+//    *         description: Option to hide certain questions.
+//    *       - in: query
+//    *         name: badgeCount
+//    *         schema:
+//    *           type: boolean
+//    *         description: Option to include badgeCount in the analysis.
+//    *       - in: query
+//    *         name: target
+//    *         schema:
+//    *           type: boolean
+//    *         description: Option to target specific questions.
+//    *       - in: query
+//    *         name: badges
+//    *         schema:
+//    *           type: boolean
+//    *         description: Option to include badges in the result.
+//    *     requestBody:
+//    *       required: true
+//    *       content:
+//    *         application/json:
+//    *           schema:
+//    *             type: object
+//    *             properties:
+//    *               someKey:
+//    *                 type: string
+//    *                 description: A description of the data being sent in the request body.
+//    *               anotherKey:
+//    *                 type: integer
+//    *                 description: Another piece of data in the request body.
+//    *             example:
+//    *               someKey: "example value"
+//    *               anotherKey: 123
+//    *     responses:
+//    *       '200':
+//    *         description: Successfully retrieved all info quest questions with result.
+//    *       '500':
+//    *         description: Internal server error.
+//    */
+//   InfoQuestQuestionController.analyze
+// );
+
+
 router.post(
-  "/analyze/:hide?",
+  "/advanceAnalytics/:userUuid/:questForeignKey",
   /**
    * @swagger
-   * /infoquestions/analyze:
+   * /infoquestions/advanceAnalytics/{userUuid}/{questForeignKey}:
    *   post:
    *     tags:
    *       - Info Quest Question
-   *     summary: Get all quests with result
-   *     description: This endpoint supports four optional boolean query parameters hide, badgeCount, target, and badges.
+   *     summary: Update or add advance analytics info quest questions
+   *     description: This endpoint updates or adds advance analytics based on the provided JSON body.
    *     parameters:
-   *       - in: query
-   *         name: hide
+   *       - in: path
+   *         name: userUuid
+   *         required: true
    *         schema:
-   *           type: boolean
-   *         description: Option to hide certain questions.
-   *       - in: query
-   *         name: badgeCount
+   *           type: string
+   *         description: The UUID of the user.
+   *       - in: path
+   *         name: questForeignKey
+   *         required: true
    *         schema:
-   *           type: boolean
-   *         description: Option to include badgeCount in the analysis.
-   *       - in: query
-   *         name: target
-   *         schema:
-   *           type: boolean
-   *         description: Option to target specific questions.
-   *       - in: query
-   *         name: badges
-   *         schema:
-   *           type: boolean
-   *         description: Option to include badges in the result.
+   *           type: string
+   *         description: The foreign key of the quest.
    *     requestBody:
    *       required: true
    *       content:
@@ -636,6 +685,9 @@ router.post(
    *           schema:
    *             type: object
    *             properties:
+   *               type:
+   *                 type: string
+   *                 description: The type of the analytics object.
    *               someKey:
    *                 type: string
    *                 description: A description of the data being sent in the request body.
@@ -643,15 +695,118 @@ router.post(
    *                 type: integer
    *                 description: Another piece of data in the request body.
    *             example:
+   *               type: "exampleType"
    *               someKey: "example value"
    *               anotherKey: 123
    *     responses:
    *       '200':
-   *         description: Successfully retrieved all info quest questions with result.
+   *         description: Successfully updated or added advance analytics.
+   *       '400':
+   *         description: Bad request due to missing or invalid parameters.
    *       '500':
    *         description: Internal server error.
    */
-  InfoQuestQuestionController.analyze
+  InfoQuestQuestionController.advanceAnalytics
+);
+
+router.delete(
+  "/deleteAdvanceAnalytics/:userUuid/:questForeignKey/:type/:id",
+  /**
+   * @swagger
+   * /infoquestions/deleteAdvanceAnalytics/{userUuid}/{questForeignKey}/{type}/{id}:
+   *   delete:
+   *     tags:
+   *       - Info Quest Question
+   *     summary: Delete advance analytics info quest questions
+   *     description: This endpoint deletes an advance analytics object based on the provided parameters.
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The UUID of the user.
+   *       - in: path
+   *         name: questForeignKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The foreign key of the quest.
+   *       - in: path
+   *         name: type
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The type of the analytics object to delete.
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The id of the analytics object to delete.
+   *     responses:
+   *       '200':
+   *         description: Successfully deleted the advance analytics object.
+   *       '404':
+   *         description: Document not found or object with the specified type not found.
+   *       '500':
+   *         description: Internal server error.
+   */
+  InfoQuestQuestionController.deleteAdvanceAnalytics
+);
+
+router.post(
+  "/updateAnalyticsOrder/:userUuid/:questForeignKey",
+  /**
+   * @swagger
+   * /infoquestions/updateAnalyticsOrder/{userUuid}/{questForeignKey}:
+   *   post:
+   *     tags:
+   *       - Info Quest Question
+   *     summary: Update the order of objects in advanceAnalytics
+   *     description: Updates the order of objects in the advanceAnalytics array based on the provided order array.
+   *     parameters:
+   *       - in: path
+   *         name: userUuid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: User UUID.
+   *       - in: path
+   *         name: questForeignKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Quest foreign key.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: object
+   *               properties:
+   *                 type:
+   *                   type: string
+   *                   description: Type of the analytics item.
+   *                 order:
+   *                   type: integer
+   *                   description: New order for the analytics item.
+   *               example:
+   *                 - type: "hide"
+   *                   order: 1
+   *                 - type: "badgeCount"
+   *                   order: 2
+   *     responses:
+   *       '200':
+   *         description: Successfully updated the order of analytics items.
+   *       '404':
+   *         description: Document not found.
+   *       '500':
+   *         description: Internal server error.
+   */
+  InfoQuestQuestionController.updateAnalyticsOrder
 );
 
 module.exports = router;

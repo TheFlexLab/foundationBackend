@@ -94,7 +94,7 @@ const getPercentage = (document, page, quest) => {
   }
 };
 
-const getPercentageHiddenOption = (document, page, quest, hiddenOptionsArray) => {
+const getPercentageAA = (document, page, quest, hiddenOptionsArray) => {
   let result;
   let totalStartQuest;
 
@@ -289,5 +289,5 @@ const getPercentageQuestForeignKey = (document, quest) => {
 module.exports = {
   getPercentage,
   getPercentageQuestForeignKey,
-  getPercentageHiddenOption,
+  getPercentageAA,
 };
