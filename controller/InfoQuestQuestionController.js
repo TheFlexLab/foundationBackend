@@ -4708,33 +4708,73 @@ const advanceAnalytics = async (req, res) => {
         // Mark the document as modified to ensure Mongoose tracks changes to the array
         advanceAnalyticsDoc.markModified('advanceAnalytics');
       } else {
-        // Find the current maximum order value in the advanceAnalytics array
-        const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
-          (max, item) => (item.order > max ? item.order : max),
-          0
-        );
+        if (req.body.type === 'target' && req.body.targetedOptionsArray && req.body.targetedOptionsArray.length > 1) {
+          // Find the current maximum order value in the advanceAnalytics array
+          const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
+            (max, item) => (item.order > max ? item.order : max),
+            0
+          );
 
-        // If no such object exists, push the new object with order greater than the existing ones
-        const newAnalytics = {
-          ...req.body,
-          _id: new mongoose.Types.ObjectId(),
-          order: maxOrder + 1, // Set the new order value to be greater than the max order
-        };
-        advanceAnalyticsDoc.advanceAnalytics.push(newAnalytics);
+          // Create new documents for each element in targetedOptionsArray
+          const newAnalytics = req.body.targetedOptionsArray.map((option, index) => ({
+            ...req.body,
+            _id: new mongoose.Types.ObjectId(),
+            order: maxOrder + index + 1, // Increment order for each new document
+            targetedOptionsArray: [option] // Assuming you want to store the option or adjust as needed
+          }));
+
+          // Push new documents to the advanceAnalytics array
+          advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
+        }
+        else {
+          // Find the current maximum order value in the advanceAnalytics array
+          const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
+            (max, item) => (item.order > max ? item.order : max),
+            0
+          );
+
+          // If no such object exists, push the new object with order greater than the existing ones
+          const newAnalytics = {
+            ...req.body,
+            _id: new mongoose.Types.ObjectId(),
+            order: maxOrder + 1, // Set the new order value to be greater than the max order
+          };
+          advanceAnalyticsDoc.advanceAnalytics.push(newAnalytics);
+        }
       }
 
       // Save the updated document
       await advanceAnalyticsDoc.save();
     } else {
-      // If the document does not exist, create a new document with the new object
-      const newDoc = new AdvanceAnalytics({
-        userUuid,
-        questForeignKey,
-        advanceAnalytics: [
-          { ...req.body, _id: new mongoose.Types.ObjectId(), order: 1 }, // Start with order 1
-        ],
-      });
-      await newDoc.save();
+      if (req.body.type === 'target' && req.body.targetedOptionsArray && req.body.targetedOptionsArray.length > 1) {
+        // Create new analytics documents for each element in targetedOptionsArray
+        const newAnalytics = req.body.targetedOptionsArray.map((option, index) => ({
+          ...req.body,
+          _id: new mongoose.Types.ObjectId(),
+          order: index + 1, // Use the index + 1 as the order value
+          targetedOptionsArray: [option] // Store the option or adjust as needed
+        }));
+
+        // Create a new document with the new analytics entries
+        const newDoc = new AdvanceAnalytics({
+          userUuid,
+          questForeignKey,
+          advanceAnalytics: newAnalytics,
+        });
+
+        await newDoc.save();
+      }
+      else {
+        // If the document does not exist, create a new document with the new object
+        const newDoc = new AdvanceAnalytics({
+          userUuid,
+          questForeignKey,
+          advanceAnalytics: [
+            { ...req.body, _id: new mongoose.Types.ObjectId(), order: 1 }, // Start with order 1
+          ],
+        });
+        await newDoc.save();
+      }
     }
 
     const recentAdvanceAnalytics = await AdvanceAnalytics.findOne(
