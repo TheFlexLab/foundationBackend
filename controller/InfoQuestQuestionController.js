@@ -362,20 +362,9 @@ const targetfx = async (data, userUuid, questForeignKey, targetedOptionsArray, t
     //     }
     //   });
 
-    //   const questWithFilteredResults = [
-    //     {
-    //       ...infoQuest._doc,
-    //       totalStartQuest: startQuests.length,
-    //       result
-    //     }
-    //   ]
-
-    //   const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-    //   const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-    //   const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
 
     //   const targetedAnswers = targetDoc.targetedOptionsArray;
-    //   const QuestAnswers = resultArray[0].QuestAnswers;
+    //   const QuestAnswers = data.QuestAnswers;
     //   const filteredQuestAnswers = QuestAnswers.filter(answer =>
     //     targetedAnswers.includes(answer.question)
     //   );
@@ -383,7 +372,7 @@ const targetfx = async (data, userUuid, questForeignKey, targetedOptionsArray, t
     //     !targetedAnswers.includes(answer.question)
     //   );
 
-    //   return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
+    //   return { ...data, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
 
     // }
     // else {
@@ -544,7 +533,7 @@ const targetfx = async (data, userUuid, questForeignKey, targetedOptionsArray, t
       ...Object.keys(result[0].selected),
       ...Object.keys(result[0].contended)
     ];
-    const QuestAnswers = resultArray[0].QuestAnswers;
+    const QuestAnswers = data.QuestAnswers;
     const filteredQuestAnswers = QuestAnswers.filter(answer =>
       targetedAnswers.includes(answer.question)
     );
