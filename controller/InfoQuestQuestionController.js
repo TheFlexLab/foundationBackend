@@ -91,10 +91,24 @@ const hiddenOptionsfx = async (data, userUuid, questForeignKey, hiddenOptionsArr
       !hiddenOptionsArray.includes(answer.question)
     );
 
+    // Ensure optionsRemoved array exists and update it
+    if (!data.optionsRemoved) {
+      data.optionsRemoved = [];
+    }
+
+    // Add hiddenOptionsArray elements to optionsRemoved
+    hiddenOptionsArray.forEach(option => {
+      if (!data.optionsRemoved.includes(option)) {
+        data.optionsRemoved.push(option);
+      }
+    });
+
     return {
       ...data,
       QuestAnswers,
+      totalStartQuest: 5,
       result: updatedResult,
+      optionsRemoved: data.optionsRemoved, // Include the updated optionsRemoved array
     };
 
   } catch (error) {
@@ -3380,7 +3394,7 @@ const getQuestById = async (req, res) => {
       }
 
       const arrayResult = [currentResult];
-      let resultArray = arrayResult.map((item) => getPercentage(item, page, quest));
+      let resultArray = arrayResult.map((item) => getPercentageHiddenOption(item, null, null, []));
       const desiredArray = resultArray.map((item) => ({
         ...item,
         selectedPercentage: item.selectedPercentage
@@ -3397,7 +3411,7 @@ const getQuestById = async (req, res) => {
           ? advanceAnalyticsDoc.advanceAnalytics
           : null;
       }
-  
+
       res.status(200).json({
         data: desiredArray,
       });
@@ -3420,7 +3434,7 @@ const getQuestById = async (req, res) => {
           ? advanceAnalyticsDoc.advanceAnalytics
           : null;
       }
-  
+
       res.status(200).json({
         data: desiredArray,
       });
@@ -4752,7 +4766,7 @@ const deleteAdvanceAnalytics = async (req, res) => {
         questForeignKey: questForeignKey,
       },
       {
-        $pull: { advanceAnalytics: { type: type, _id: id } }, // Remove objects matching the type
+        $pull: { advanceAnalytics: { type: type, _id: new mongoose.Types.ObjectId(id) } }, // Remove objects matching the type
       },
       { new: true } // Return the updated document
     );
