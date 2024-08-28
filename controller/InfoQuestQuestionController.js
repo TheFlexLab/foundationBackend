@@ -65,28 +65,37 @@ const operators = {
 
 const hiddenOptionsfx = async (data, userUuid, questForeignKey, hiddenOptionsArray) => {
   try {
-    // Check if 'result' exists in data
-    if (data.result) {
-      // Destructure selected and contended from result
-      const { selected, contended } = data.result;
+    // Flatten the hiddenOptionsArray into a set of keys to be hidden
+    const hiddenKeysSet = new Set(hiddenOptionsArray);
 
-      // Remove keys from 'selected' if they exist in hiddenOptionsArray
-      hiddenOptionsArray.forEach((option) => {
-        if (selected && option in selected) {
-          delete selected[option];
+    // Process the result to remove hidden keys
+    const updatedResult = data.result.map(resultItem => {
+      // Remove keys from `selected` if they exist in hiddenKeysSet
+      if (resultItem.selected) {
+        for (const key of hiddenKeysSet) {
+          delete resultItem.selected[key];
         }
-      });
+      }
 
-      // Remove keys from 'contended' if they exist in hiddenOptionsArray
-      hiddenOptionsArray.forEach((option) => {
-        if (contended && option in contended) {
-          delete contended[option];
+      // Remove keys from `contended` if they exist in hiddenKeysSet
+      if (resultItem.contended) {
+        for (const key of hiddenKeysSet) {
+          delete resultItem.contended[key];
         }
-      });
-    }
+      }
 
-    // Return the modified data
-    return data._doc;
+      return resultItem;
+    });
+
+    const QuestAnswers = data.QuestAnswers.filter(answer =>
+      !hiddenOptionsArray.includes(answer.question)
+    );
+
+    return {
+      ...data,
+      QuestAnswers,
+      result: updatedResult,
+    };
 
   } catch (error) {
     throw error;
@@ -3323,8 +3332,6 @@ const getQuestById = async (req, res) => {
       }
     );
 
-    console.log(advanceAnalyticsDoc);
-
     if (advanceAnalyticsDoc && advanceAnalyticsDoc.advanceAnalytics.length > 0) {
       // Global function map
       const functionMap = {
@@ -3340,7 +3347,7 @@ const getQuestById = async (req, res) => {
         .sort((a, b) => a.order - b.order);
 
       // Initialize the result variable
-      let currentResult = { ...result1[0], optionsRemoved: [] };
+      let currentResult = { ...result1[0]._doc, optionsRemoved: [] };
 
       // console.log(JSON.stringify(result1[0], null, 2));
 
@@ -3373,10 +3380,9 @@ const getQuestById = async (req, res) => {
       }
 
       const arrayResult = [currentResult];
-
-      let resultArray = result1.map((item) => getPercentage(item, page, quest));
+      let resultArray = arrayResult.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
-        ...item._doc,
+        ...item,
         selectedPercentage: item.selectedPercentage
           ? item.selectedPercentage
           : [],
@@ -4733,9 +4739,11 @@ const advanceAnalytics = async (req, res) => {
 const deleteAdvanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey, type, id } = req.params;
+    console.log(userUuid, questForeignKey, type, id);
 
     if (!type || !id) return res.status(403).json({ message: "Type or Id is not Provided" });
     if (!userUuid || !questForeignKey) return res.status(403).json({ message: "Invalid request, Please provide references userUuid and questForeignKey in params" });
+
 
     // Update the document by removing the object with the specified type from the advanceAnalytics array
     const result = await AdvanceAnalytics.findOneAndUpdate(
