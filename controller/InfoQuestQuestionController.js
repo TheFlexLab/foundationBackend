@@ -11,7 +11,7 @@ const BookmarkQuests = require("../models/BookmarkQuests");
 const {
   getPercentage,
   getPercentageQuestForeignKey,
-  getPercentageHiddenOption,
+  getPercentageAA,
 } = require("../utils/getPercentage");
 const shortLink = require("shortlink");
 const { execSync } = require("child_process");
@@ -117,57 +117,78 @@ const hiddenOptionsfx = async (data, userUuid, questForeignKey, hiddenOptionsArr
 
 const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
   try {
-
-    return data;
-
-    // If not exist create the analyze settings
-    const docAlreadyExists = await BadgeCount.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    )
-    if (docAlreadyExists) {
-      docAlreadyExists.oprend = oprend;
-      docAlreadyExists.range = range;
-      await docAlreadyExists.save();
-    }
-    else {
-      const badgeCount = new BadgeCount();
-      badgeCount.userUuid = userUuid;
-      badgeCount.questForeignKey = questForeignKey;
-      badgeCount.oprend = oprend;
-      badgeCount.range = range;
-      await badgeCount.save();
-    }
-
-    const badgeCountDoc = await BadgeCount.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    );
-
-    const quest = await InfoQuestQuestions.findOne(
-      {
-        _id: questForeignKey
-      }
-    );
-
-    if (badgeCountDoc.oprend === 0) {
-      const resultStartQuest = await getQuestionsWithStatus([quest], userUuid);
-      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-      return { result: { ...resultArray } };
-    }
-
+    // return data;
     // Assuming `oprend` and `range` are defined
+    // const startQuests = await StartQuests.aggregate([
+    //   {
+    //     $match: {
+    //       questForeignKey: questForeignKey, // Match the specific questForeignKey
+    //       $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: 'users', // The name of the User collection
+    //       localField: 'uuid', // The field in StartQuests that matches User
+    //       foreignField: 'uuid', // The field in User to match
+    //       as: 'userDetails' // The name of the array field to hold matching documents
+    //     }
+    //   },
+    //   {
+    //     $unwind: '$userDetails' // Unwind the array to deconstruct the documents
+    //   },
+    //   {
+    //     $match: {
+    //       'userDetails.badges': { $exists: true }, // Ensure the badges field exists
+    //       $expr: { [operator]: [{ $size: '$userDetails.badges' }, range] } // Match based on badges array length
+    //     }
+    //   },
+    //   {
+    //     $project: {
+    //       userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
+    //     }
+    //   }
+    // ]);
+
     const operator = operators[oprend];
     const startQuests = await StartQuests.aggregate([
       {
         $match: {
           questForeignKey: questForeignKey, // Match the specific questForeignKey
           $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
+        }
+      },
+      {
+        // Add a stage to extract the most recent document in the data array
+        $addFields: {
+          recentData: { $arrayElemAt: ['$data', -1] } // Get the most recent data from the array
+        }
+      },
+      {
+        $match: {
+          // Check if any keys in `selected` or `contended` match the latest `selected` or `contended`
+          $or: [
+            {
+              'recentData.selected': {
+                $in: Object.keys(data.result[0]?.selected || {}) // Check if any selected key matches, safely
+              }
+            },
+            {
+              'recentData.selected.question': {
+                $in: Object.keys(data.result[0]?.selected || {}) // Safely check if any selected key matches in `question`
+              }
+            },
+            {
+              'recentData.contended': {
+                $in: Object.keys(data.result[0]?.contended || {}) // Check if any contended key matches, safely
+              }
+            },
+            {
+              'recentData.contended.question': {
+                $in: Object.keys(data.result[0]?.contended || {}) // Safely check if any contended key matches in `question`
+              }
+            }
+          ]
         }
       },
       {
@@ -250,19 +271,11 @@ const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
       }
     });
 
-    const questWithFilteredResults = [
-      {
-        ...quest._doc,
-        totalStartQuest: startQuests.length,
-        result
-      }
-    ]
-
-    const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-    return { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } };
+    return {
+      ...data,
+      totalStartQuest: startQuests.length,
+      result
+    };
 
   } catch (error) {
     throw error;
@@ -3393,7 +3406,7 @@ const getQuestById = async (req, res) => {
       }
 
       const arrayResult = [currentResult];
-      let resultArray = arrayResult.map((item) => getPercentageHiddenOption(item, null, null, []));
+      let resultArray = arrayResult.map((item) => getPercentageAA(item, null, null, []));
       const desiredArray = resultArray.map((item) => ({
         ...item,
         selectedPercentage: item.selectedPercentage
@@ -3440,7 +3453,7 @@ const getQuestById = async (req, res) => {
     }
 
   } catch (error) {
-    //console.log(error);
+    console.log(error.message);
     res.status(500).json({
       message: `An error occurred while getQuestById InfoQuest: ${error.message}`,
     });
