@@ -48,502 +48,497 @@ const operators = {
   4: '$ne'   // Not equal to
 };
 
-// const hiddenOptionsfx = async (userUuid, questForeignKey, hiddenOptionsArray, infoQuest) => {
-//   try {
-//     const docAlreadyExists = await HiddenOptions.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-//     if (docAlreadyExists) {
-//       docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
-//       await docAlreadyExists.save();
-//     }
-//     else {
-//       const hiddenOptions = new HiddenOptions();
-//       hiddenOptions.userUuid = userUuid;
-//       hiddenOptions.questForeignKey = questForeignKey;
-//       hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
-//       await hiddenOptions.save();
-//     }
-
-//     const hiddenOptions = await HiddenOptions.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-
-//     const resultStartQuest = await getQuestionsWithStatus(infoQuest, userUuid);
-//     const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//     const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
-
-//     const desiredArray = resultArray.map((item) => ({
-//       ...item._doc,
-//       selectedPercentage: item.selectedPercentage
-//         ? item.selectedPercentage
-//         : [],
-//       contendedPercentage: item.contendedPercentage
-//         ? item.contendedPercentage
-//         : [],
-//       userQuestSetting: item.userQuestSetting,
-//     }));
-
-//     hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
-//     let finalDoc = null;
-//     if (hiddenAnswers) {
-//       const QuestAnswers = desiredArray[0].QuestAnswers.filter(
-//         (doc) => !hiddenAnswers.includes(doc.question)
-//       );
-//       finalDoc = {
-//         ...desiredArray,
-//         0: {
-//           ...desiredArray[0],
-//           QuestAnswers,
-//           hiddenAnswers
-//         }
-//       }
-//     }
-
-//     return finalDoc ? finalDoc : desiredArray;
-
-//   } catch (error) {
-//     throw error;
-//   }
+// const hiddenOptionsfxx = async (data, userUuid, questForeginKey) => {
+//   console.log("hhhhhhhhide");
+//   return {...data, hide: "hide"};
 // }
 
-// const badgeCountfx = async (userUuid, questForeignKey, oprend, range) => {
-//   try {
-
-//     // If not exist create the analyze settings
-//     const docAlreadyExists = await BadgeCount.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-//     if (docAlreadyExists) {
-//       docAlreadyExists.oprend = oprend;
-//       docAlreadyExists.range = range;
-//       await docAlreadyExists.save();
-//     }
-//     else {
-//       const badgeCount = new BadgeCount();
-//       badgeCount.userUuid = userUuid;
-//       badgeCount.questForeignKey = questForeignKey;
-//       badgeCount.oprend = oprend;
-//       badgeCount.range = range;
-//       await badgeCount.save();
-//     }
-
-//     const badgeCountDoc = await BadgeCount.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     );
-
-//     const quest = await InfoQuestQuestions.findOne(
-//       {
-//         _id: questForeignKey
-//       }
-//     );
-
-//     if (badgeCountDoc.oprend === 0) {
-//       const resultStartQuest = await getQuestionsWithStatus([quest], userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-//       return { result: { ...resultArray } };
-//     }
-
-//     // Assuming `oprend` and `range` are defined
-//     const operator = operators[oprend];
-//     const startQuests = await StartQuests.aggregate([
-//       {
-//         $match: {
-//           questForeignKey: questForeignKey, // Match the specific questForeignKey
-//           $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
-//         }
-//       },
-//       {
-//         $lookup: {
-//           from: 'users', // The name of the User collection
-//           localField: 'uuid', // The field in StartQuests that matches User
-//           foreignField: 'uuid', // The field in User to match
-//           as: 'userDetails' // The name of the array field to hold matching documents
-//         }
-//       },
-//       {
-//         $unwind: '$userDetails' // Unwind the array to deconstruct the documents
-//       },
-//       {
-//         $match: {
-//           'userDetails.badges': { $exists: true }, // Ensure the badges field exists
-//           $expr: { [operator]: [{ $size: '$userDetails.badges' }, range] } // Match based on badges array length
-//         }
-//       },
-//       {
-//         $project: {
-//           userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
-//         }
-//       }
-//     ]);
-
-//     let result = [
-//       {
-//         selected: {},
-//         contended: {}
-//       }
-//     ];
-
-//     startQuests.forEach(doc => {
-//       // Find the most recent `data` object based on the `created` field
-//       let recentData = doc.data.reduce((latest, current) => {
-//         return new Date(latest.created) > new Date(current.created) ? latest : current;
-//       });
-
-//       // Handle the first structure (where `selected` is a string)
-//       if (typeof recentData.selected === 'string') {
-//         if (result[0].selected[recentData.selected]) {
-//           result[0].selected[recentData.selected]++;
-//         } else {
-//           result[0].selected[recentData.selected] = 1;
-//         }
-//       }
-
-//       // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//       if (Array.isArray(recentData.selected)) {
-//         recentData.selected.forEach(selection => {
-//           if (selection && typeof selection === 'object') {
-//             Object.keys(selection).forEach(key => {
-//               if (key === 'question') {
-//                 if (result[0].selected[selection[key]]) {
-//                   result[0].selected[selection[key]]++;
-//                 } else {
-//                   result[0].selected[selection[key]] = 1;
-//                 }
-//               }
-//             });
-//           }
-//         });
-//       }
-
-//       if (Array.isArray(recentData.contended)) {
-//         recentData.contended.forEach(contention => {
-//           if (contention && typeof contention === 'object') {
-//             Object.keys(contention).forEach(key => {
-//               if (key === 'question') {
-//                 if (result[0].contended[contention[key]]) {
-//                   result[0].contended[contention[key]]++;
-//                 } else {
-//                   result[0].contended[contention[key]] = 1;
-//                 }
-//               }
-//             });
-//           }
-//         });
-//       }
-//     });
-
-//     const questWithFilteredResults = [
-//       {
-//         ...quest._doc,
-//         totalStartQuest: startQuests.length,
-//         result
-//       }
-//     ]
-
-//     const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//     const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//     const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//     return { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } };
-
-//   } catch (error) {
-//     throw error;
-//   }
+// const badgeCountfxx = async (data, userUuid, questForeginKey) => {
+//   console.log("BBBBC");
+//   return {...data, badgeCount: "badgeCount"};
 // }
 
-// const targetfx = async (userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray) => {
-//   try {
-
-//     const infoQuest = await InfoQuestQuestions.findOne({
-//       _id: questForeignKey,
-//     }).populate("getUserBadge", "badges");
-//     if (!infoQuest) throw new Error("No Quest Exist!");
-
-//     const targetedQuest = await InfoQuestQuestions.findOne({
-//       _id: targetedQuestForeignKey,
-//     }).populate("getUserBadge", "badges");
-//     if (!targetedQuest) throw new Error("No Quest Exist!");
-
-//     // If Target Doc exist
-//     const targetDocExists = await Target.findOne(
-//       {
-//         userUuid: userUuid,
-//         targetedQuestForeignKey: targetedQuestForeignKey,
-//       }
-//     )
-//     if (targetDocExists) {
-//       targetDocExists.questForeignKey = questForeignKey;
-//       targetDocExists.targetedQuestForeignKey = targetedQuestForeignKey;
-//       targetDocExists.targetedOptionsArray = targetedOptionsArray;
-//       await targetDocExists.save();
-//     }
-//     else {
-//       const target = new Target();
-//       target.userUuid = userUuid;
-//       target.questForeignKey = questForeignKey;
-//       target.targetedQuestForeignKey = targetedQuestForeignKey;
-//       target.targetedOptionsArray = targetedOptionsArray;
-//       await target.save();
-//     }
-
-//     const targetDoc = await Target.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-
-//     if (questForeignKey === targetedQuestForeignKey) {
-//       const startQuests = await StartQuests.aggregate([
-//         { $unwind: "$data" },
-//         { $sort: { "data.created": -1 } },
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" },
-//             questForeignKey: { $first: "$questForeignKey" },
-//             recentData: { $first: "$data" }
-//           }
-//         },
-//         {
-//           $match: {
-//             $or: [
-//               // Check if selected is a string and matches the targetedOptionsArray
-//               { "recentData.selected": { $in: targetedOptionsArray } },
-//               // Check if selected is an array of objects with question fields
-//               { "recentData.selected.question": { $in: targetedOptionsArray } },
-//               // Check if contended is a string and matches the targetedOptionsArray
-//               { "recentData.contended": { $in: targetedOptionsArray } },
-//               // Check if contended is an array of objects with question fields
-//               { "recentData.contended.question": { $in: targetedOptionsArray } }
-//             ]
-//           }
-//         }
-//       ]);
-
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         const recentData = doc.recentData; // This is already the most recent data
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               if (selection.question) {
-//                 if (result[0].selected[selection.question]) {
-//                   result[0].selected[selection.question]++;
-//                 } else {
-//                   result[0].selected[selection.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               if (contention.question) {
-//                 if (result[0].contended[contention.question]) {
-//                   result[0].contended[contention.question]++;
-//                 } else {
-//                   result[0].contended[contention.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-//       });
-
-//       const questWithFilteredResults = [
-//         {
-//           ...infoQuest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       const targetedAnswers = targetDoc.targetedOptionsArray;
-//       const QuestAnswers = resultArray[0].QuestAnswers;
-//       const filteredQuestAnswers = QuestAnswers.filter(answer =>
-//         targetedAnswers.includes(answer.question)
-//       );
-//       const optionsRemoved = QuestAnswers.filter(answer =>
-//         !targetedAnswers.includes(answer.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
-
-//     }
-//     else {
-//       let targetUuids = await StartQuests.aggregate([
-//         { $match: { questForeignKey: targetedQuestForeignKey } }, // Step 1: Match targetedQuestForeignKey
-//         { $unwind: "$data" }, // Unwind the data array to work with each entry individually
-//         { $sort: { "data.created": -1 } }, // Sort by the created date in descending order to get the most recent first
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" }, // Extract the uuid of each document
-//             recentData: { $first: "$data" } // Get the most recent data entry
-//           }
-//         },
-//         {
-//           $match: {
-//             $or: [
-//               // Check if selected is a string and matches the targetedOptionsArray
-//               { "recentData.selected": { $in: targetedOptionsArray } },
-//               // Check if selected is an array of objects with question fields
-//               { "recentData.selected.question": { $in: targetedOptionsArray } },
-//               // Check if contended is a string and matches the targetedOptionsArray
-//               { "recentData.contended": { $in: targetedOptionsArray } },
-//               // Check if contended is an array of objects with question fields
-//               { "recentData.contended.question": { $in: targetedOptionsArray } }
-//             ]
-//           }
-//         },
-//         {
-//           $group: {
-//             _id: null,
-//             uuids: { $addToSet: "$uuid" } // Collect all uuids that match the criteria
-//           }
-//         }
-//       ]);
-
-//       targetUuids = targetUuids.length > 0 ? targetUuids[0].uuids : [];
-
-//       console.log(targetUuids);
-
-//       const startQuests = await StartQuests.aggregate([
-//         { $match: { uuid: { $in: targetUuids }, questForeignKey: questForeignKey } },
-//         { $unwind: "$data" },
-//         { $sort: { "data.created": -1 } },
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" },
-//             questForeignKey: { $first: "$questForeignKey" },
-//             recentData: { $first: "$data" }
-//           }
-//         }
-//       ]);
-
-//       console.log(startQuests);
-
-//       // Initialize result as an array with one object
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         const recentData = doc.recentData; // This is already the most recent data
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               if (selection.question) {
-//                 if (result[0].selected[selection.question]) {
-//                   result[0].selected[selection.question]++;
-//                 } else {
-//                   result[0].selected[selection.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               if (contention.question) {
-//                 if (result[0].contended[contention.question]) {
-//                   result[0].contended[contention.question]++;
-//                 } else {
-//                   result[0].contended[contention.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-//       });
-//       console.log(result);
-
-//       const questWithFilteredResults = [
-//         {
-//           ...infoQuest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       const targetedAnswers = [
-//         ...Object.keys(result[0].selected),
-//         ...Object.keys(result[0].contended)
-//       ];
-//       const QuestAnswers = resultArray[0].QuestAnswers;
-//       const filteredQuestAnswers = QuestAnswers.filter(answer =>
-//         targetedAnswers.includes(answer.question)
-//       );
-//       const optionsRemoved = QuestAnswers.filter(answer =>
-//         !targetedAnswers.includes(answer.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
-//     }
-
-//   } catch (error) {
-//     throw error;
-//   }
+// const targetfxx = async (data, userUuid, questForeginKey) => {
+//   console.log("TTTTTarget");
+//   return {...data, target: "target"};
 // }
+
+const hiddenOptionsfx = async (data, userUuid, questForeignKey) => {
+  try {
+
+    return data;
+
+    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, hiddenOptions.hiddenOptionsArray));
+
+    const desiredArray = resultArray.map((item) => ({
+      ...item._doc,
+      selectedPercentage: item.selectedPercentage
+        ? item.selectedPercentage
+        : [],
+      contendedPercentage: item.contendedPercentage
+        ? item.contendedPercentage
+        : [],
+      userQuestSetting: item.userQuestSetting,
+    }));
+
+    hiddenAnswers = hiddenOptions.hiddenOptionsArray.length !== 0 ? hiddenOptions.hiddenOptionsArray : null;
+    let finalDoc = null;
+    if (hiddenAnswers) {
+      const QuestAnswers = desiredArray[0].QuestAnswers.filter(
+        (doc) => !hiddenAnswers.includes(doc.question)
+      );
+      finalDoc = {
+        ...desiredArray,
+        0: {
+          ...desiredArray[0],
+          QuestAnswers,
+          hiddenAnswers
+        }
+      }
+    }
+
+    return finalDoc ? finalDoc : desiredArray;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const badgeCountfx = async (data, userUuid, questForeignKey) => {
+  try {
+
+    return data;
+
+    // If not exist create the analyze settings
+    const docAlreadyExists = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+    if (docAlreadyExists) {
+      docAlreadyExists.oprend = oprend;
+      docAlreadyExists.range = range;
+      await docAlreadyExists.save();
+    }
+    else {
+      const badgeCount = new BadgeCount();
+      badgeCount.userUuid = userUuid;
+      badgeCount.questForeignKey = questForeignKey;
+      badgeCount.oprend = oprend;
+      badgeCount.range = range;
+      await badgeCount.save();
+    }
+
+    const badgeCountDoc = await BadgeCount.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    );
+
+    const quest = await InfoQuestQuestions.findOne(
+      {
+        _id: questForeignKey
+      }
+    );
+
+    if (badgeCountDoc.oprend === 0) {
+      const resultStartQuest = await getQuestionsWithStatus([quest], userUuid);
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+      return { result: { ...resultArray } };
+    }
+
+    // Assuming `oprend` and `range` are defined
+    const operator = operators[oprend];
+    const startQuests = await StartQuests.aggregate([
+      {
+        $match: {
+          questForeignKey: questForeignKey, // Match the specific questForeignKey
+          $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
+        }
+      },
+      {
+        $lookup: {
+          from: 'users', // The name of the User collection
+          localField: 'uuid', // The field in StartQuests that matches User
+          foreignField: 'uuid', // The field in User to match
+          as: 'userDetails' // The name of the array field to hold matching documents
+        }
+      },
+      {
+        $unwind: '$userDetails' // Unwind the array to deconstruct the documents
+      },
+      {
+        $match: {
+          'userDetails.badges': { $exists: true }, // Ensure the badges field exists
+          $expr: { [operator]: [{ $size: '$userDetails.badges' }, range] } // Match based on badges array length
+        }
+      },
+      {
+        $project: {
+          userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
+        }
+      }
+    ]);
+
+    let result = [
+      {
+        selected: {},
+        contended: {}
+      }
+    ];
+
+    startQuests.forEach(doc => {
+      // Find the most recent `data` object based on the `created` field
+      let recentData = doc.data.reduce((latest, current) => {
+        return new Date(latest.created) > new Date(current.created) ? latest : current;
+      });
+
+      // Handle the first structure (where `selected` is a string)
+      if (typeof recentData.selected === 'string') {
+        if (result[0].selected[recentData.selected]) {
+          result[0].selected[recentData.selected]++;
+        } else {
+          result[0].selected[recentData.selected] = 1;
+        }
+      }
+
+      // Handle the second structure (where `selected` and `contended` are arrays of objects)
+      if (Array.isArray(recentData.selected)) {
+        recentData.selected.forEach(selection => {
+          if (selection && typeof selection === 'object') {
+            Object.keys(selection).forEach(key => {
+              if (key === 'question') {
+                if (result[0].selected[selection[key]]) {
+                  result[0].selected[selection[key]]++;
+                } else {
+                  result[0].selected[selection[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(recentData.contended)) {
+        recentData.contended.forEach(contention => {
+          if (contention && typeof contention === 'object') {
+            Object.keys(contention).forEach(key => {
+              if (key === 'question') {
+                if (result[0].contended[contention[key]]) {
+                  result[0].contended[contention[key]]++;
+                } else {
+                  result[0].contended[contention[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    const questWithFilteredResults = [
+      {
+        ...quest._doc,
+        totalStartQuest: startQuests.length,
+        result
+      }
+    ]
+
+    const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
+    const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+    const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+
+    return { ...resultArray, 0: { ...resultArray[0], oprend: badgeCountDoc.oprend, range: badgeCountDoc.range } };
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const targetfx = async (data, userUuid, questForeignKey) => {
+  try {
+
+    return data;
+
+    const infoQuest = await InfoQuestQuestions.findOne({
+      _id: questForeignKey,
+    }).populate("getUserBadge", "badges");
+    if (!infoQuest) throw new Error("No Quest Exist!");
+
+    const targetedQuest = await InfoQuestQuestions.findOne({
+      _id: targetedQuestForeignKey,
+    }).populate("getUserBadge", "badges");
+    if (!targetedQuest) throw new Error("No Quest Exist!");
+
+    // If Target Doc exist
+    const targetDocExists = await Target.findOne(
+      {
+        userUuid: userUuid,
+        targetedQuestForeignKey: targetedQuestForeignKey,
+      }
+    )
+    if (targetDocExists) {
+      targetDocExists.questForeignKey = questForeignKey;
+      targetDocExists.targetedQuestForeignKey = targetedQuestForeignKey;
+      targetDocExists.targetedOptionsArray = targetedOptionsArray;
+      await targetDocExists.save();
+    }
+    else {
+      const target = new Target();
+      target.userUuid = userUuid;
+      target.questForeignKey = questForeignKey;
+      target.targetedQuestForeignKey = targetedQuestForeignKey;
+      target.targetedOptionsArray = targetedOptionsArray;
+      await target.save();
+    }
+
+    const targetDoc = await Target.findOne(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      }
+    )
+
+    if (questForeignKey === targetedQuestForeignKey) {
+      const startQuests = await StartQuests.aggregate([
+        { $unwind: "$data" },
+        { $sort: { "data.created": -1 } },
+        {
+          $group: {
+            _id: "$_id",
+            uuid: { $first: "$uuid" },
+            questForeignKey: { $first: "$questForeignKey" },
+            recentData: { $first: "$data" }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              // Check if selected is a string and matches the targetedOptionsArray
+              { "recentData.selected": { $in: targetedOptionsArray } },
+              // Check if selected is an array of objects with question fields
+              { "recentData.selected.question": { $in: targetedOptionsArray } },
+              // Check if contended is a string and matches the targetedOptionsArray
+              { "recentData.contended": { $in: targetedOptionsArray } },
+              // Check if contended is an array of objects with question fields
+              { "recentData.contended.question": { $in: targetedOptionsArray } }
+            ]
+          }
+        }
+      ]);
+
+      let result = [
+        {
+          selected: {},
+          contended: {}
+        }
+      ];
+
+      startQuests.forEach(doc => {
+        const recentData = doc.recentData; // This is already the most recent data
+
+        // Handle the first structure (where `selected` is a string)
+        if (typeof recentData.selected === 'string') {
+          if (result[0].selected[recentData.selected]) {
+            result[0].selected[recentData.selected]++;
+          } else {
+            result[0].selected[recentData.selected] = 1;
+          }
+        }
+
+        // Handle the second structure (where `selected` and `contended` are arrays of objects)
+        if (Array.isArray(recentData.selected)) {
+          recentData.selected.forEach(selection => {
+            if (selection && typeof selection === 'object') {
+              if (selection.question) {
+                if (result[0].selected[selection.question]) {
+                  result[0].selected[selection.question]++;
+                } else {
+                  result[0].selected[selection.question] = 1;
+                }
+              }
+            }
+          });
+        }
+
+        if (Array.isArray(recentData.contended)) {
+          recentData.contended.forEach(contention => {
+            if (contention && typeof contention === 'object') {
+              if (contention.question) {
+                if (result[0].contended[contention.question]) {
+                  result[0].contended[contention.question]++;
+                } else {
+                  result[0].contended[contention.question] = 1;
+                }
+              }
+            }
+          });
+        }
+      });
+
+      const questWithFilteredResults = [
+        {
+          ...infoQuest._doc,
+          totalStartQuest: startQuests.length,
+          result
+        }
+      ]
+
+      const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+
+      const targetedAnswers = targetDoc.targetedOptionsArray;
+      const QuestAnswers = resultArray[0].QuestAnswers;
+      const filteredQuestAnswers = QuestAnswers.filter(answer =>
+        targetedAnswers.includes(answer.question)
+      );
+      const optionsRemoved = QuestAnswers.filter(answer =>
+        !targetedAnswers.includes(answer.question)
+      );
+
+      return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
+
+    }
+    else {
+      let targetUuids = await StartQuests.aggregate([
+        { $match: { questForeignKey: targetedQuestForeignKey } }, // Step 1: Match targetedQuestForeignKey
+        { $unwind: "$data" }, // Unwind the data array to work with each entry individually
+        { $sort: { "data.created": -1 } }, // Sort by the created date in descending order to get the most recent first
+        {
+          $group: {
+            _id: "$_id",
+            uuid: { $first: "$uuid" }, // Extract the uuid of each document
+            recentData: { $first: "$data" } // Get the most recent data entry
+          }
+        },
+        {
+          $match: {
+            $or: [
+              // Check if selected is a string and matches the targetedOptionsArray
+              { "recentData.selected": { $in: targetedOptionsArray } },
+              // Check if selected is an array of objects with question fields
+              { "recentData.selected.question": { $in: targetedOptionsArray } },
+              // Check if contended is a string and matches the targetedOptionsArray
+              { "recentData.contended": { $in: targetedOptionsArray } },
+              // Check if contended is an array of objects with question fields
+              { "recentData.contended.question": { $in: targetedOptionsArray } }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            uuids: { $addToSet: "$uuid" } // Collect all uuids that match the criteria
+          }
+        }
+      ]);
+
+      targetUuids = targetUuids.length > 0 ? targetUuids[0].uuids : [];
+
+      console.log(targetUuids);
+
+      const startQuests = await StartQuests.aggregate([
+        { $match: { uuid: { $in: targetUuids }, questForeignKey: questForeignKey } },
+        { $unwind: "$data" },
+        { $sort: { "data.created": -1 } },
+        {
+          $group: {
+            _id: "$_id",
+            uuid: { $first: "$uuid" },
+            questForeignKey: { $first: "$questForeignKey" },
+            recentData: { $first: "$data" }
+          }
+        }
+      ]);
+
+      console.log(startQuests);
+
+      // Initialize result as an array with one object
+      let result = [
+        {
+          selected: {},
+          contended: {}
+        }
+      ];
+
+      startQuests.forEach(doc => {
+        const recentData = doc.recentData; // This is already the most recent data
+
+        // Handle the first structure (where `selected` is a string)
+        if (typeof recentData.selected === 'string') {
+          if (result[0].selected[recentData.selected]) {
+            result[0].selected[recentData.selected]++;
+          } else {
+            result[0].selected[recentData.selected] = 1;
+          }
+        }
+
+        // Handle the second structure (where `selected` and `contended` are arrays of objects)
+        if (Array.isArray(recentData.selected)) {
+          recentData.selected.forEach(selection => {
+            if (selection && typeof selection === 'object') {
+              if (selection.question) {
+                if (result[0].selected[selection.question]) {
+                  result[0].selected[selection.question]++;
+                } else {
+                  result[0].selected[selection.question] = 1;
+                }
+              }
+            }
+          });
+        }
+
+        if (Array.isArray(recentData.contended)) {
+          recentData.contended.forEach(contention => {
+            if (contention && typeof contention === 'object') {
+              if (contention.question) {
+                if (result[0].contended[contention.question]) {
+                  result[0].contended[contention.question]++;
+                } else {
+                  result[0].contended[contention.question] = 1;
+                }
+              }
+            }
+          });
+        }
+      });
+      console.log(result);
+
+      const questWithFilteredResults = [
+        {
+          ...infoQuest._doc,
+          totalStartQuest: startQuests.length,
+          result
+        }
+      ]
+
+      const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
+      const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
+      const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
+
+      const targetedAnswers = [
+        ...Object.keys(result[0].selected),
+        ...Object.keys(result[0].contended)
+      ];
+      const QuestAnswers = resultArray[0].QuestAnswers;
+      const filteredQuestAnswers = QuestAnswers.filter(answer =>
+        targetedAnswers.includes(answer.question)
+      );
+      const optionsRemoved = QuestAnswers.filter(answer =>
+        !targetedAnswers.includes(answer.question)
+      );
+
+      return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
 
 // const hiddenOptionsTarget = async (userUuid, questForeignKey, hiddenOptionsArray, targetedQuestForeignKey, targetedOptionsArray) => {
 //   try {
@@ -3316,6 +3311,21 @@ const getQuestById = async (req, res) => {
     //   )
     // }
     // else {
+    //   let resultArray = result1.map((item) => getPercentage(item, page, quest));
+    //   const desiredArray = resultArray.map((item) => ({
+    //     ...item._doc,
+    //     selectedPercentage: item.selectedPercentage
+    //       ? item.selectedPercentage
+    //       : [],
+    //     contendedPercentage: item.contendedPercentage
+    //       ? item.contendedPercentage
+    //       : [],
+    //     userQuestSetting: item.userQuestSetting,
+    //   }));
+    //   res.status(200).json({
+    //     data: desiredArray,
+    //   });
+    // }
 
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne(
       {
@@ -3324,6 +3334,43 @@ const getQuestById = async (req, res) => {
       }
     );
 
+    console.log(advanceAnalyticsDoc);
+
+    // if (advanceAnalyticsDoc && advanceAnalyticsDoc.advanceAnalytics.length > 0) {
+    //   // Global function map
+    //   const functionMap = {
+    //     hide: hiddenOptionsfx,
+    //     badgeCount: badgeCountfx,
+    //     target: targetfx,
+    //     // forthAA: forthAAfx, Replace with actual one
+    //     // fifthAA: fifthAAfx, Replace with actual one
+    //     // Add other function mappings as needed
+    //   };
+    //   // Sort the advanceAnalytics array by the order field
+    //   const sortedAnalytics = advanceAnalyticsDoc.advanceAnalytics
+    //     .sort((a, b) => a.order - b.order);
+
+    //   // Initialize the result variable
+    //   let currentResult = result1[0];
+
+    //   console.log(JSON.stringify(result1[0], null, 2));
+
+    //   // Call functions based on type in sorted order
+    //   for (const analyticsItem of sortedAnalytics) {
+    //     const func = functionMap[analyticsItem.type];
+    //     if (func) {
+    //       // Call the function with currentResult, userUuid, and questForeignKey
+    //       currentResult = await func(currentResult, uuid, id);
+    //     } else {
+    //       console.warn(`No function found for type: ${analyticsItem.type}`);
+    //     }
+    //   }
+
+    //   res.status(200).json({
+    //     data: currentResult,
+    //   });
+    // }
+    // else {
       let resultArray = result1.map((item) => getPercentage(item, page, quest));
       const desiredArray = resultArray.map((item) => ({
         ...item._doc,
@@ -3335,9 +3382,15 @@ const getQuestById = async (req, res) => {
           : [],
         userQuestSetting: item.userQuestSetting,
       }));
+
+      if (desiredArray[0]) {
+        desiredArray[0].advanceAnalytics = advanceAnalyticsDoc
+          ? advanceAnalyticsDoc.advanceAnalytics
+          : null;
+      }
+  
       res.status(200).json({
         data: desiredArray,
-        advanceAnalytics: advanceAnalyticsDoc ? advanceAnalyticsDoc.advanceAnalytics : null
       });
     // }
 
@@ -4582,8 +4635,8 @@ const advanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey } = req.params;
 
-    if(!req.body.type ) return res.status(403).json({message: "Type is not Provided"});
-    if(!userUuid && !questForeignKey) return res.status(403).json({message: "Invalid request, Please provide references userUuid and questForeignKey in params"});
+    if(!req.body.type) return res.status(403).json({message: "Type is not Provided"});
+    if(!userUuid || !questForeignKey) return res.status(403).json({message: "Invalid request, Please provide references userUuid and questForeignKey in params"});
 
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne(
       {
@@ -4593,33 +4646,47 @@ const advanceAnalytics = async (req, res) => {
     );
 
     if (advanceAnalyticsDoc) {
-      // Check if an object with the same 'type' exists in the advanceAnalytics array
-      const existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(item => item.type === req.body.type);
+      // Check if an object with the same 'type' and '_id' exists in the advanceAnalytics array
+      const existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+        (item) => item.type === req.body.type && item._id.toString() === req.body.id
+      );
+    
       if (existingAnalytics) {
-        // If an object with the same 'type' exists, update it with the new data from req.body
-        // Object.assign(existingAnalytics, req.body);
         // If an object with the same 'type' exists, update it with the new data from req.body
         for (let key in req.body) {
           existingAnalytics[key] = req.body[key];
         }
-        // To ensure Mongoose tracks changes to the array, mark the document as modified
+        // Mark the document as modified to ensure Mongoose tracks changes to the array
         advanceAnalyticsDoc.markModified('advanceAnalytics');
       } else {
-        // If no such object exists, push the new object into the advanceAnalytics array
-        const newAnalytics = { ...req.body, _id: new mongoose.Types.ObjectId() };
+        // Find the current maximum order value in the advanceAnalytics array
+        const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
+          (max, item) => (item.order > max ? item.order : max),
+          0
+        );
+    
+        // If no such object exists, push the new object with order greater than the existing ones
+        const newAnalytics = {
+          ...req.body,
+          _id: new mongoose.Types.ObjectId(),
+          order: maxOrder + 1, // Set the new order value to be greater than the max order
+        };
         advanceAnalyticsDoc.advanceAnalytics.push(newAnalytics);
       }
+    
+      // Save the updated document
       await advanceAnalyticsDoc.save();
-    }
-    else {
-      // If document does not exist, create a new document
+    } else {
+      // If the document does not exist, create a new document with the new object
       const newDoc = new AdvanceAnalytics({
         userUuid,
         questForeignKey,
-        advanceAnalytics: [{ ...req.body, _id: new mongoose.Types.ObjectId() }],
+        advanceAnalytics: [
+          { ...req.body, _id: new mongoose.Types.ObjectId(), order: 1 }, // Start with order 1
+        ],
       });
       await newDoc.save();
-    }
+    }    
 
     const recentAdvanceAnalytics = await AdvanceAnalytics.findOne(
       {
@@ -4639,10 +4706,10 @@ const advanceAnalytics = async (req, res) => {
 
 const deleteAdvanceAnalytics = async (req, res) => {
   try {
-    const { userUuid, questForeignKey, type } = req.params;
+    const { userUuid, questForeignKey, type, id } = req.params;
 
-    if(!type) return res.status(403).json({message: "Type is not Provided"});
-    if(!userUuid && !questForeignKey) return res.status(403).json({message: "Invalid request, Please provide references userUuid and questForeignKey in params"});
+    if(!type || !id) return res.status(403).json({message: "Type or Id is not Provided"});
+    if(!userUuid || !questForeignKey) return res.status(403).json({message: "Invalid request, Please provide references userUuid and questForeignKey in params"});
 
     // Update the document by removing the object with the specified type from the advanceAnalytics array
     const result = await AdvanceAnalytics.findOneAndUpdate(
@@ -4651,7 +4718,7 @@ const deleteAdvanceAnalytics = async (req, res) => {
         questForeignKey: questForeignKey,
       },
       {
-        $pull: { advanceAnalytics: { type: type } }, // Remove objects matching the type
+        $pull: { advanceAnalytics: { type: type, _id: id } }, // Remove objects matching the type
       },
       { new: true } // Return the updated document
     );
@@ -4675,10 +4742,57 @@ const deleteAdvanceAnalytics = async (req, res) => {
   }
 }
 
+// const updateAnalyticsOrder = async (req, res) => {
+//   try {
+//     const { userUuid, questForeignKey } = req.params;
+//     const { order } = req.body;  // order should be an array of objects with type and order
+
+//     // Find the document
+//     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
+//       userUuid: userUuid,
+//       questForeignKey: questForeignKey,
+//     });
+
+//     if (!advanceAnalyticsDoc) {
+//       return res.status(404).json({ message: "Document not found." });
+//     }
+
+//     // Create a map of types to new orders for quick lookup
+//     const orderMap = new Map(order.map(item => [item.type, item.order]));
+
+//     // Update the order of objects in advanceAnalytics
+//     advanceAnalyticsDoc.advanceAnalytics.forEach(item => {
+//       if (orderMap.has(item.type)) {
+//         item.order = orderMap.get(item.type);
+//       }
+//     });
+
+//     // Mark the array as modified
+//     advanceAnalyticsDoc.markModified('advanceAnalytics');
+
+//     // Save the updated document
+//     await advanceAnalyticsDoc.save();
+
+//     const recentAdvanceAnalytics = await AdvanceAnalytics.findOne(
+//       {
+//         userUuid: userUuid,
+//         questForeignKey: questForeignKey,
+//       }
+//     );
+
+//     res.status(200).json({ message: "Analytics configured successfully!", advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics  });
+
+//   } catch (error) {
+//     // If an error occurs, return an error response
+//     console.error(error);
+//     res.status(500).json({ message: error.message });
+//   }
+// }
+
 const updateAnalyticsOrder = async (req, res) => {
   try {
     const { userUuid, questForeignKey } = req.params;
-    const { order } = req.body;  // order should be an array of objects with type and order
+    const { order } = req.body; // order should be an array of objects with _id, type, and order
 
     // Find the document
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
@@ -4690,13 +4804,14 @@ const updateAnalyticsOrder = async (req, res) => {
       return res.status(404).json({ message: "Document not found." });
     }
 
-    // Create a map of types to new orders for quick lookup
-    const orderMap = new Map(order.map(item => [item.type, item.order]));
+    // Create a map of _id and type to new orders for quick lookup
+    const orderMap = new Map(order.map(item => [`${item._id}_${item.type}`, item.order]));
 
     // Update the order of objects in advanceAnalytics
     advanceAnalyticsDoc.advanceAnalytics.forEach(item => {
-      if (orderMap.has(item.type)) {
-        item.order = orderMap.get(item.type);
+      const key = `${item._id}_${item.type}`;
+      if (orderMap.has(key)) {
+        item.order = orderMap.get(key);
       }
     });
 
@@ -4706,22 +4821,22 @@ const updateAnalyticsOrder = async (req, res) => {
     // Save the updated document
     await advanceAnalyticsDoc.save();
 
-    const recentAdvanceAnalytics = await AdvanceAnalytics.findOne(
-      {
-        userUuid: userUuid,
-        questForeignKey: questForeignKey,
-      }
-    );
+    // Fetch the updated document
+    const recentAdvanceAnalytics = await AdvanceAnalytics.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
 
-    res.status(200).json({ message: "Analytics configured successfully!", advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics  });
-
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
   } catch (error) {
     // If an error occurs, return an error response
     console.error(error);
     res.status(500).json({ message: error.message });
   }
-}
-
+};
 
 module.exports = {
   createInfoQuestQuest,

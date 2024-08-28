@@ -738,6 +738,12 @@ router.delete(
    *         schema:
    *           type: string
    *         description: The type of the analytics object to delete.
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The id of the analytics object to delete.
    *     responses:
    *       '200':
    *         description: Successfully deleted the advance analytics object.
