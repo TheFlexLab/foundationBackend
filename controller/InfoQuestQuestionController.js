@@ -2680,7 +2680,7 @@ const getQuestsAll = async (req, res) => {
     //         ? { interactingCounter: -1 }
     //         : { createdAt: -1 } // Default sort
     // );
-    if (participated === "All") {
+    if (participated === "All" && sort !== "Wow") {
       query = query.skip(skip).limit(pageSize);
     }
 
@@ -4704,12 +4704,10 @@ const advanceAnalytics = async (req, res) => {
     if (!req.body.type)
       return res.status(403).json({ message: "Type is not Provided" });
     if (!userUuid || !questForeignKey)
-      return res
-        .status(403)
-        .json({
-          message:
-            "Invalid request, Please provide references userUuid and questForeignKey in params",
-        });
+      return res.status(403).json({
+        message:
+          "Invalid request, Please provide references userUuid and questForeignKey in params",
+      });
 
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
       userUuid: userUuid,
@@ -4837,12 +4835,10 @@ const advanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Analytics configured successfully!",
-        advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
-      });
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
   } catch (error) {
     // If an error occurs, return an error response
     console.error(error);
@@ -4858,12 +4854,10 @@ const deleteAdvanceAnalytics = async (req, res) => {
     if (!type || !id)
       return res.status(403).json({ message: "Type or Id is not Provided" });
     if (!userUuid || !questForeignKey)
-      return res
-        .status(403)
-        .json({
-          message:
-            "Invalid request, Please provide references userUuid and questForeignKey in params",
-        });
+      return res.status(403).json({
+        message:
+          "Invalid request, Please provide references userUuid and questForeignKey in params",
+      });
 
     // Update the document by removing the object with the specified type from the advanceAnalytics array
     const result = await AdvanceAnalytics.findOneAndUpdate(
@@ -4891,12 +4885,10 @@ const deleteAdvanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Analytics configured successfully!",
-        advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
-      });
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
   } catch (error) {
     // If an error occurs, return an error response
     console.error(error);
