@@ -106,7 +106,6 @@ const hiddenOptionsfx = async (data, userUuid, questForeignKey, hiddenOptionsArr
     return {
       ...data,
       QuestAnswers,
-      totalStartQuest: 5,
       result: updatedResult,
       optionsRemoved: data.optionsRemoved, // Include the updated optionsRemoved array
     };
