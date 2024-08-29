@@ -287,6 +287,203 @@ const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
   }
 };
 
+const activityfx = async (data, userUuid, questForeignKey, allParams) => {
+  try {
+    const operator = operators[allParams.operand];
+    const switchCases = {
+      twitter: {
+        // Condition 1: Check for 'twitter' badge with followers
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      { $eq: ["$$badge.accountName", "twitter"] },
+                      {
+                        [operator]: ["$$badge.followers", allParams.followers],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      sex: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: ["$$badge.personal.sex", allParams.sex],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+    };
+    const startQuests = await StartQuests.aggregate([
+      {
+        $match: {
+          questForeignKey: questForeignKey, // Match the specific questForeignKey
+          $expr: { $gt: [{ $size: "$data" }, 0] }, // Ensure the data array length is greater than 0
+        },
+      },
+      {
+        // Add a stage to extract the most recent document in the data array
+        $addFields: {
+          recentData: { $arrayElemAt: ["$data", -1] }, // Get the most recent data from the array
+        },
+      },
+      {
+        $match: {
+          // Check if any keys in `selected` or `contended` match the latest `selected` or `contended`
+          $or: [
+            {
+              "recentData.selected": {
+                $in: Object.keys(data.result[0]?.selected || {}), // Check if any selected key matches, safely
+              },
+            },
+            {
+              "recentData.selected.question": {
+                $in: Object.keys(data.result[0]?.selected || {}), // Safely check if any selected key matches in `question`
+              },
+            },
+            {
+              "recentData.contended": {
+                $in: Object.keys(data.result[0]?.contended || {}), // Check if any contended key matches, safely
+              },
+            },
+            {
+              "recentData.contended.question": {
+                $in: Object.keys(data.result[0]?.contended || {}), // Safely check if any contended key matches in `question`
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "users", // The name of the User collection
+          localField: "uuid", // The field in StartQuests that matches User
+          foreignField: "uuid", // The field in User to match
+          as: "userDetails", // The name of the array field to hold matching documents
+        },
+      },
+      {
+        $unwind: "$userDetails", // Unwind the array to deconstruct the documents
+      },
+      {
+        $addFields: {
+          conditionMet: {
+            $switch: {
+              branches: [
+                switchCases[allParams.subtype] || { case: false, then: false },
+              ],
+              default: false, // If none of the conditions are met, return false
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          conditionMet: true, // Only match documents where the condition is met
+        },
+      },
+      {
+        $project: {
+          userDetails: 0, // Optionally exclude userDetails if you don't need it in the result
+        },
+      },
+    ]);
+
+    let result = [
+      {
+        selected: {},
+        contended: {},
+      },
+    ];
+
+    startQuests.forEach((doc) => {
+      // Find the most recent `data` object based on the `created` field
+      let recentData = doc.data.reduce((latest, current) => {
+        return new Date(latest.created) > new Date(current.created)
+          ? latest
+          : current;
+      });
+
+      // Handle the first structure (where `selected` is a string)
+      if (typeof recentData.selected === "string") {
+        if (result[0].selected[recentData.selected]) {
+          result[0].selected[recentData.selected]++;
+        } else {
+          result[0].selected[recentData.selected] = 1;
+        }
+      }
+
+      // Handle the second structure (where `selected` and `contended` are arrays of objects)
+      if (Array.isArray(recentData.selected)) {
+        recentData.selected.forEach((selection) => {
+          if (selection && typeof selection === "object") {
+            Object.keys(selection).forEach((key) => {
+              if (key === "question") {
+                if (result[0].selected[selection[key]]) {
+                  result[0].selected[selection[key]]++;
+                } else {
+                  result[0].selected[selection[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(recentData.contended)) {
+        recentData.contended.forEach((contention) => {
+          if (contention && typeof contention === "object") {
+            Object.keys(contention).forEach((key) => {
+              if (key === "question") {
+                if (result[0].contended[contention[key]]) {
+                  result[0].contended[contention[key]]++;
+                } else {
+                  result[0].contended[contention[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    return {
+      ...data,
+      totalStartQuest: startQuests.length,
+      result,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 const targetfx = async (
   data,
   userUuid,
@@ -3371,6 +3568,7 @@ const getQuestById = async (req, res) => {
         hide: hiddenOptionsfx,
         badgeCount: badgeCountfx,
         target: targetfx,
+        activity: activityfx,
         // forthAA: forthAAfx, Replace with actual one
         // fifthAA: fifthAAfx, Replace with actual one
         // Add other function mappings as needed
@@ -3403,6 +3601,9 @@ const getQuestById = async (req, res) => {
                 analyticsItem.targetedOptionsArray,
                 analyticsItem.targetedQuestForeignKey
               ); // Add parameters for target type
+              break;
+            case "activity":
+              params.push(analyticsItem.allParams); // Add parameters for target type
               break;
             // Add more cases for other types as needed
             default:
