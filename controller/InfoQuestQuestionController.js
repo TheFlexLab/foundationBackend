@@ -340,6 +340,111 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         },
         then: true,
       },
+      relationship: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$$badge.personal.relationshipStatus",
+                          allParams.relationshipStatus,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      currentCity: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$$badge.personal.currentCity",
+                          allParams.currentCity,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      homeTown: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: ["$$badge.personal.homeTown", allParams.homeTown],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      dateOfBirth: {
+        // Check if the `dateOfBirth` is within the range
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $gte: ["$$badge.personal.dateOfBirth", allParams.from],
+                      },
+                      {
+                        $lte: ["$$badge.personal.dateOfBirth", allParams.to],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
     };
     const startQuests = await StartQuests.aggregate([
       {
