@@ -445,7 +445,86 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         },
         then: true,
       },
+      work: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$$badge.personal.${allParams.fieldName}",
+                          allParams.fieldValue,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      education: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$$badge.personal.${allParams.fieldName}",
+                          allParams.fieldValue,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      firstName: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $ne: [
+                      { $type: [`$$badge.personal.firstName`] }, // Check if the field type is not missing
+                      "missing",
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
     };
+    const [fieldKey, fieldCondition] = Object.entries(field)[0]; // e.g., fieldKey = "personal.dateOfBirth", fieldCondition = { from: "2000-01-01", to: "2005-12-31" }
+
     const startQuests = await StartQuests.aggregate([
       {
         $match: {
