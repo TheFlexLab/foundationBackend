@@ -446,21 +446,31 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         },
         then: true,
       },
+
       work: {
-        // Check for sex
         case: {
           $gt: [
             {
               $size: {
                 $filter: {
-                  input: "$userDetails.badges",
+                  input: "$userDetails.badges", // Access badges array
                   as: "badge",
                   cond: {
                     $and: [
                       {
                         $eq: [
-                          "$$badge.personal.education.${allParams.fieldName}",
-                          allParams.fieldValue,
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  `$$badge.personal.work.${allParams.fieldName}`,
+                                  0,
+                                ], // Safely access the field
+                              },
+                              null, // Default to null if not found
+                            ],
+                          },
+                          allParams.fieldValue, // Match the provided field value
                         ],
                       },
                     ],
@@ -474,20 +484,29 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         then: true,
       },
       education: {
-        // Check for sex
         case: {
           $gt: [
             {
               $size: {
                 $filter: {
-                  input: "$userDetails.badges",
+                  input: "$userDetails.badges", // Access badges array
                   as: "badge",
                   cond: {
                     $and: [
                       {
                         $eq: [
-                          "$$badge.personal.education.${allParams.fieldName}",
-                          allParams.fieldValue,
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  `$$badge.personal.education.${allParams.fieldName}`,
+                                  0,
+                                ], // Safely access the field
+                              },
+                              null, // Default to null if not found
+                            ],
+                          },
+                          allParams.fieldValue, // Match the provided field value
                         ],
                       },
                     ],
@@ -500,6 +519,7 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         },
         then: true,
       },
+
       firstName: {
         // Check for sex
         case: {
