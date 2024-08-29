@@ -290,6 +290,8 @@ const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
 const activityfx = async (data, userUuid, questForeignKey, allParams) => {
   try {
     const operator = operators[allParams.operand];
+    console.log(allParams);
+
     const switchCases = {
       twitter: {
         // Condition 1: Check for 'twitter' badge with followers
@@ -341,7 +343,6 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         then: true,
       },
       relationship: {
-        // Check for sex
         case: {
           $gt: [
             {
@@ -458,7 +459,7 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
                     $and: [
                       {
                         $eq: [
-                          "$$badge.personal.${allParams.fieldName}",
+                          "$$badge.personal.education.${allParams.fieldName}",
                           allParams.fieldValue,
                         ],
                       },
@@ -485,7 +486,7 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
                     $and: [
                       {
                         $eq: [
-                          "$$badge.personal.${allParams.fieldName}",
+                          "$$badge.personal.education.${allParams.fieldName}",
                           allParams.fieldValue,
                         ],
                       },
@@ -523,7 +524,6 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
         then: true,
       },
     };
-    const [fieldKey, fieldCondition] = Object.entries(field)[0]; // e.g., fieldKey = "personal.dateOfBirth", fieldCondition = { from: "2000-01-01", to: "2005-12-31" }
 
     const startQuests = await StartQuests.aggregate([
       {
