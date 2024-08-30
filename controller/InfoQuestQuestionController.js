@@ -2761,12 +2761,6 @@ const getQuestById = async (req, res) => {
         page,
       }));
 
-      if (desiredArray[0]) {
-        desiredArray[0].advanceAnalytics = advanceAnalyticsDoc
-          ? advanceAnalyticsDoc.advanceAnalytics
-          : null;
-      }
-
       res.status(200).json({
         data: desiredArray,
       });
