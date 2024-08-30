@@ -48,21 +48,6 @@ const operators = {
   4: "$ne", // Not equal to
 };
 
-// const hiddenOptionsfxx = async (data, userUuid, questForeginKey) => {
-//   console.log("hhhhhhhhide");
-//   return {...data, hide: "hide"};
-// }
-
-// const badgeCountfxx = async (data, userUuid, questForeginKey) => {
-//   console.log("BBBBC");
-//   return {...data, badgeCount: "badgeCount"};
-// }
-
-// const targetfxx = async (data, userUuid, questForeginKey) => {
-//   console.log("TTTTTarget");
-//   return {...data, target: "target"};
-// }
-
 const hiddenOptionsfx = async (
   data,
   userUuid,
@@ -121,39 +106,6 @@ const hiddenOptionsfx = async (
 
 const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
   try {
-    // return data;
-    // Assuming `oprend` and `range` are defined
-    // const startQuests = await StartQuests.aggregate([
-    //   {
-    //     $match: {
-    //       questForeignKey: questForeignKey, // Match the specific questForeignKey
-    //       $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'users', // The name of the User collection
-    //       localField: 'uuid', // The field in StartQuests that matches User
-    //       foreignField: 'uuid', // The field in User to match
-    //       as: 'userDetails' // The name of the array field to hold matching documents
-    //     }
-    //   },
-    //   {
-    //     $unwind: '$userDetails' // Unwind the array to deconstruct the documents
-    //   },
-    //   {
-    //     $match: {
-    //       'userDetails.badges': { $exists: true }, // Ensure the badges field exists
-    //       $expr: { [operator]: [{ $size: '$userDetails.badges' }, range] } // Match based on badges array length
-    //     }
-    //   },
-    //   {
-    //     $project: {
-    //       userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
-    //     }
-    //   }
-    // ]);
-
     const operator = operators[oprend];
     const startQuests = await StartQuests.aggregate([
       {
@@ -295,96 +247,6 @@ const targetfx = async (
   targetedQuestForeignKey
 ) => {
   try {
-    // if (questForeignKey === targetedQuestForeignKey) {
-    //   const startQuests = await StartQuests.aggregate([
-    //     { $unwind: "$data" },
-    //     { $sort: { "data.created": -1 } },
-    //     {
-    //       $group: {
-    //         _id: "$_id",
-    //         uuid: { $first: "$uuid" },
-    //         questForeignKey: { $first: "$questForeignKey" },
-    //         recentData: { $first: "$data" }
-    //       }
-    //     },
-    //     {
-    //       $match: {
-    //         $or: [
-    //           // Check if selected is a string and matches the targetedOptionsArray
-    //           { "recentData.selected": { $in: targetedOptionsArray } },
-    //           // Check if selected is an array of objects with question fields
-    //           { "recentData.selected.question": { $in: targetedOptionsArray } },
-    //           // Check if contended is a string and matches the targetedOptionsArray
-    //           { "recentData.contended": { $in: targetedOptionsArray } },
-    //           // Check if contended is an array of objects with question fields
-    //           { "recentData.contended.question": { $in: targetedOptionsArray } }
-    //         ]
-    //       }
-    //     }
-    //   ]);
-
-    //   let result = [
-    //     {
-    //       selected: {},
-    //       contended: {}
-    //     }
-    //   ];
-
-    //   startQuests.forEach(doc => {
-    //     const recentData = doc.recentData; // This is already the most recent data
-
-    //     // Handle the first structure (where `selected` is a string)
-    //     if (typeof recentData.selected === 'string') {
-    //       if (result[0].selected[recentData.selected]) {
-    //         result[0].selected[recentData.selected]++;
-    //       } else {
-    //         result[0].selected[recentData.selected] = 1;
-    //       }
-    //     }
-
-    //     // Handle the second structure (where `selected` and `contended` are arrays of objects)
-    //     if (Array.isArray(recentData.selected)) {
-    //       recentData.selected.forEach(selection => {
-    //         if (selection && typeof selection === 'object') {
-    //           if (selection.question) {
-    //             if (result[0].selected[selection.question]) {
-    //               result[0].selected[selection.question]++;
-    //             } else {
-    //               result[0].selected[selection.question] = 1;
-    //             }
-    //           }
-    //         }
-    //       });
-    //     }
-
-    //     if (Array.isArray(recentData.contended)) {
-    //       recentData.contended.forEach(contention => {
-    //         if (contention && typeof contention === 'object') {
-    //           if (contention.question) {
-    //             if (result[0].contended[contention.question]) {
-    //               result[0].contended[contention.question]++;
-    //             } else {
-    //               result[0].contended[contention.question] = 1;
-    //             }
-    //           }
-    //         }
-    //       });
-    //     }
-    //   });
-
-    //   const targetedAnswers = targetDoc.targetedOptionsArray;
-    //   const QuestAnswers = data.QuestAnswers;
-    //   const filteredQuestAnswers = QuestAnswers.filter(answer =>
-    //     targetedAnswers.includes(answer.question)
-    //   );
-    //   const optionsRemoved = QuestAnswers.filter(answer =>
-    //     !targetedAnswers.includes(answer.question)
-    //   );
-
-    //   return { ...data, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
-
-    // }
-    // else {
     let targetUuids = await StartQuests.aggregate([
       { $match: { questForeignKey: targetedQuestForeignKey } }, // Step 1: Match targetedQuestForeignKey
       { $unwind: "$data" }, // Unwind the data array to work with each entry individually
@@ -419,20 +281,6 @@ const targetfx = async (
     ]);
 
     targetUuids = targetUuids.length > 0 ? targetUuids[0].uuids : [];
-
-    // const startQuests = await StartQuests.aggregate([
-    //   { $match: { uuid: { $in: targetUuids }, questForeignKey: questForeignKey } },
-    //   { $unwind: "$data" },
-    //   { $sort: { "data.created": -1 } },
-    //   {
-    //     $group: {
-    //       _id: "$_id",
-    //       uuid: { $first: "$uuid" },
-    //       questForeignKey: { $first: "$questForeignKey" },
-    //       recentData: { $first: "$data" }
-    //     }
-    //   }
-    // ]);
 
     const startQuests = await StartQuests.aggregate([
       // Step 1: Match documents by uuid and questForeignKey
@@ -542,6 +390,7 @@ const targetfx = async (
       ...Object.keys(result[0].selected),
       ...Object.keys(result[0].contended),
     ];
+
     const QuestAnswers = data.QuestAnswers;
     const filteredQuestAnswers = QuestAnswers.filter((answer) =>
       targetedAnswers.includes(answer.question)
@@ -552,9 +401,8 @@ const targetfx = async (
 
     return {
       ...data,
-      result,
       totalStartQuest: startQuests.length,
-      QuestAnswers: filteredQuestAnswers,
+      result,
     };
     // }
   } catch (error) {
@@ -562,873 +410,405 @@ const targetfx = async (
   }
 };
 
-// const hiddenOptionsTarget = async (userUuid, questForeignKey, hiddenOptionsArray, targetedQuestForeignKey, targetedOptionsArray) => {
-//   try {
-
-//     if (hiddenOptionsArray.length === 0) {
-//       const result = await targetfx(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray);
-//       return result;
-//     }
-
-//     const infoQuest = await InfoQuestQuestions.findOne({
-//       _id: questForeignKey,
-//     }).populate("getUserBadge", "badges");
-//     if (!infoQuest) throw new Error("No Quest Exist!");
-
-//     const targetedQuest = await InfoQuestQuestions.findOne({
-//       _id: targetedQuestForeignKey,
-//     }).populate("getUserBadge", "badges");
-//     if (!targetedQuest) throw new Error("No Quest Exist!");
-
-//     // If Target Doc exist
-//     const targetDocExists = await Target.findOne(
-//       {
-//         userUuid: userUuid,
-//         targetedQuestForeignKey: targetedQuestForeignKey,
-//       }
-//     )
-//     if (targetDocExists) {
-//       targetDocExists.questForeignKey = questForeignKey;
-//       targetDocExists.targetedQuestForeignKey = targetedQuestForeignKey;
-//       targetDocExists.targetedOptionsArray = targetedOptionsArray;
-//       await targetDocExists.save();
-//     }
-//     else {
-//       const target = new Target();
-//       target.userUuid = userUuid;
-//       target.questForeignKey = questForeignKey;
-//       target.targetedQuestForeignKey = targetedQuestForeignKey;
-//       target.targetedOptionsArray = targetedOptionsArray;
-//       await target.save();
-//     }
-
-//     const targetDoc = await Target.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     );
-
-//     if (questForeignKey === targetedQuestForeignKey) {
-//       // Step 2: Modify the aggregation pipeline to exclude documents with recentData in hiddenOptionsArray
-//       const startQuests = await StartQuests.aggregate([
-//         { $unwind: "$data" },
-//         { $sort: { "data.created": -1 } },
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" },
-//             questForeignKey: { $first: "$questForeignKey" },
-//             recentData: { $first: "$data" }
-//           }
-//         },
-//         {
-//           $match: {
-//             $or: [
-//               { "recentData.selected": { $in: targetedOptionsArray } },
-//               { "recentData.selected.question": { $in: targetedOptionsArray } },
-//               { "recentData.contended": { $in: targetedOptionsArray } },
-//               { "recentData.contended.question": { $in: targetedOptionsArray } }
-//             ]
-//           }
-//         },
-//         {
-//           $match: {
-//             $nor: [
-//               { "recentData.selected": { $in: hiddenOptionsArray } },
-//               { "recentData.selected.question": { $in: hiddenOptionsArray } },
-//               { "recentData.contended": { $in: hiddenOptionsArray } },
-//               { "recentData.contended.question": { $in: hiddenOptionsArray } }
-//             ]
-//           }
-//         }
-//       ]);
-
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         const recentData = doc.recentData; // This is already the most recent data
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               if (selection.question) {
-//                 if (result[0].selected[selection.question]) {
-//                   result[0].selected[selection.question]++;
-//                 } else {
-//                   result[0].selected[selection.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               if (contention.question) {
-//                 if (result[0].contended[contention.question]) {
-//                   result[0].contended[contention.question]++;
-//                 } else {
-//                   result[0].contended[contention.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-//       });
-
-//       const questWithFilteredResults = [
-//         {
-//           ...infoQuest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       const targetedAnswers = targetDoc.targetedOptionsArray;
-//       const QuestAnswers = resultArray[0].QuestAnswers;
-//       const optionsRemoved = QuestAnswers.filter(answer =>
-//         !targetedAnswers.includes(answer.question)
-//       );
-//       // Extract `question` values from optionsRemoved
-//       const optionsRemovedQuestions = optionsRemoved.map(answer => answer.question);
-
-//       // Create a new array containing unique values from both optionsRemoved and hiddenOptionsArray
-//       const unionArray = [
-//         ...new Set([
-//           ...optionsRemovedQuestions,
-//           ...hiddenOptionsArray
-//         ])
-//       ];
-
-//       const filteredQuestAnswers = QuestAnswers.filter(answer =>
-//         !unionArray.includes(answer.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemovedQuestions, QuestAnswers: filteredQuestAnswers } };
-
-//     }
-//     else {
-//       let targetUuids = await StartQuests.aggregate([
-//         { $match: { questForeignKey: targetedQuestForeignKey } }, // Step 1: Match targetedQuestForeignKey
-//         { $unwind: "$data" }, // Unwind the data array to work with each entry individually
-//         { $sort: { "data.created": -1 } }, // Sort by the created date in descending order to get the most recent first
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" }, // Extract the uuid of each document
-//             recentData: { $first: "$data" } // Get the most recent data entry
-//           }
-//         },
-//         {
-//           $match: {
-//             $or: [
-//               // Check if selected is a string and matches the targetedOptionsArray
-//               { "recentData.selected": { $in: targetedOptionsArray } },
-//               // Check if selected is an array of objects with question fields
-//               { "recentData.selected.question": { $in: targetedOptionsArray } },
-//               // Check if contended is a string and matches the targetedOptionsArray
-//               { "recentData.contended": { $in: targetedOptionsArray } },
-//               // Check if contended is an array of objects with question fields
-//               { "recentData.contended.question": { $in: targetedOptionsArray } }
-//             ]
-//           }
-//         },
-//         {
-//           $group: {
-//             _id: null,
-//             uuids: { $addToSet: "$uuid" } // Collect all uuids that match the criteria
-//           }
-//         }
-//       ]);
-
-//       targetUuids = targetUuids.length > 0 ? targetUuids[0].uuids : [];
-
-//       const startQuests = await StartQuests.aggregate([
-//         // Step 1: Match documents by uuid and questForeignKey
-//         { $match: { uuid: { $in: targetUuids }, questForeignKey: questForeignKey } },
-
-//         // Step 2: Unwind the data array to process each entry individually
-//         { $unwind: "$data" },
-
-//         // Step 3: Sort by the created date in descending order to get the most recent first
-//         { $sort: { "data.created": -1 } },
-
-//         // Step 4: Group by document ID to get the most recent data entry for each document
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" },
-//             questForeignKey: { $first: "$questForeignKey" },
-//             recentData: { $first: "$data" }
-//           }
-//         },
-
-//         // Step 5: Filter out documents where any recentData fields match entries in hiddenOptionsArray
-//         {
-//           $match: {
-//             $nor: [
-//               { "recentData.selected": { $in: hiddenOptionsArray } },
-//               { "recentData.selected.question": { $in: hiddenOptionsArray } },
-//               { "recentData.contended": { $in: hiddenOptionsArray } },
-//               { "recentData.contended.question": { $in: hiddenOptionsArray } }
-//             ]
-//           }
-//         }
-//       ]);
-
-//       // Initialize result as an array with one object
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         const recentData = doc.recentData; // This is already the most recent data
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               if (selection.question) {
-//                 if (result[0].selected[selection.question]) {
-//                   result[0].selected[selection.question]++;
-//                 } else {
-//                   result[0].selected[selection.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               if (contention.question) {
-//                 if (result[0].contended[contention.question]) {
-//                   result[0].contended[contention.question]++;
-//                 } else {
-//                   result[0].contended[contention.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-//       });
-
-//       const questWithFilteredResults = [
-//         {
-//           ...infoQuest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       const targetedAnswers = resultArray[0].selectedPercentage.map(item => Object.keys(item)[0]);
-//       const QuestAnswers = resultArray[0].QuestAnswers;
-//       const optionsRemoved = QuestAnswers.filter(answer =>
-//         !targetedAnswers.includes(answer.question)
-//       );
-//       // Extract `question` values from optionsRemoved
-//       const optionsRemovedQuestions = optionsRemoved.map(answer => answer.question);
-
-//       // Create a new array containing unique values from both optionsRemoved and hiddenOptionsArray
-//       const unionArray = [
-//         ...new Set([
-//           ...optionsRemovedQuestions,
-//           ...hiddenOptionsArray
-//         ])
-//       ];
-
-//       const filteredQuestAnswers = QuestAnswers.filter(answer =>
-//         !unionArray.includes(answer.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemovedQuestions, QuestAnswers: filteredQuestAnswers } };
-//     }
-
-//   } catch (error) {
-//     throw error;
-//   }
-// }
-
-// const badgeCountTarget = async (userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, oprend, range) => {
-//   try {
-
-//     if (oprend === 0) {
-//       const result = await targetfx(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray);
-//       return result;
-//     }
-
-//     const infoQuest = await InfoQuestQuestions.findOne({
-//       _id: questForeignKey,
-//     }).populate("getUserBadge", "badges");
-//     if (!infoQuest) throw new Error("No Quest Exist!");
-
-//     const targetedQuest = await InfoQuestQuestions.findOne({
-//       _id: targetedQuestForeignKey,
-//     }).populate("getUserBadge", "badges");
-//     if (!targetedQuest) throw new Error("No Quest Exist!");
-
-//     // If Target Doc exist
-//     const targetDocExists = await Target.findOne(
-//       {
-//         userUuid: userUuid,
-//         targetedQuestForeignKey: targetedQuestForeignKey,
-//       }
-//     )
-//     if (targetDocExists) {
-//       targetDocExists.questForeignKey = questForeignKey;
-//       targetDocExists.targetedQuestForeignKey = targetedQuestForeignKey;
-//       targetDocExists.targetedOptionsArray = targetedOptionsArray;
-//       await targetDocExists.save();
-//     }
-//     else {
-//       const target = new Target();
-//       target.userUuid = userUuid;
-//       target.questForeignKey = questForeignKey;
-//       target.targetedQuestForeignKey = targetedQuestForeignKey;
-//       target.targetedOptionsArray = targetedOptionsArray;
-//       await target.save();
-//     }
-
-//     const targetDoc = await Target.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-
-//     if (questForeignKey === targetedQuestForeignKey) {
-//       // Get the operator and condition
-//       const operator = operators[oprend];
-//       const condition = { [operator]: range };
-//       const startQuests = await StartQuests.aggregate([
-//         // Step 1: Join with users collection
-//         {
-//           $lookup: {
-//             from: 'users',
-//             localField: 'uuid',
-//             foreignField: 'uuid',
-//             as: 'user'
-//           }
-//         },
-//         // Step 2: Unwind the user array to get a single user document
-//         { $unwind: "$user" },
-//         // Step 3: Unwind the data array from StartQuests
-//         { $unwind: "$data" },
-//         // Step 4: Sort by the created date in descending order
-//         { $sort: { "data.created": -1 } },
-//         // Step 5: Group to get the most recent data
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" },
-//             questForeignKey: { $first: "$questForeignKey" },
-//             recentData: { $first: "$data" },
-//             userBadges: { $first: "$user.badges" } // Get the badges from user
-//           }
-//         },
-//         // Step 6: Match against the targetedOptionsArray
-//         {
-//           $match: {
-//             $or: [
-//               { "recentData.selected": { $in: targetedOptionsArray } },
-//               { "recentData.selected.question": { $in: targetedOptionsArray } },
-//               { "recentData.contended": { $in: targetedOptionsArray } },
-//               { "recentData.contended.question": { $in: targetedOptionsArray } }
-//             ]
-//           }
-//         },
-//         // Step 7: Filter based on badges condition
-//         {
-//           $match: {
-//             "userBadges": {
-//               [operator]: range
-//             }
-//           }
-//         }
-//       ]);
-
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         const recentData = doc.recentData; // This is already the most recent data
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               if (selection.question) {
-//                 if (result[0].selected[selection.question]) {
-//                   result[0].selected[selection.question]++;
-//                 } else {
-//                   result[0].selected[selection.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               if (contention.question) {
-//                 if (result[0].contended[contention.question]) {
-//                   result[0].contended[contention.question]++;
-//                 } else {
-//                   result[0].contended[contention.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-//       });
-
-//       const questWithFilteredResults = [
-//         {
-//           ...infoQuest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       const targetedAnswers = targetDoc.targetedOptionsArray;
-//       const QuestAnswers = resultArray[0].QuestAnswers;
-//       const filteredQuestAnswers = QuestAnswers.filter(answer =>
-//         targetedAnswers.includes(answer.question)
-//       );
-//       const optionsRemoved = QuestAnswers.filter(answer =>
-//         !targetedAnswers.includes(answer.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers } };
-
-//     }
-//     else {
-//       let targetUuids = await StartQuests.aggregate([
-//         { $match: { questForeignKey: targetedQuestForeignKey } }, // Step 1: Match targetedQuestForeignKey
-//         { $unwind: "$data" }, // Unwind the data array to work with each entry individually
-//         { $sort: { "data.created": -1 } }, // Sort by the created date in descending order to get the most recent first
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" }, // Extract the uuid of each document
-//             recentData: { $first: "$data" } // Get the most recent data entry
-//           }
-//         },
-//         {
-//           $match: {
-//             $or: [
-//               // Check if selected is a string and matches the targetedOptionsArray
-//               { "recentData.selected": { $in: targetedOptionsArray } },
-//               // Check if selected is an array of objects with question fields
-//               { "recentData.selected.question": { $in: targetedOptionsArray } },
-//               // Check if contended is a string and matches the targetedOptionsArray
-//               { "recentData.contended": { $in: targetedOptionsArray } },
-//               // Check if contended is an array of objects with question fields
-//               { "recentData.contended.question": { $in: targetedOptionsArray } }
-//             ]
-//           }
-//         },
-//         {
-//           $group: {
-//             _id: null,
-//             uuids: { $addToSet: "$uuid" } // Collect all uuids that match the criteria
-//           }
-//         }
-//       ]);
-
-//       targetUuids = targetUuids.length > 0 ? targetUuids[0].uuids : [];
-
-//       console.log(targetUuids);
-
-//       const startQuests = await StartQuests.aggregate([
-//         { $match: { uuid: { $in: targetUuids }, questForeignKey: questForeignKey } },
-//         { $unwind: "$data" },
-//         { $sort: { "data.created": -1 } },
-//         {
-//           $group: {
-//             _id: "$_id",
-//             uuid: { $first: "$uuid" },
-//             questForeignKey: { $first: "$questForeignKey" },
-//             recentData: { $first: "$data" }
-//           }
-//         },
-//         {
-//           $lookup: {
-//             from: "users",
-//             localField: "uuid",
-//             foreignField: "uuid",
-//             as: "user"
-//           }
-//         },
-//         { $unwind: "$user" },
-//         {
-//           $match: {
-//             "user.badges": {
-//               [operators[oprend]]: range
-//             }
-//           }
-//         }
-//       ]);
-
-//       // Initialize result as an array with one object
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         const recentData = doc.recentData; // This is already the most recent data
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               if (selection.question) {
-//                 if (result[0].selected[selection.question]) {
-//                   result[0].selected[selection.question]++;
-//                 } else {
-//                   result[0].selected[selection.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               if (contention.question) {
-//                 if (result[0].contended[contention.question]) {
-//                   result[0].contended[contention.question]++;
-//                 } else {
-//                   result[0].contended[contention.question] = 1;
-//                 }
-//               }
-//             }
-//           });
-//         }
-//       });
-//       console.log(result);
-
-//       const questWithFilteredResults = [
-//         {
-//           ...infoQuest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       // const targetedAnswers = resultArray[0].selectedPercentage.map(item => Object.keys(item)[0]);
-//       const targetedAnswers = [
-//         ...Object.keys(result[0].selected),
-//         ...Object.keys(result[0].contended)
-//       ];
-//       const QuestAnswers = resultArray[0].QuestAnswers;
-//       const filteredQuestAnswers = QuestAnswers.filter(answer =>
-//         targetedAnswers.includes(answer.question)
-//       );
-//       const optionsRemoved = QuestAnswers.filter(answer =>
-//         !targetedAnswers.includes(answer.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], optionsRemoved: optionsRemoved, QuestAnswers: filteredQuestAnswers, oprend: oprend, range: range } };
-//     }
-
-//   } catch (error) {
-//     throw error;
-//   }
-// }
-
-// const hiddenOptionsBadgeCount = async (userUuid, questForeignKey, hiddenOptionsArray, oprend, range) => {
-//   try {
-
-//     // If Hide Options Doc exist
-//     const hiddenOptionsDocAlreadyExists = await HiddenOptions.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-//     if (hiddenOptionsDocAlreadyExists) {
-//       hiddenOptionsDocAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
-//       await hiddenOptionsDocAlreadyExists.save();
-//     }
-//     else {
-//       const hiddenOptions = new HiddenOptions();
-//       hiddenOptions.userUuid = userUuid;
-//       hiddenOptions.questForeignKey = questForeignKey;
-//       hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
-//       await hiddenOptions.save();
-//     }
-
-//     // If Badge Count Doc exist
-//     const badgeCountDocAlreadyExists = await BadgeCount.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     )
-//     if (badgeCountDocAlreadyExists) {
-//       badgeCountDocAlreadyExists.oprend = oprend;
-//       badgeCountDocAlreadyExists.range = range;
-//       await badgeCountDocAlreadyExists.save();
-//     }
-//     else {
-//       const badgeCount = new BadgeCount();
-//       badgeCount.userUuid = userUuid;
-//       badgeCount.questForeignKey = questForeignKey;
-//       badgeCount.oprend = oprend;
-//       badgeCount.range = range;
-//       await badgeCount.save();
-//     }
-
-//     // Filter Setting for Analytics
-//     const hiddenOptions = await HiddenOptions.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     );
-
-//     const badgeCount = await BadgeCount.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     );
-
-//     const quest = await InfoQuestQuestions.findOne(
-//       {
-//         _id: questForeignKey
-//       }
-//     );
-
-//     if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
-//       const infoQuest = await InfoQuestQuestions.find({
-//         _id: questForeignKey,
-//       }).populate("getUserBadge", "badges");
-//       if (!infoQuest) throw new Error("No Quest Exist!");
-//       result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptions.hiddenOptionsArray, infoQuest);
-//       return result;
-//     }
-//     else if (hiddenOptions && hiddenOptions.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-//       result = await badgeCountfx(userUuid, questForeignKey, badgeCount.oprend, badgeCount.range);
-//       return result;
-//     }
-//     else {
-//       // Assuming `oprend` and `range` are defined
-//       const operator = operators[badgeCount.oprend];
-//       let startQuests = await StartQuests.aggregate([
-//         {
-//           $match: {
-//             questForeignKey: questForeignKey, // Match the specific questForeignKey
-//             $expr: { $gt: [{ $size: '$data' }, 0] } // Ensure the data array length is greater than 0
-//           }
-//         },
-//         {
-//           $lookup: {
-//             from: 'users', // The name of the User collection
-//             localField: 'uuid', // The field in StartQuests that matches User
-//             foreignField: 'uuid', // The field in User to match
-//             as: 'userDetails' // The name of the array field to hold matching documents
-//           }
-//         },
-//         {
-//           $unwind: '$userDetails' // Unwind the array to deconstruct the documents
-//         },
-//         {
-//           $match: {
-//             'userDetails.badges': { $exists: true }, // Ensure the badges field exists
-//             $expr: { [operator]: [{ $size: '$userDetails.badges' }, badgeCount.range] } // Match based on badges array length
-//           }
-//         },
-//         {
-//           $project: {
-//             userDetails: 0 // Optionally exclude userDetails if you don't need it in the result
-//           }
-//         }
-//       ]);
-
-//       startQuests = startQuests.map(quest => {
-//         // Exclude userDetails
-//         const { userDetails, ...rest } = quest;
-
-//         // Perform additional filtering on 'data' if needed
-//         rest.data = rest.data.map(item => {
-//           // Handle the first structure (where `selected` is a string)
-//           if (typeof item.selected === 'string') {
-//             // If selected is a string and matches any in hiddenOptionsArray, remove it
-//             if (hiddenOptions.hiddenOptionsArray.includes(item.selected)) {
-//               item.selected = null; // or you can remove the property entirely
-//             }
-//           }
-
-//           // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//           if (Array.isArray(item.selected)) {
-//             item.selected = item.selected.filter(sel => !hiddenOptions.hiddenOptionsArray.includes(sel.question));
-//           }
-
-//           if (Array.isArray(item.contended)) {
-//             item.contended = item.contended.filter(con => !hiddenOptions.hiddenOptionsArray.includes(con.question));
-//           }
-
-//           return item;
-//         });
-
-//         return rest;
-//       });
-
-//       let result = [
-//         {
-//           selected: {},
-//           contended: {}
-//         }
-//       ];
-
-//       startQuests.forEach(doc => {
-//         // Find the most recent `data` object based on the `created` field
-//         let recentData = doc.data.reduce((latest, current) => {
-//           return new Date(latest.created) > new Date(current.created) ? latest : current;
-//         });
-
-//         // Handle the first structure (where `selected` is a string)
-//         if (typeof recentData.selected === 'string') {
-//           if (result[0].selected[recentData.selected]) {
-//             result[0].selected[recentData.selected]++;
-//           } else {
-//             result[0].selected[recentData.selected] = 1;
-//           }
-//         }
-
-//         // Handle the second structure (where `selected` and `contended` are arrays of objects)
-//         if (Array.isArray(recentData.selected)) {
-//           recentData.selected.forEach(selection => {
-//             if (selection && typeof selection === 'object') {
-//               Object.keys(selection).forEach(key => {
-//                 if (key === 'question') {
-//                   if (result[0].selected[selection[key]]) {
-//                     result[0].selected[selection[key]]++;
-//                   } else {
-//                     result[0].selected[selection[key]] = 1;
-//                   }
-//                 }
-//               });
-//             }
-//           });
-//         }
-
-//         if (Array.isArray(recentData.contended)) {
-//           recentData.contended.forEach(contention => {
-//             if (contention && typeof contention === 'object') {
-//               Object.keys(contention).forEach(key => {
-//                 if (key === 'question') {
-//                   if (result[0].contended[contention[key]]) {
-//                     result[0].contended[contention[key]]++;
-//                   } else {
-//                     result[0].contended[contention[key]] = 1;
-//                   }
-//                 }
-//               });
-//             }
-//           });
-//         }
-//       });
-
-//       const questWithFilteredResults = [
-//         {
-//           ...quest._doc,
-//           totalStartQuest: startQuests.length,
-//           result
-//         }
-//       ]
-
-//       const resultStartQuest = await getQuestionsWithStatus(questWithFilteredResults, userUuid);
-//       const resultUserQuestSetting = await getQuestionsWithUserSettings(resultStartQuest, userUuid);
-//       const resultArray = resultUserQuestSetting.map((item) => getPercentageHiddenOption(item, null, null, []));
-
-//       const hiddenAnswers = hiddenOptions.hiddenOptionsArray;
-//       const QuestAnswers = resultArray[0].QuestAnswers.filter(
-//         (doc) => !hiddenAnswers.includes(doc.question)
-//       );
-
-//       return { ...resultArray, 0: { ...resultArray[0], hiddenAnswers, QuestAnswers, oprend: badgeCount.oprend, range: badgeCount.range } };
-//     }
-
-//   } catch (error) {
-//     throw error;
-//   }
-// }
+const activityfx = async (data, userUuid, questForeignKey, allParams) => {
+  try {
+    const operator = operators[allParams.operand];
+
+    const switchCases = {
+      twitter: {
+        // Condition 1: Check for 'twitter' badge with followers
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      { $eq: ["$$badge.accountName", "twitter"] },
+                      {
+                        [operator]: ["$$badge.followers", allParams.followers],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      sex: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: ["$$badge.personal.sex", allParams.sex],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      relationship: {
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$$badge.personal.relationshipStatus",
+                          allParams.relationshipStatus,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      currentCity: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$$badge.personal.currentCity",
+                          allParams.currentCity,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      homeTown: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: ["$$badge.personal.homeTown", allParams.homeTown],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      dateOfBirth: {
+        // Check if the `dateOfBirth` is within the range
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $gte: ["$$badge.personal.dateOfBirth", allParams.from],
+                      },
+                      {
+                        $lte: ["$$badge.personal.dateOfBirth", allParams.to],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+
+      work: {
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges", // Access badges array
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  `$$badge.personal.work.${allParams.fieldName}`,
+                                  0,
+                                ], // Safely access the field
+                              },
+                              null, // Default to null if not found
+                            ],
+                          },
+                          allParams.fieldValue, // Match the provided field value
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+      education: {
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges", // Access badges array
+                  as: "badge",
+                  cond: {
+                    $and: [
+                      {
+                        $eq: [
+                          {
+                            $ifNull: [
+                              {
+                                $arrayElemAt: [
+                                  `$$badge.personal.education.${allParams.fieldName}`,
+                                  0,
+                                ], // Safely access the field
+                              },
+                              null, // Default to null if not found
+                            ],
+                          },
+                          allParams.fieldValue, // Match the provided field value
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+
+      firstName: {
+        // Check for sex
+        case: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: "$userDetails.badges",
+                  as: "badge",
+                  cond: {
+                    $ne: [
+                      { $type: [`$$badge.personal.firstName`] }, // Check if the field type is not missing
+                      "missing",
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+        then: true,
+      },
+    };
+
+    const startQuests = await StartQuests.aggregate([
+      {
+        $match: {
+          questForeignKey: questForeignKey, // Match the specific questForeignKey
+          $expr: { $gt: [{ $size: "$data" }, 0] }, // Ensure the data array length is greater than 0
+        },
+      },
+      {
+        // Add a stage to extract the most recent document in the data array
+        $addFields: {
+          recentData: { $arrayElemAt: ["$data", -1] }, // Get the most recent data from the array
+        },
+      },
+      {
+        $match: {
+          // Check if any keys in `selected` or `contended` match the latest `selected` or `contended`
+          $or: [
+            {
+              "recentData.selected": {
+                $in: Object.keys(data.result[0]?.selected || {}), // Check if any selected key matches, safely
+              },
+            },
+            {
+              "recentData.selected.question": {
+                $in: Object.keys(data.result[0]?.selected || {}), // Safely check if any selected key matches in `question`
+              },
+            },
+            {
+              "recentData.contended": {
+                $in: Object.keys(data.result[0]?.contended || {}), // Check if any contended key matches, safely
+              },
+            },
+            {
+              "recentData.contended.question": {
+                $in: Object.keys(data.result[0]?.contended || {}), // Safely check if any contended key matches in `question`
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "users", // The name of the User collection
+          localField: "uuid", // The field in StartQuests that matches User
+          foreignField: "uuid", // The field in User to match
+          as: "userDetails", // The name of the array field to hold matching documents
+        },
+      },
+      {
+        $unwind: "$userDetails", // Unwind the array to deconstruct the documents
+      },
+      {
+        $addFields: {
+          conditionMet: {
+            $switch: {
+              branches: [
+                switchCases[allParams.subtype] || { case: false, then: false },
+              ],
+              default: false, // If none of the conditions are met, return false
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          conditionMet: true, // Only match documents where the condition is met
+        },
+      },
+      {
+        $project: {
+          userDetails: 0, // Optionally exclude userDetails if you don't need it in the result
+        },
+      },
+    ]);
+
+    let result = [
+      {
+        selected: {},
+        contended: {},
+      },
+    ];
+
+    startQuests.forEach((doc) => {
+      // Find the most recent `data` object based on the `created` field
+      let recentData = doc.data.reduce((latest, current) => {
+        return new Date(latest.created) > new Date(current.created)
+          ? latest
+          : current;
+      });
+
+      // Handle the first structure (where `selected` is a string)
+      if (typeof recentData.selected === "string") {
+        if (result[0].selected[recentData.selected]) {
+          result[0].selected[recentData.selected]++;
+        } else {
+          result[0].selected[recentData.selected] = 1;
+        }
+      }
+
+      // Handle the second structure (where `selected` and `contended` are arrays of objects)
+      if (Array.isArray(recentData.selected)) {
+        recentData.selected.forEach((selection) => {
+          if (selection && typeof selection === "object") {
+            Object.keys(selection).forEach((key) => {
+              if (key === "question") {
+                if (result[0].selected[selection[key]]) {
+                  result[0].selected[selection[key]]++;
+                } else {
+                  result[0].selected[selection[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(recentData.contended)) {
+        recentData.contended.forEach((contention) => {
+          if (contention && typeof contention === "object") {
+            Object.keys(contention).forEach((key) => {
+              if (key === "question") {
+                if (result[0].contended[contention[key]]) {
+                  result[0].contended[contention[key]]++;
+                } else {
+                  result[0].contended[contention[key]] = 1;
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    return {
+      ...data,
+      totalStartQuest: startQuests.length,
+      result,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
 
 const createInfoQuestQuest = async (req, res) => {
   try {
@@ -2680,7 +2060,7 @@ const getQuestsAll = async (req, res) => {
     //         ? { interactingCounter: -1 }
     //         : { createdAt: -1 } // Default sort
     // );
-    if (participated === "All") {
+    if (participated === "All" && sort !== "Wow") {
       query = query.skip(skip).limit(pageSize);
     }
 
@@ -3281,82 +2661,6 @@ const getQuestById = async (req, res) => {
     }
     //console.log("questSharedLink", quest);
 
-    // const hiddenOptionsDoc = await HiddenOptions.findOne(
-    //   {
-    //     userUuid: uuid,
-    //     questForeignKey: id,
-    //   }
-    // )
-
-    // const badgeCount = await BadgeCount.findOne(
-    //   {
-    //     userUuid: uuid,
-    //     questForeignKey: id,
-    //   }
-    // )
-
-    // if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && !badgeCount) {
-    //   let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
-    //   return res.status(200).json(
-    //     {
-    //       message: "Advance analytics configured successfully.",
-    //       data: result,
-    //     }
-    //   )
-    // }
-    // else if (badgeCount && badgeCount.oprend !== 0 && !hiddenOptionsDoc) {
-    //   let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
-    //   return res.status(200).json(
-    //     {
-    //       message: "Advance analytics configured successfully.",
-    //       data: result,
-    //     }
-    //   )
-    // }
-    // else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend === 0) {
-    //   let result = await hiddenOptionsfx(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, infoQuest);
-    //   return res.status(200).json(
-    //     {
-    //       message: "Advance analytics configured successfully.",
-    //       data: result,
-    //     }
-    //   )
-    // }
-    // else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length === 0 && badgeCount && badgeCount.oprend !== 0) {
-    //   let result = await badgeCountfx(uuid, id, badgeCount.oprend, badgeCount.range);
-    //   return res.status(200).json(
-    //     {
-    //       message: "Advance analytics configured successfully.",
-    //       data: result,
-    //     }
-    //   )
-    // }
-    // else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCount && badgeCount.oprend !== 0) {
-    //   let result = await hiddenOptionsBadgeCount(uuid, id, hiddenOptionsDoc.hiddenOptionsArray, badgeCount.oprend, badgeCount.range);
-    //   return res.status(200).json(
-    //     {
-    //       message: "Advance analytics configured successfully.",
-    //       data: result,
-    //     }
-    //   )
-    // }
-    // else {
-    //   let resultArray = result1.map((item) => getPercentage(item, page, quest));
-    //   const desiredArray = resultArray.map((item) => ({
-    //     ...item._doc,
-    //     selectedPercentage: item.selectedPercentage
-    //       ? item.selectedPercentage
-    //       : [],
-    //     contendedPercentage: item.contendedPercentage
-    //       ? item.contendedPercentage
-    //       : [],
-    //     userQuestSetting: item.userQuestSetting,
-    //   }));
-    //   res.status(200).json({
-    //     data: desiredArray,
-    //   });
-    // }
-
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
       userUuid: uuid,
       questForeignKey: id,
@@ -3371,7 +2675,7 @@ const getQuestById = async (req, res) => {
         hide: hiddenOptionsfx,
         badgeCount: badgeCountfx,
         target: targetfx,
-        // forthAA: forthAAfx, Replace with actual one
+        activity: activityfx,
         // fifthAA: fifthAAfx, Replace with actual one
         // Add other function mappings as needed
       };
@@ -3382,8 +2686,6 @@ const getQuestById = async (req, res) => {
 
       // Initialize the result variable
       let currentResult = { ...result1[0]._doc, optionsRemoved: [] };
-
-      // console.log(JSON.stringify(result1[0], null, 2));
 
       // Call functions based on type in sorted order
       for (const analyticsItem of sortedAnalytics) {
@@ -3403,6 +2705,9 @@ const getQuestById = async (req, res) => {
                 analyticsItem.targetedOptionsArray,
                 analyticsItem.targetedQuestForeignKey
               ); // Add parameters for target type
+              break;
+            case "activity":
+              params.push(analyticsItem.allParams); // Add parameters for target type
               break;
             // Add more cases for other types as needed
             default:
@@ -3429,6 +2734,7 @@ const getQuestById = async (req, res) => {
           ? item.contendedPercentage
           : [],
         userQuestSetting: item.userQuestSetting,
+        page
       }));
 
       if (desiredArray[0]) {
@@ -3451,13 +2757,8 @@ const getQuestById = async (req, res) => {
           ? item.contendedPercentage
           : [],
         userQuestSetting: item.userQuestSetting,
+        page,
       }));
-
-      if (desiredArray[0]) {
-        desiredArray[0].advanceAnalytics = advanceAnalyticsDoc
-          ? advanceAnalyticsDoc.advanceAnalytics
-          : null;
-      }
 
       res.status(200).json({
         data: desiredArray,
@@ -4325,378 +3626,6 @@ const getFlickerUrl = async (req, res) => {
   }
 };
 
-// const analyze = async (req, res) => {
-//   try {
-
-//     const { userUuid, questForeignKey, hiddenOptionsArray, oprend, range, targetedQuestForeignKey, targetedOptionsArray } = req.body;
-//     let result = {};
-
-//     if (Object.keys(req.query).length === 1 && req.query.hide) {
-//       const badgeCountDoc = await BadgeCount.findOne(
-//         {
-//           userUuid: userUuid,
-//           questForeignKey: questForeignKey,
-//         }
-//       );
-//       const targetDoc = await Target.findOne(
-//         {
-//           userUuid: userUuid,
-//           targetedQuestForeignKey: targetedQuestForeignKey,
-//         }
-//       );
-//       if (badgeCountDoc && !targetedQuestForeignKey && !targetedOptionsArray) {
-
-//         const docAlreadyExists = await HiddenOptions.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         )
-//         if (docAlreadyExists) {
-//           docAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
-//           await docAlreadyExists.save();
-//         }
-//         else {
-//           const hiddenOptions = new HiddenOptions();
-//           hiddenOptions.userUuid = userUuid;
-//           hiddenOptions.questForeignKey = questForeignKey;
-//           hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
-//           await hiddenOptions.save();
-//         }
-//         const hiddenOptionsDoc = await HiddenOptions.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         );
-//         result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (targetedQuestForeignKey && targetedOptionsArray && !oprend) {
-//         const docAlreadyExists = await Target.findOne(
-//           {
-//             userUuid: userUuid,
-//             targetedQuestForeignKey: targetedQuestForeignKey,
-//           }
-//         )
-//         if (docAlreadyExists) {
-//           docAlreadyExists.targetedQuestForeignKey = targetedQuestForeignKey;
-//           docAlreadyExists.targetedOptionsArray = targetedOptionsArray;
-//           await docAlreadyExists.save();
-//         }
-//         else {
-//           const targetNewDoc = new Target();
-//           targetNewDoc.userUuid = userUuid;
-//           targetNewDoc.questForeignKey = questForeignKey;
-//           targetNewDoc.targetedQuestForeignKey = targetedQuestForeignKey;
-//           targetNewDoc.targetedOptionsArray = targetedOptionsArray;
-//           await targetNewDoc.save();
-//         }
-
-//         const hiddenOptionsDocAlreadyExists = await HiddenOptions.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         )
-//         if (hiddenOptionsDocAlreadyExists) {
-//           hiddenOptionsDocAlreadyExists.hiddenOptionsArray = hiddenOptionsArray;
-//           await hiddenOptionsDocAlreadyExists.save();
-//         }
-//         else {
-//           const hiddenOptions = new HiddenOptions();
-//           hiddenOptions.userUuid = userUuid;
-//           hiddenOptions.questForeignKey = questForeignKey;
-//           hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
-//           await hiddenOptions.save();
-//         }
-//         const hiddenOptionsDoc = await HiddenOptions.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         );
-
-//         result = await hiddenOptionsTarget(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, targetedQuestForeignKey, targetedOptionsArray);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         );
-//       }
-//       else {
-//         const infoQuest = await InfoQuestQuestions.find({
-//           _id: questForeignKey,
-//         }).populate("getUserBadge", "badges");
-//         if (!infoQuest) throw new Error("No Quest Exist!");
-//         result = await hiddenOptionsfx(userUuid, questForeignKey, hiddenOptionsArray, infoQuest);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//     }
-
-//     if (Object.keys(req.query).length === 1 && req.query.badgeCount) {
-//       const hiddenOptionsDoc = await HiddenOptions.findOne(
-//         {
-//           userUuid: userUuid,
-//           questForeignKey: questForeignKey,
-//         }
-//       );
-//       const targetDoc = await Target.findOne(
-//         {
-//           userUuid: userUuid,
-//           targetedQuestForeignKey: targetedQuestForeignKey,
-//         }
-//       );
-//       if (hiddenOptionsDoc && !targetedQuestForeignKey && !targetedOptionsArray) {
-//         const docAlreadyExists = await BadgeCount.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         )
-//         if (docAlreadyExists) {
-//           docAlreadyExists.oprend = oprend;
-//           docAlreadyExists.range = range;
-//           await docAlreadyExists.save();
-//         }
-//         else {
-//           const badgeCount = new BadgeCount();
-//           badgeCount.userUuid = userUuid;
-//           badgeCount.questForeignKey = questForeignKey;
-//           badgeCount.oprend = oprend;
-//           badgeCount.range = range;
-//           await badgeCount.save();
-//         }
-
-//         const badgeCountDoc = await BadgeCount.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         );
-
-//         result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (targetedQuestForeignKey && targetedOptionsArray && !oprend) {
-//         const docAlreadyExists = await Target.findOne(
-//           {
-//             userUuid: userUuid,
-//             targetedQuestForeignKey: targetedQuestForeignKey,
-//           }
-//         )
-//         if (docAlreadyExists) {
-//           docAlreadyExists.targetedQuestForeignKey = targetedQuestForeignKey;
-//           docAlreadyExists.targetedOptionsArray = targetedOptionsArray;
-//           await docAlreadyExists.save();
-//         }
-//         else {
-//           const targetNewDoc = new Target();
-//           targetNewDoc.userUuid = userUuid;
-//           targetNewDoc.questForeignKey = questForeignKey;
-//           targetNewDoc.targetedQuestForeignKey = targetedQuestForeignKey;
-//           targetNewDoc.targetedOptionsArray = targetedOptionsArray;
-//           await targetNewDoc.save();
-//         }
-
-//         const badgeCountDocAlreadyExists = await BadgeCount.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         )
-//         if (badgeCountDocAlreadyExists) {
-//           badgeCountDocAlreadyExists.oprend = oprend;
-//           badgeCountDocAlreadyExists.range = range;
-//           await badgeCountDocAlreadyExists.save();
-//         }
-//         else {
-//           const badgeCount = new BadgeCount();
-//           badgeCount.userUuid = userUuid;
-//           badgeCount.questForeignKey = questForeignKey;
-//           badgeCount.oprend = oprend;
-//           badgeCount.range = range;
-//           await badgeCount.save();
-//         }
-
-//         const badgeCountDoc = await BadgeCount.findOne(
-//           {
-//             userUuid: userUuid,
-//             questForeignKey: questForeignKey,
-//           }
-//         );
-
-//         result = await badgeCountTarget(userUuid, questForeignKey, targetDoc.targetedQuestForeignKey, targetDoc.targetedOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         );
-//       }
-//       else {
-//         result = await badgeCountfx(userUuid, questForeignKey, oprend, range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//     }
-
-//     if (Object.keys(req.query).length === 1 && req.query.target) {
-//       const hiddenOptionsDoc = await HiddenOptions.findOne(
-//         {
-//           userUuid: userUuid,
-//           questForeignKey: questForeignKey,
-//         }
-//       );
-//       const badgeCountDoc = await BadgeCount.findOne(
-//         {
-//           userUuid: userUuid,
-//           questForeignKey: questForeignKey,
-//         }
-//       );
-//       if (hiddenOptionsDoc && !hiddenOptionsArray && !oprend) {
-//         result = await hiddenOptionsTarget(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, targetedQuestForeignKey, targetedOptionsArray);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (hiddenOptionsDoc && hiddenOptionsArray && !oprend) {
-//         hiddenOptionsDoc.hiddenOptionsArray = hiddenOptionsArray;
-//         await hiddenOptionsDoc.save();
-//         result = await hiddenOptionsTarget(userUuid, questForeignKey, hiddenOptionsArray, targetedQuestForeignKey, targetedOptionsArray);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         );
-//       }
-//       else if (!hiddenOptionsDoc && hiddenOptionsArray && !oprend) {
-//         const targetDoc = await Target.findOne(
-//           {
-//             userUuid: userUuid,
-//             targetedQuestForeignKey: targetedQuestForeignKey,
-//           }
-//         );
-
-//         const hiddenOptions = new HiddenOptions();
-//         hiddenOptions.userUuid = userUuid;
-//         hiddenOptions.questForeignKey = questForeignKey;
-//         hiddenOptions.hiddenOptionsArray = hiddenOptionsArray;
-//         await hiddenOptions.save();
-
-//         result = await hiddenOptionsTarget(userUuid, questForeignKey, hiddenOptionsArray, targetDoc.targetedQuestForeignKey, targetDoc.targetedOptionsArray);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (badgeCountDoc && !oprend && !hiddenOptionsArray) {
-//         result = await badgeCountTarget(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, badgeCountDoc.oprend, badgeCountDoc.range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (badgeCountDoc && oprend && !hiddenOptionsArray) {
-//         badgeCountDoc.oprend = oprend;
-//         badgeCountDoc.range = range;
-//         await badgeCountDoc.save();
-//         result = await badgeCountTarget(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray, oprend, range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (!badgeCountDoc && oprend && !hiddenOptionsArray) {
-
-//         const targetDoc = await Target.findOne(
-//           {
-//             userUuid: userUuid,
-//             targetedQuestForeignKey: targetedQuestForeignKey,
-//           }
-//         );
-
-//         const badgeCount = new BadgeCount();
-//         badgeCount.userUuid = userUuid;
-//         badgeCount.questForeignKey = questForeignKey;
-//         badgeCount.oprend = oprend;
-//         badgeCount.range = range;
-//         await badgeCount.save();
-
-//         result = await badgeCountTarget(userUuid, questForeignKey, targetDoc.targetedQuestForeignKey, targetDoc.targetedOptionsArray, oprend, range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else if (hiddenOptionsDoc && hiddenOptionsDoc.hiddenOptionsArray.length > 0 && badgeCountDoc && badgeCountDoc.oprend !== 0) {
-//         result = await hiddenOptionsBadgeCountTarget(userUuid, questForeignKey, hiddenOptionsDoc.hiddenOptionsArray, oprend, range);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//       else {
-//         result = await targetfx(userUuid, questForeignKey, targetedQuestForeignKey, targetedOptionsArray);
-//         return res.status(200).json(
-//           {
-//             message: "Advance analytics configured successfully.",
-//             result: result,
-//           }
-//         )
-//       }
-//     }
-
-//     if (req.query.hide && req.query.badgeCount) {
-//       result = await hiddenOptionsBadgeCount(userUuid, questForeignKey, hiddenOptionsArray, oprend, range);
-//       return res.status(200).json(
-//         {
-//           message: "Advance analytics configured successfully.",
-//           result: result,
-//         }
-//       )
-//     }
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: `${error.message}` });
-//   }
-// };
-
 const advanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey } = req.params;
@@ -4704,12 +3633,10 @@ const advanceAnalytics = async (req, res) => {
     if (!req.body.type)
       return res.status(403).json({ message: "Type is not Provided" });
     if (!userUuid || !questForeignKey)
-      return res
-        .status(403)
-        .json({
-          message:
-            "Invalid request, Please provide references userUuid and questForeignKey in params",
-        });
+      return res.status(403).json({
+        message:
+          "Invalid request, Please provide references userUuid and questForeignKey in params",
+      });
 
     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
       userUuid: userUuid,
@@ -4734,7 +3661,7 @@ const advanceAnalytics = async (req, res) => {
         if (
           req.body.type === "target" &&
           req.body.targetedOptionsArray &&
-          req.body.targetedOptionsArray.length > 1
+          req.body.targetedOptionsArray.length >= 1
         ) {
           // Find the current maximum order value in the advanceAnalytics array
           const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
@@ -4754,14 +3681,16 @@ const advanceAnalytics = async (req, res) => {
           // advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
 
           // Extract existing options from advanceAnalyticsDoc
-          const existingOptions = advanceAnalyticsDoc.advanceAnalytics.map(
-            (item) => item.targetedOptionsArray[0]
-          );
+          const existingOptions = advanceAnalyticsDoc.advanceAnalytics
+          .filter((item) => item.type === "target") // Filter items where type is "target"
+          .map((item) => item.targetedOptionsArray[0]); // Map targetedOptionsArray[0]
 
           // Filter targetedOptionsArray to exclude options that already exist
           const filteredOptions = req.body.targetedOptionsArray.filter(
             (option) => !existingOptions.includes(option)
           );
+
+          if(filteredOptions.length === 0 ) return res.status(409).json({message: "Options already exist"});
 
           // Create new documents for each element in filteredOptions
           const newAnalytics = filteredOptions.map((option, index) => ({
@@ -4783,6 +3712,38 @@ const advanceAnalytics = async (req, res) => {
             0
           );
 
+          let existingAnalytics;
+
+          if(req.body.type === 'hide'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.hiddenOptionsArray === req.body.hiddenOptionsArray
+            );
+          }
+
+          if(req.body.type === 'badgeCount'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.oprend === req.body.oprend && item.range === req.body.range
+            );
+          }
+
+          if(req.body.type === 'target'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.targetedOptionsArray === req.body.targetedOptionsArray && item.targetedQuestForeignKey === req.body.targetedQuestForeignKey
+            );
+          }
+
+          if(req.body.type === 'activity'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.allParams.subtype === req.body.allParams.subtype
+            );
+          }
+
+          if(existingAnalytics) return res.status(409).json({ message: "Advance Analytic already Exists." });
+
           // If no such object exists, push the new object with order greater than the existing ones
           const newAnalytics = {
             ...req.body,
@@ -4799,7 +3760,7 @@ const advanceAnalytics = async (req, res) => {
       if (
         req.body.type === "target" &&
         req.body.targetedOptionsArray &&
-        req.body.targetedOptionsArray.length > 1
+        req.body.targetedOptionsArray.length >= 1
       ) {
         // Create new analytics documents for each element in targetedOptionsArray
         const newAnalytics = req.body.targetedOptionsArray.map(
@@ -4837,12 +3798,10 @@ const advanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Analytics configured successfully!",
-        advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
-      });
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
   } catch (error) {
     // If an error occurs, return an error response
     console.error(error);
@@ -4853,17 +3812,14 @@ const advanceAnalytics = async (req, res) => {
 const deleteAdvanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey, type, id } = req.params;
-    console.log(userUuid, questForeignKey, type, id);
 
     if (!type || !id)
       return res.status(403).json({ message: "Type or Id is not Provided" });
     if (!userUuid || !questForeignKey)
-      return res
-        .status(403)
-        .json({
-          message:
-            "Invalid request, Please provide references userUuid and questForeignKey in params",
-        });
+      return res.status(403).json({
+        message:
+          "Invalid request, Please provide references userUuid and questForeignKey in params",
+      });
 
     // Update the document by removing the object with the specified type from the advanceAnalytics array
     const result = await AdvanceAnalytics.findOneAndUpdate(
@@ -4891,65 +3847,16 @@ const deleteAdvanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Analytics configured successfully!",
-        advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
-      });
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
   } catch (error) {
     // If an error occurs, return an error response
     console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-
-// const updateAnalyticsOrder = async (req, res) => {
-//   try {
-//     const { userUuid, questForeignKey } = req.params;
-//     const { order } = req.body;  // order should be an array of objects with type and order
-
-//     // Find the document
-//     const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
-//       userUuid: userUuid,
-//       questForeignKey: questForeignKey,
-//     });
-
-//     if (!advanceAnalyticsDoc) {
-//       return res.status(404).json({ message: "Document not found." });
-//     }
-
-//     // Create a map of types to new orders for quick lookup
-//     const orderMap = new Map(order.map(item => [item.type, item.order]));
-
-//     // Update the order of objects in advanceAnalytics
-//     advanceAnalyticsDoc.advanceAnalytics.forEach(item => {
-//       if (orderMap.has(item.type)) {
-//         item.order = orderMap.get(item.type);
-//       }
-//     });
-
-//     // Mark the array as modified
-//     advanceAnalyticsDoc.markModified('advanceAnalytics');
-
-//     // Save the updated document
-//     await advanceAnalyticsDoc.save();
-
-//     const recentAdvanceAnalytics = await AdvanceAnalytics.findOne(
-//       {
-//         userUuid: userUuid,
-//         questForeignKey: questForeignKey,
-//       }
-//     );
-
-//     res.status(200).json({ message: "Analytics configured successfully!", advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics  });
-
-//   } catch (error) {
-//     // If an error occurs, return an error response
-//     console.error(error);
-//     res.status(500).json({ message: error.message });
-//   }
-// }
 
 const updateAnalyticsOrder = async (req, res) => {
   try {
@@ -5002,6 +3909,42 @@ const updateAnalyticsOrder = async (req, res) => {
   }
 };
 
+const deleteAllAdvanceAnalytics = async (req, res) => {
+  try {
+    const { userUuid, questForeignKey } = req.params;
+
+    // Update the document by removing the object with the specified type from the advanceAnalytics array
+    const result = await AdvanceAnalytics.findOneAndUpdate(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      },
+      {
+        advanceAnalytics: []
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: "Document not found." });
+    }
+
+    const recentAdvanceAnalytics = await AdvanceAnalytics.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
+
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
+  } catch (error) {
+    // If an error occurs, return an error response
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createInfoQuestQuest,
   deleteInfoQuestQuest,
@@ -5028,8 +3971,8 @@ module.exports = {
   getQuestionsWithStatusQuestForeignKey,
   getQuestionsWithUserSettingsQuestForeignKey,
   getEmbededPostByUniqueId,
-  // analyze,
   advanceAnalytics,
   deleteAdvanceAnalytics,
   updateAnalyticsOrder,
+  deleteAllAdvanceAnalytics
 };
