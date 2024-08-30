@@ -413,7 +413,6 @@ const targetfx = async (
 const activityfx = async (data, userUuid, questForeignKey, allParams) => {
   try {
     const operator = operators[allParams.operand];
-    console.log(allParams);
 
     const switchCases = {
       twitter: {
@@ -3682,14 +3681,16 @@ const advanceAnalytics = async (req, res) => {
           // advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
 
           // Extract existing options from advanceAnalyticsDoc
-          const existingOptions = advanceAnalyticsDoc.advanceAnalytics.map(
-            (item) => item.targetedOptionsArray[0]
-          );
+          const existingOptions = advanceAnalyticsDoc.advanceAnalytics
+          .filter((item) => item.type === "target") // Filter items where type is "target"
+          .map((item) => item.targetedOptionsArray[0]); // Map targetedOptionsArray[0]
 
           // Filter targetedOptionsArray to exclude options that already exist
           const filteredOptions = req.body.targetedOptionsArray.filter(
             (option) => !existingOptions.includes(option)
           );
+
+          if(filteredOptions.length === 0 ) return res.status(409).json({message: "Options already exist"});
 
           // Create new documents for each element in filteredOptions
           const newAnalytics = filteredOptions.map((option, index) => ({
