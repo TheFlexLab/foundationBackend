@@ -3780,7 +3780,6 @@ const advanceAnalytics = async (req, res) => {
 const deleteAdvanceAnalytics = async (req, res) => {
   try {
     const { userUuid, questForeignKey, type, id } = req.params;
-    console.log(userUuid, questForeignKey, type, id);
 
     if (!type || !id)
       return res.status(403).json({ message: "Type or Id is not Provided" });
@@ -3878,6 +3877,42 @@ const updateAnalyticsOrder = async (req, res) => {
   }
 };
 
+const deleteAllAdvanceAnalytics = async (req, res) => {
+  try {
+    const { userUuid, questForeignKey } = req.params;
+
+    // Update the document by removing the object with the specified type from the advanceAnalytics array
+    const result = await AdvanceAnalytics.findOneAndUpdate(
+      {
+        userUuid: userUuid,
+        questForeignKey: questForeignKey,
+      },
+      {
+        advanceAnalytics: []
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: "Document not found." });
+    }
+
+    const recentAdvanceAnalytics = await AdvanceAnalytics.findOne({
+      userUuid: userUuid,
+      questForeignKey: questForeignKey,
+    });
+
+    res.status(200).json({
+      message: "Analytics configured successfully!",
+      advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+    });
+  } catch (error) {
+    // If an error occurs, return an error response
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createInfoQuestQuest,
   deleteInfoQuestQuest,
@@ -3907,4 +3942,5 @@ module.exports = {
   advanceAnalytics,
   deleteAdvanceAnalytics,
   updateAnalyticsOrder,
+  deleteAllAdvanceAnalytics
 };
