@@ -3712,6 +3712,38 @@ const advanceAnalytics = async (req, res) => {
             0
           );
 
+          let existingAnalytics;
+
+          if(req.body.type === 'hide'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.hiddenOptionsArray === req.body.hiddenOptionsArray
+            );
+          }
+
+          if(req.body.type === 'badgeCount'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.oprend === req.body.oprend && item.range === req.body.range
+            );
+          }
+
+          if(req.body.type === 'target'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.targetedOptionsArray === req.body.targetedOptionsArray && item.targetedQuestForeignKey === req.body.targetedQuestForeignKey
+            );
+          }
+
+          if(req.body.type === 'activity'){
+            existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
+              (item) =>
+                item.type === req.body.type && item.allParams.subtype === req.body.allParams.subtype
+            );
+          }
+
+          if(existingAnalytics) return res.status(409).json({ message: "Advance Analytic already Exists." });
+
           // If no such object exists, push the new object with order greater than the existing ones
           const newAnalytics = {
             ...req.body,
