@@ -3856,6 +3856,7 @@ const getQuestById = async (req, res) => {
           ? item.contendedPercentage
           : [],
         userQuestSetting: item.userQuestSetting,
+        page: req.body.page,
       }));
 
       if (desiredArray[0]) {
