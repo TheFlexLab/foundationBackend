@@ -3808,6 +3808,9 @@ const advanceAnalytics = async (req, res) => {
     const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      },
+      query: {
+        postLink: null
       }
     }
     const desiredArray = await getQuestById(requestAA);
@@ -3865,6 +3868,9 @@ const deleteAdvanceAnalytics = async (req, res) => {
     const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      },
+      query: {
+        postLink: null
       }
     }
     const desiredArray = await getQuestById(requestAA);
@@ -3924,6 +3930,9 @@ const updateAnalyticsOrder = async (req, res) => {
     const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      },
+      query: {
+        postLink: null
       }
     }
     const desiredArray = await getQuestById(requestAA);
@@ -3968,6 +3977,9 @@ const deleteAllAdvanceAnalytics = async (req, res) => {
     const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      },
+      query: {
+        postLink: null
       }
     }
     const desiredArray = await getQuestById(requestAA);
