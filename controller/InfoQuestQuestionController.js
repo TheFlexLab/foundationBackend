@@ -2643,7 +2643,7 @@ const getAllQuestsWithResult = async (req, res) => {
 
 const getQuestById = async (req, res) => {
   try {
-    const { uuid, id, page } = req.params; // Use req.params instead of req.body
+    const { uuid, id, page, isAdvanceAnalytics } = req.params; // Use req.params instead of req.body
     const { postLink } = req.query;
     const infoQuest = await InfoQuestQuestions.find({
       _id: id,
@@ -2743,6 +2743,8 @@ const getQuestById = async (req, res) => {
           : null;
       }
 
+      if(isAdvanceAnalytics) return desiredArray;
+
       res.status(200).json({
         data: desiredArray,
       });
@@ -2759,6 +2761,8 @@ const getQuestById = async (req, res) => {
         userQuestSetting: item.userQuestSetting,
         page,
       }));
+
+      if(isAdvanceAnalytics) return desiredArray;
 
       res.status(200).json({
         data: desiredArray,
@@ -3696,6 +3700,7 @@ const advanceAnalytics = async (req, res) => {
           const newAnalytics = filteredOptions.map((option, index) => ({
             ...req.body,
             _id: new mongoose.Types.ObjectId(),
+            id: _id,
             order: maxOrder + index + 1, // Increment order for each new document
             targetedOptionsArray: [option], // Set the current option
           }));
@@ -3748,6 +3753,7 @@ const advanceAnalytics = async (req, res) => {
           const newAnalytics = {
             ...req.body,
             _id: new mongoose.Types.ObjectId(),
+            id: _id,
             order: maxOrder + 1, // Set the new order value to be greater than the max order
           };
           advanceAnalyticsDoc.advanceAnalytics.push(newAnalytics);
@@ -3767,6 +3773,7 @@ const advanceAnalytics = async (req, res) => {
           (option, index) => ({
             ...req.body,
             _id: new mongoose.Types.ObjectId(),
+            id: _id,
             order: index + 1, // Use the index + 1 as the order value
             targetedOptionsArray: [option], // Store the option or adjust as needed
           })
@@ -3786,7 +3793,7 @@ const advanceAnalytics = async (req, res) => {
           userUuid,
           questForeignKey,
           advanceAnalytics: [
-            { ...req.body, _id: new mongoose.Types.ObjectId(), order: 1 }, // Start with order 1
+            { ...req.body, _id: new mongoose.Types.ObjectId(), id: _id, order: 1 }, // Start with order 1
           ],
         });
         await newDoc.save();
@@ -3798,9 +3805,17 @@ const advanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
+    const req = {
+      params: {
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      }
+    }
+    const desiredArray = await getQuestById(req);
+
     res.status(200).json({
       message: "Analytics configured successfully!",
       advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+      data: desiredArray
     });
   } catch (error) {
     // If an error occurs, return an error response
@@ -3847,9 +3862,17 @@ const deleteAdvanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
+    const req = {
+      params: {
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      }
+    }
+    const desiredArray = await getQuestById(req);
+
     res.status(200).json({
       message: "Analytics configured successfully!",
       advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+      data: desiredArray,
     });
   } catch (error) {
     // If an error occurs, return an error response
@@ -3898,9 +3921,17 @@ const updateAnalyticsOrder = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
+    const req = {
+      params: {
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      }
+    }
+    const desiredArray = await getQuestById(req);
+
     res.status(200).json({
       message: "Analytics configured successfully!",
       advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+      data: desiredArray,
     });
   } catch (error) {
     // If an error occurs, return an error response
@@ -3934,9 +3965,17 @@ const deleteAllAdvanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
+    const req = {
+      params: {
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
+      }
+    }
+    const desiredArray = await getQuestById(req);
+
     res.status(200).json({
       message: "Analytics configured successfully!",
       advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
+      data: desiredArray,
     });
   } catch (error) {
     // If an error occurs, return an error response
