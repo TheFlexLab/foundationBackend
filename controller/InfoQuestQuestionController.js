@@ -3805,12 +3805,12 @@ const advanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    const req = {
+    const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       }
     }
-    const desiredArray = await getQuestById(req);
+    const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
       message: "Analytics configured successfully!",
@@ -3862,12 +3862,12 @@ const deleteAdvanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    const req = {
+    const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       }
     }
-    const desiredArray = await getQuestById(req);
+    const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
       message: "Analytics configured successfully!",
@@ -3921,12 +3921,12 @@ const updateAnalyticsOrder = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    const req = {
+    const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       }
     }
-    const desiredArray = await getQuestById(req);
+    const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
       message: "Analytics configured successfully!",
@@ -3965,12 +3965,12 @@ const deleteAllAdvanceAnalytics = async (req, res) => {
       questForeignKey: questForeignKey,
     });
 
-    const req = {
+    const requestAA = {
       params: {
         uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       }
     }
-    const desiredArray = await getQuestById(req);
+    const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
       message: "Analytics configured successfully!",
