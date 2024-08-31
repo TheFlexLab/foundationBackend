@@ -3696,11 +3696,12 @@ const advanceAnalytics = async (req, res) => {
 
           if(filteredOptions.length === 0 ) return res.status(409).json({message: "Options already exist"});
 
+          const ids = new mongoose.Types.ObjectId();
           // Create new documents for each element in filteredOptions
           const newAnalytics = filteredOptions.map((option, index) => ({
             ...req.body,
-            _id: new mongoose.Types.ObjectId(),
-            id: _id,
+            _id: ids,
+            id: ids,
             order: maxOrder + index + 1, // Increment order for each new document
             targetedOptionsArray: [option], // Set the current option
           }));
@@ -3749,11 +3750,12 @@ const advanceAnalytics = async (req, res) => {
 
           if(existingAnalytics) return res.status(409).json({ message: "Advance Analytic already Exists." });
 
+          const ids = new mongoose.Types.ObjectId();
           // If no such object exists, push the new object with order greater than the existing ones
           const newAnalytics = {
             ...req.body,
-            _id: new mongoose.Types.ObjectId(),
-            id: _id,
+            _id: ids,
+            id: ids,
             order: maxOrder + 1, // Set the new order value to be greater than the max order
           };
           advanceAnalyticsDoc.advanceAnalytics.push(newAnalytics);
@@ -3768,12 +3770,13 @@ const advanceAnalytics = async (req, res) => {
         req.body.targetedOptionsArray &&
         req.body.targetedOptionsArray.length >= 1
       ) {
+        const ids = new mongoose.Types.ObjectId();
         // Create new analytics documents for each element in targetedOptionsArray
         const newAnalytics = req.body.targetedOptionsArray.map(
           (option, index) => ({
             ...req.body,
-            _id: new mongoose.Types.ObjectId(),
-            id: _id,
+            _id: ids,
+            id: ids,
             order: index + 1, // Use the index + 1 as the order value
             targetedOptionsArray: [option], // Store the option or adjust as needed
           })
@@ -3788,12 +3791,13 @@ const advanceAnalytics = async (req, res) => {
 
         await newDoc.save();
       } else {
+        const ids = new mongoose.Types.ObjectId();
         // If the document does not exist, create a new document with the new object
         const newDoc = new AdvanceAnalytics({
           userUuid,
           questForeignKey,
           advanceAnalytics: [
-            { ...req.body, _id: new mongoose.Types.ObjectId(), id: _id, order: 1 }, // Start with order 1
+            { ...req.body, _id: ids, id: ids, order: 1 }, // Start with order 1
           ],
         });
         await newDoc.save();
