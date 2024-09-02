@@ -36,4 +36,39 @@ const connectDB = async () => {
   }
 };
 
+// const connectDB = async () => {
+//   if (true) {
+//     try {
+//       const conn = await mongoose.connect(
+//         "mongodb://" +
+//           "foundationDatabse" +
+//           ":" +
+//           "foundation" +
+//           "@foundation.cluster-chkicsa8wkr6.us-east-2.docdb.amazonaws.com:27017/" + "foundationDevelopmentDocDb" +"?tls=true&tlsCAFile=global-bundle.pem" +
+//           "&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+//       );
+//       console.log(
+//         `DocumentDB Connected! Database Name: ${conn.connection.db.databaseName} -  Host: ${conn.connection.host}`.cyan.underline.bold
+//       );
+//     } catch (err) {
+//       console.log("Could not establish connection to DocDB! " + err.message);
+//     }
+//   } else {
+//     try {
+//       const conn = await mongoose.connect(process.env.MONGO_URI, {
+//         user: process.env.MONGO_USER,
+//         pass: process.env.MONGO_PASSWORD,
+//         useNewUrlParser: true,
+//         useUnifiedTopology: true,
+//       });
+
+//       console.log(
+//         `MongoDB Connected! Database Name: ${conn.connection.db.databaseName} -  Host: ${conn.connection.host}`.cyan.underline.bold
+//       );
+//     } catch (err) {
+//       //console.log("Could not establish connection to MongoDB! " + err);
+//     }
+//   }
+// };
+
 module.exports = connectDB;
