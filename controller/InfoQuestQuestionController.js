@@ -3760,6 +3760,23 @@ const advanceAnalytics = async (req, res) => {
           req.body.targetedOptionsArray &&
           req.body.targetedOptionsArray.length >= 1
         ) {
+          
+        const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
+          userUuid: userUuid,
+          questForeignKey: questForeignKey,
+        });
+        
+        if (advanceAnalyticsDoc) {
+          // Filter out documents where `type: "target"` and `targetedQuestForeignKey` does not match
+          advanceAnalyticsDoc.advanceAnalytics = advanceAnalyticsDoc.advanceAnalytics.filter(
+            (doc) =>
+              !(doc.type === "target" && doc.targetedQuestForeignKey !== req.body.targetedQuestForeignKey)
+          );
+        
+          // Save the updated document
+          await advanceAnalyticsDoc.save();
+        }
+
           // Find the current maximum order value in the advanceAnalytics array
           const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
             (max, item) => (item.order > max ? item.order : max),
