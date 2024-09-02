@@ -1237,10 +1237,10 @@ const getAllQuestsWithOpenInfoQuestStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -1416,10 +1416,10 @@ const getAllQuestsWithAnsweredStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -1679,10 +1679,10 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-          ? { lastInteractedAt: -1 }
-          : sort === "Most Popular"
-          ? { interactingCounter: -1 }
-          : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : sort === "Most Popular"
+              ? { interactingCounter: -1 }
+              : "createdAt"
       )
       .skip(skip)
       .limit(pageSize)
@@ -1700,21 +1700,21 @@ const getAllQuestsWithDefaultStatus = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.selectedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.selectedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.contendedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.contendedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -2044,12 +2044,12 @@ const getQuestsAll = async (req, res) => {
       sort === "Oldest First"
         ? { createdAt: 1, _id: 1 }
         : sort === "Newest First"
-        ? { createdAt: -1, _id: 1 }
-        : sort === "Last Updated"
-        ? { lastInteractedAt: -1, _id: 1 }
-        : sort === "Most Popular"
-        ? { interactingCounter: -1, _id: 1 }
-        : { createdAt: -1, _id: 1 }
+          ? { createdAt: -1, _id: 1 }
+          : sort === "Last Updated"
+            ? { lastInteractedAt: -1, _id: 1 }
+            : sort === "Most Popular"
+              ? { interactingCounter: -1, _id: 1 }
+              : { createdAt: -1, _id: 1 }
     );
     // query = query.sort(
     //   sort === "Newest First"
@@ -2298,21 +2298,21 @@ const getQuestsAll = async (req, res) => {
     ...item._doc,
     selectedPercentage: item?.selectedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.selectedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.selectedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
     contendedPercentage: item?.contendedPercentage?.[0]
       ? [
-          Object.fromEntries(
-            Object.entries(item.contendedPercentage[0]).sort(
-              (a, b) => parseInt(b[1]) - parseInt(a[1])
-            )
-          ),
-        ]
+        Object.fromEntries(
+          Object.entries(item.contendedPercentage[0]).sort(
+            (a, b) => parseInt(b[1]) - parseInt(a[1])
+          )
+        ),
+      ]
       : [],
   }));
   // Query the database with skip and limit options to get questions for the requested page
@@ -2617,10 +2617,10 @@ const getAllQuestsWithResult = async (req, res) => {
         sort === "Newest First"
           ? { createdAt: -1 }
           : sort === "Last Updated"
-          ? { lastInteractedAt: -1 }
-          : sort === "Most Popular"
-          ? { interactingCounter: -1 }
-          : "createdAt"
+            ? { lastInteractedAt: -1 }
+            : sort === "Most Popular"
+              ? { interactingCounter: -1 }
+              : "createdAt"
       ) // Sort by createdAt field in descending order
       .skip(skip)
       .limit(pageSize);
@@ -2734,7 +2734,7 @@ const getQuestById = async (req, res) => {
           ? item.contendedPercentage
           : [],
         userQuestSetting: item.userQuestSetting,
-        page,
+        page
       }));
 
       if (desiredArray[0]) {
@@ -3087,10 +3087,10 @@ const getAllQuestsWithCompletedStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -3271,10 +3271,10 @@ const getAllQuestsWithChangeAnsStatus = async (req, res) => {
           req.body.sort === "Newest First"
             ? { createdAt: -1 }
             : req.body.sort === "Last Updated"
-            ? { lastInteractedAt: -1 }
-            : req.body.sort === "Most Popular"
-            ? { interactingCounter: -1 }
-            : "createdAt"
+              ? { lastInteractedAt: -1 }
+              : req.body.sort === "Most Popular"
+                ? { interactingCounter: -1 }
+                : "createdAt"
         )
         .populate("getUserBadge", "badges");
     }
@@ -3688,12 +3688,72 @@ const advanceAnalytics = async (req, res) => {
 
         if (existingAnalyticsCheck) return res.status(409).json({ message: "Advance Analytic already Exists." });
 
-        // If an object with the same 'type' exists, update it with the new data from req.body
-        for (let key in req.body) {
-          existingAnalytics[key] = req.body[key];
+        if (
+          req.body.type === "target" &&
+          req.body.targetedOptionsArray &&
+          req.body.targetedOptionsArray.length >= 1 &&
+          existingAnalytics.targetedQuestForeignKey !== req.body.targetedQuestForeignKey
+        ) {
+
+          // Delete documents where `targetedQuestForeignKey` matches `existingAnalytics.targetedQuestForeignKey`
+          await AdvanceAnalytics.findOneAndUpdate(
+            {
+              userUuid: userUuid,
+              questForeignKey: questForeignKey,
+            },
+            {
+              $pull: {
+                advanceAnalytics: {
+                  targetedQuestForeignKey: existingAnalytics.targetedQuestForeignKey,
+                },
+              }, // Remove objects matching the type
+            },
+            { new: true } // Return the updated document
+          );
+
+          // Find the current maximum order value in the advanceAnalytics array
+          const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
+            (max, item) => (item.order > max ? item.order : max),
+            0
+          );
+
+          // Extract existing options from advanceAnalyticsDoc
+          const existingOptions = advanceAnalyticsDoc.advanceAnalytics
+            .filter((item) => item.type === "target") // Filter items where type is "target"
+            .map((item) => item.targetedOptionsArray[0]); // Map targetedOptionsArray[0]
+
+          // Filter targetedOptionsArray to exclude options that already exist
+          const filteredOptions = req.body.targetedOptionsArray.filter(
+            (option) => !existingOptions.includes(option)
+          );
+
+          if (filteredOptions.length === 0) return res.status(409).json({ message: "Options already exist" });
+
+          const newAnalytics = filteredOptions.map((option, index) => {
+            const ids = new mongoose.Types.ObjectId(); // Generate a new ObjectId for each document
+            return {
+              ...req.body,
+              _id: ids,
+              id: ids,
+              order: maxOrder + index + 1, // Increment order for each new document
+              targetedOptionsArray: [option], // Set the current option
+            };
+          });
+
+          // Push the new analytics if there are any new entries
+          if (newAnalytics.length > 0) {
+            advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
+            await advanceAnalyticsDoc.save();
+          }
         }
-        // Mark the document as modified to ensure Mongoose tracks changes to the array
-        advanceAnalyticsDoc.markModified("advanceAnalytics");
+        else {
+          // If an object with the same 'type' exists, update it with the new data from req.body
+          for (let key in req.body) {
+            existingAnalytics[key] = req.body[key];
+          }
+          // Mark the document as modified to ensure Mongoose tracks changes to the array
+          advanceAnalyticsDoc.markModified("advanceAnalytics");
+        }
       } else {
         if (
           req.body.type === "target" &&
@@ -3716,8 +3776,7 @@ const advanceAnalytics = async (req, res) => {
             (option) => !existingOptions.includes(option)
           );
 
-          if (filteredOptions.length === 0)
-            return res.status(409).json({ message: "Options already exist" });
+          if (filteredOptions.length === 0) return res.status(409).json({ message: "Options already exist" });
 
           const newAnalytics = filteredOptions.map((option, index) => {
             const ids = new mongoose.Types.ObjectId(); // Generate a new ObjectId for each document
@@ -3744,45 +3803,35 @@ const advanceAnalytics = async (req, res) => {
 
           let existingAnalytics;
 
-          if (req.body.type === "hide") {
+          if (req.body.type === 'hide') {
             existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
               (item) =>
-                item.type === req.body.type &&
-                item.hiddenOptionsArray === req.body.hiddenOptionsArray
+                item.type === req.body.type && item.hiddenOptionsArray === req.body.hiddenOptionsArray
             );
           }
 
-          if (req.body.type === "badgeCount") {
+          if (req.body.type === 'badgeCount') {
             existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
               (item) =>
-                item.type === req.body.type &&
-                item.oprend === req.body.oprend &&
-                item.range === req.body.range
+                item.type === req.body.type && item.oprend === req.body.oprend && item.range === req.body.range
             );
           }
 
-          if (req.body.type === "target") {
+          if (req.body.type === 'target') {
             existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
               (item) =>
-                item.type === req.body.type &&
-                item.targetedOptionsArray === req.body.targetedOptionsArray &&
-                item.targetedQuestForeignKey ===
-                  req.body.targetedQuestForeignKey
+                item.type === req.body.type && item.targetedOptionsArray === req.body.targetedOptionsArray && item.targetedQuestForeignKey === req.body.targetedQuestForeignKey
             );
           }
 
-          if (req.body.type === "activity") {
+          if (req.body.type === 'activity') {
             existingAnalytics = advanceAnalyticsDoc.advanceAnalytics.find(
               (item) =>
-                item.type === req.body.type &&
-                item.allParams.subtype === req.body.allParams.subtype
+                item.type === req.body.type && item.allParams.subtype === req.body.allParams.subtype
             );
           }
 
-          if (existingAnalytics)
-            return res
-              .status(409)
-              .json({ message: "Advance Analytic already Exists." });
+          if (existingAnalytics) return res.status(409).json({ message: "Advance Analytic already Exists." });
 
           const ids = new mongoose.Types.ObjectId();
           // If no such object exists, push the new object with order greater than the existing ones
@@ -3805,18 +3854,16 @@ const advanceAnalytics = async (req, res) => {
         req.body.targetedOptionsArray.length >= 1
       ) {
         // Create new analytics documents for each element in targetedOptionsArray
-        const newAnalytics = req.body.targetedOptionsArray.map(
-          (option, index) => {
-            const ids = new mongoose.Types.ObjectId(); // Generate a new ObjectId for each document
-            return {
-              ...req.body,
-              _id: ids,
-              id: ids,
-              order: index + 1, // Use the index + 1 as the order value
-              targetedOptionsArray: [option], // Store the option or adjust as needed
-            };
-          }
-        );
+        const newAnalytics = req.body.targetedOptionsArray.map((option, index) => {
+          const ids = new mongoose.Types.ObjectId(); // Generate a new ObjectId for each document
+          return {
+            ...req.body,
+            _id: ids,
+            id: ids,
+            order: index + 1, // Use the index + 1 as the order value
+            targetedOptionsArray: [option], // Store the option or adjust as needed
+          };
+        });
 
         // Create a new document with the new analytics entries
         const newDoc = new AdvanceAnalytics({
@@ -3847,21 +3894,18 @@ const advanceAnalytics = async (req, res) => {
 
     const requestAA = {
       params: {
-        uuid: userUuid,
-        id: questForeignKey,
-        page: "advance-analytics",
-        isAdvanceAnalytics: true,
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       },
       query: {
-        postLink: null,
-      },
-    };
+        postLink: null
+      }
+    }
     const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
       message: "Analytics configured successfully!",
       advanceAnalytics: recentAdvanceAnalytics.advanceAnalytics,
-      data: desiredArray,
+      data: desiredArray
     });
   } catch (error) {
     // If an error occurs, return an error response
@@ -3910,15 +3954,12 @@ const deleteAdvanceAnalytics = async (req, res) => {
 
     const requestAA = {
       params: {
-        uuid: userUuid,
-        id: questForeignKey,
-        page: "advance-analytics",
-        isAdvanceAnalytics: true,
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       },
       query: {
-        postLink: null,
-      },
-    };
+        postLink: null
+      }
+    }
     const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
@@ -3975,15 +4016,12 @@ const updateAnalyticsOrder = async (req, res) => {
 
     const requestAA = {
       params: {
-        uuid: userUuid,
-        id: questForeignKey,
-        page: "advance-analytics",
-        isAdvanceAnalytics: true,
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       },
       query: {
-        postLink: null,
-      },
-    };
+        postLink: null
+      }
+    }
     const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
@@ -4009,7 +4047,7 @@ const deleteAllAdvanceAnalytics = async (req, res) => {
         questForeignKey: questForeignKey,
       },
       {
-        advanceAnalytics: [],
+        advanceAnalytics: []
       },
       { new: true } // Return the updated document
     );
@@ -4025,15 +4063,12 @@ const deleteAllAdvanceAnalytics = async (req, res) => {
 
     const requestAA = {
       params: {
-        uuid: userUuid,
-        id: questForeignKey,
-        page: "advance-analytics",
-        isAdvanceAnalytics: true,
+        uuid: userUuid, id: questForeignKey, page: "advance-analytics", isAdvanceAnalytics: true,
       },
       query: {
-        postLink: null,
-      },
-    };
+        postLink: null
+      }
+    }
     const desiredArray = await getQuestById(requestAA);
 
     res.status(200).json({
@@ -4077,5 +4112,5 @@ module.exports = {
   advanceAnalytics,
   deleteAdvanceAnalytics,
   updateAnalyticsOrder,
-  deleteAllAdvanceAnalytics,
+  deleteAllAdvanceAnalytics
 };
