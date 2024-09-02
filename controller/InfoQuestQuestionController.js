@@ -3688,72 +3688,72 @@ const advanceAnalytics = async (req, res) => {
 
         if (existingAnalyticsCheck) return res.status(409).json({ message: "Advance Analytic already Exists." });
 
-        if (
-          req.body.type === "target" &&
-          req.body.targetedOptionsArray &&
-          req.body.targetedOptionsArray.length >= 1 &&
-          existingAnalytics.targetedQuestForeignKey !== req.body.targetedQuestForeignKey
-        ) {
+        // if (
+        //   req.body.type === "target" &&
+        //   req.body.targetedOptionsArray &&
+        //   req.body.targetedOptionsArray.length >= 1 &&
+        //   existingAnalytics.targetedQuestForeignKey !== req.body.targetedQuestForeignKey
+        // ) {
 
-          // Delete documents where `targetedQuestForeignKey` matches `existingAnalytics.targetedQuestForeignKey`
-          await AdvanceAnalytics.findOneAndUpdate(
-            {
-              userUuid: userUuid,
-              questForeignKey: questForeignKey,
-            },
-            {
-              $pull: {
-                advanceAnalytics: {
-                  targetedQuestForeignKey: existingAnalytics.targetedQuestForeignKey,
-                },
-              }, // Remove objects matching the type
-            },
-            { new: true } // Return the updated document
-          );
+        //   // Delete documents where `targetedQuestForeignKey` matches `existingAnalytics.targetedQuestForeignKey`
+        //   // await AdvanceAnalytics.findOneAndUpdate(
+        //   //   {
+        //   //     userUuid: userUuid,
+        //   //     questForeignKey: questForeignKey,
+        //   //   },
+        //   //   {
+        //   //     $pull: {
+        //   //       advanceAnalytics: {
+        //   //         targetedQuestForeignKey: existingAnalytics.targetedQuestForeignKey,
+        //   //       },
+        //   //     }, // Remove objects matching the type
+        //   //   },
+        //   //   { new: true } // Return the updated document
+        //   // );
 
-          // Find the current maximum order value in the advanceAnalytics array
-          const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
-            (max, item) => (item.order > max ? item.order : max),
-            0
-          );
+        //   // Find the current maximum order value in the advanceAnalytics array
+        //   const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
+        //     (max, item) => (item.order > max ? item.order : max),
+        //     0
+        //   );
 
-          // Extract existing options from advanceAnalyticsDoc
-          const existingOptions = advanceAnalyticsDoc.advanceAnalytics
-            .filter((item) => item.type === "target") // Filter items where type is "target"
-            .map((item) => item.targetedOptionsArray[0]); // Map targetedOptionsArray[0]
+        //   // Extract existing options from advanceAnalyticsDoc
+        //   const existingOptions = advanceAnalyticsDoc.advanceAnalytics
+        //     .filter((item) => item.type === "target") // Filter items where type is "target"
+        //     .map((item) => item.targetedOptionsArray[0]); // Map targetedOptionsArray[0]
 
-          // Filter targetedOptionsArray to exclude options that already exist
-          const filteredOptions = req.body.targetedOptionsArray.filter(
-            (option) => !existingOptions.includes(option)
-          );
+        //   // Filter targetedOptionsArray to exclude options that already exist
+        //   const filteredOptions = req.body.targetedOptionsArray.filter(
+        //     (option) => !existingOptions.includes(option)
+        //   );
 
-          if (filteredOptions.length === 0) return res.status(409).json({ message: "Options already exist" });
+        //   if (filteredOptions.length === 0) return res.status(409).json({ message: "Options already exist" });
 
-          const newAnalytics = filteredOptions.map((option, index) => {
-            const ids = new mongoose.Types.ObjectId(); // Generate a new ObjectId for each document
-            return {
-              ...req.body,
-              _id: ids,
-              id: ids,
-              order: maxOrder + index + 1, // Increment order for each new document
-              targetedOptionsArray: [option], // Set the current option
-            };
-          });
+        //   const newAnalytics = filteredOptions.map((option, index) => {
+        //     const ids = new mongoose.Types.ObjectId(); // Generate a new ObjectId for each document
+        //     return {
+        //       ...req.body,
+        //       _id: ids,
+        //       id: ids,
+        //       order: maxOrder + index + 1, // Increment order for each new document
+        //       targetedOptionsArray: [option], // Set the current option
+        //     };
+        //   });
 
-          // Push the new analytics if there are any new entries
-          if (newAnalytics.length > 0) {
-            advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
-            await advanceAnalyticsDoc.save();
-          }
-        }
-        else {
+        //   // Push the new analytics if there are any new entries
+        //   if (newAnalytics.length > 0) {
+        //     advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
+        //     await advanceAnalyticsDoc.save();
+        //   }
+        // }
+        // else {
           // If an object with the same 'type' exists, update it with the new data from req.body
           for (let key in req.body) {
             existingAnalytics[key] = req.body[key];
           }
           // Mark the document as modified to ensure Mongoose tracks changes to the array
           advanceAnalyticsDoc.markModified("advanceAnalytics");
-        }
+        // }
       } else {
         if (
           req.body.type === "target" &&
@@ -3761,21 +3761,21 @@ const advanceAnalytics = async (req, res) => {
           req.body.targetedOptionsArray.length >= 1
         ) {
           
-        const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
-          userUuid: userUuid,
-          questForeignKey: questForeignKey,
-        });
+        // const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
+        //   userUuid: userUuid,
+        //   questForeignKey: questForeignKey,
+        // });
         
-        if (advanceAnalyticsDoc) {
-          // Filter out documents where `type: "target"` and `targetedQuestForeignKey` does not match
-          advanceAnalyticsDoc.advanceAnalytics = advanceAnalyticsDoc.advanceAnalytics.filter(
-            (doc) =>
-              !(doc.type === "target" && doc.targetedQuestForeignKey !== req.body.targetedQuestForeignKey)
-          );
+        // if (advanceAnalyticsDoc) {
+        //   // Filter out documents where `type: "target"` and `targetedQuestForeignKey` does not match
+        //   advanceAnalyticsDoc.advanceAnalytics = advanceAnalyticsDoc.advanceAnalytics.filter(
+        //     (doc) =>
+        //       !(doc.type === "target" && doc.targetedQuestForeignKey !== req.body.targetedQuestForeignKey)
+        //   );
         
-          // Save the updated document
-          await advanceAnalyticsDoc.save();
-        }
+        //   // Save the updated document
+        //   await advanceAnalyticsDoc.save();
+        // }
 
           // Find the current maximum order value in the advanceAnalytics array
           const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
