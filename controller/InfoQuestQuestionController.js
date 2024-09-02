@@ -3655,6 +3655,39 @@ const advanceAnalytics = async (req, res) => {
       );
 
       if (existingAnalytics) {
+
+        let existingAnalyticsCheck;
+
+        if (req.body.type === 'hide') {
+          existingAnalyticsCheck = advanceAnalyticsDoc.advanceAnalytics.find(
+            (item) =>
+              item.type === req.body.type && item.hiddenOptionsArray === req.body.hiddenOptionsArray && item._id.toString() !== req.body.id
+          );
+        }
+
+        if (req.body.type === 'badgeCount') {
+          existingAnalyticsCheck = advanceAnalyticsDoc.advanceAnalytics.find(
+            (item) =>
+              item.type === req.body.type && item.oprend === req.body.oprend && item.range === req.body.range && item._id.toString() !== req.body.id
+          );
+        }
+
+        if (req.body.type === 'target') {
+          existingAnalyticsCheck = advanceAnalyticsDoc.advanceAnalytics.find(
+            (item) =>
+              item.type === req.body.type && item.targetedOptionsArray === req.body.targetedOptionsArray && item.targetedQuestForeignKey === req.body.targetedQuestForeignKey && item._id.toString() !== req.body.id
+          );
+        }
+
+        if (req.body.type === 'activity') {
+          existingAnalyticsCheck = advanceAnalyticsDoc.advanceAnalytics.find(
+            (item) =>
+              item.type === req.body.type && item.allParams.subtype === req.body.allParams.subtype && item._id.toString() !== req.body.id
+          );
+        }
+
+        if (existingAnalyticsCheck) return res.status(409).json({ message: "Advance Analytic already Exists." });
+
         // If an object with the same 'type' exists, update it with the new data from req.body
         for (let key in req.body) {
           existingAnalytics[key] = req.body[key];
@@ -3672,17 +3705,6 @@ const advanceAnalytics = async (req, res) => {
             (max, item) => (item.order > max ? item.order : max),
             0
           );
-
-          // // Create new documents for each element in targetedOptionsArray
-          // const newAnalytics = req.body.targetedOptionsArray.map((option, index) => ({
-          //   ...req.body,
-          //   _id: new mongoose.Types.ObjectId(),
-          //   order: maxOrder + index + 1, // Increment order for each new document
-          //   targetedOptionsArray: [option] // Assuming you want to store the option or adjust as needed
-          // }));
-
-          // // Push new documents to the advanceAnalytics array
-          // advanceAnalyticsDoc.advanceAnalytics.push(...newAnalytics);
 
           // Extract existing options from advanceAnalyticsDoc
           const existingOptions = advanceAnalyticsDoc.advanceAnalytics
