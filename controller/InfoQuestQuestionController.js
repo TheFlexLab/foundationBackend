@@ -286,48 +286,33 @@ const targetfx = async (
           $or: [
             // Check if selected is a string and matches the targetedOptionsArray
             { "recentData.selected": { $in: targetedOptionsArray } },
-            // Check if selected is an array of objects with at least one matching question field
+      
+            // Check if selected is an array of objects with question fields, and all questions must match
             {
-              $expr: {
-                $and: [
-                  { $isArray: "$recentData.selected" },
+              "recentData.selected": {
+                $all: [
                   {
-                    $allElementsTrue: [
-                      {
-                        $map: {
-                          input: "$recentData.selected",
-                          as: "item",
-                          in: { $in: ["$$item.question", targetedOptionsArray] },
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
+                    $elemMatch: { question: { $in: targetedOptionsArray } }
+                  }
+                ]
+              }
             },
+      
             // Check if contended is a string and matches the targetedOptionsArray
             { "recentData.contended": { $in: targetedOptionsArray } },
-            // Check if contended is an array of objects with at least one matching question field
+      
+            // Check if contended is an array of objects with question fields, and all questions must match
             {
-              $expr: {
-                $and: [
-                  { $isArray: "$recentData.contended" },
+              "recentData.contended": {
+                $all: [
                   {
-                    $allElementsTrue: [
-                      {
-                        $map: {
-                          input: "$recentData.contended",
-                          as: "item",
-                          in: { $in: ["$$item.question", targetedOptionsArray] },
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          ],
-        },
+                    $elemMatch: { question: { $in: targetedOptionsArray } }
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },      
       {
         $group: {
