@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 const app = require("./server");
 const connectDB = require("./config/db");
 const nodeHtmlToImage = require("node-html-to-image");
-const { indexHTML, } = require("./templates/indexHTML");
+const { indexHTML } = require("./templates/indexHTML");
 dotenv.config();
 
 // Connect to database
@@ -29,6 +29,10 @@ app.get("/api/test/img", async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, "0.0.0.0", () => {
   console.log("Server is listening on port: ", port);
+});
+
+app.get("/", (req, res) => {
+  res.status(200).send("Everything is OK-v1");
 });

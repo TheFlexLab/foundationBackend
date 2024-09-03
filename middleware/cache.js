@@ -8,6 +8,7 @@ module.exports = function (req, res, next) {
   if (cachedResponse) {
     // Parse the cached response as JSON
     const parsedResponse = JSON.parse(cachedResponse);
+    console.log("If", parsedResponse);
     res.json(parsedResponse);
   } else {
     const sendJson = res.json.bind(res);
@@ -17,6 +18,7 @@ module.exports = function (req, res, next) {
       cache.put(key, jsonBody, 480 * 1000); // Cache for 8 minutes
       sendJson(body);
     };
+    console.log("Else", sendJson);
     next();
   }
 };
