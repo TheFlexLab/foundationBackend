@@ -122,26 +122,49 @@ const badgeCountfx = async (data, userUuid, questForeignKey, oprend, range) => {
       },
       {
         $match: {
-          // Check if any keys in `selected` or `contended` match the latest `selected` or `contended`
-          $or: [
+          $and: [
             {
-              "recentData.selected": {
-                $in: Object.keys(data.result[0]?.selected || {}), // Check if any selected key matches, safely
+              $expr: {
+                $setIsSubset: [
+                  { $map: { input: "$recentData.selected", as: "item", in: "$$item.question" } }, // Extract `question` values from `recentData.selected`
+                  Object.keys(data.result[0]?.selected || {}), // `question` keys from `data.result[0].selected`
+                ],
               },
             },
             {
-              "recentData.selected.question": {
-                $in: Object.keys(data.result[0]?.selected || {}), // Safely check if any selected key matches in `question`
+              $expr: {
+                $setIsSubset: [
+                  { $map: { input: "$recentData.contended", as: "item", in: "$$item.question" } }, // Extract `question` values from `recentData.contended`
+                  Object.keys(data.result[0]?.contended || {}), // `question` keys from `data.result[0].contended`
+                ],
               },
             },
+            // Ensure all questions in `recentData.selected` are present in `data.result[0].selected`
             {
-              "recentData.contended": {
-                $in: Object.keys(data.result[0]?.contended || {}), // Check if any contended key matches, safely
+              $expr: {
+                $allElementsTrue: [
+                  {
+                    $map: {
+                      input: "$recentData.selected",
+                      as: "item",
+                      in: { $in: ["$$item.question", Object.keys(data.result[0]?.selected || {})] }, // Ensure each `question` is in the keys of `selected`
+                    },
+                  },
+                ],
               },
             },
+            // Ensure all questions in `recentData.contended` are present in `data.result[0].contended`
             {
-              "recentData.contended.question": {
-                $in: Object.keys(data.result[0]?.contended || {}), // Safely check if any contended key matches in `question`
+              $expr: {
+                $allElementsTrue: [
+                  {
+                    $map: {
+                      input: "$recentData.contended",
+                      as: "item",
+                      in: { $in: ["$$item.question", Object.keys(data.result[0]?.contended || {})] }, // Ensure each `question` is in the keys of `contended`
+                    },
+                  },
+                ],
               },
             },
           ],
@@ -263,15 +286,49 @@ const targetfx = async (
           $or: [
             // Check if selected is a string and matches the targetedOptionsArray
             { "recentData.selected": { $in: targetedOptionsArray } },
-            // Check if selected is an array of objects with question fields
-            { "recentData.selected.question": { $in: targetedOptionsArray } },
+            // Check if selected is an array of objects with at least one matching question field
+            {
+              $expr: {
+                $and: [
+                  { $isArray: "$recentData.selected" },
+                  {
+                    $allElementsTrue: [
+                      {
+                        $map: {
+                          input: "$recentData.selected",
+                          as: "item",
+                          in: { $in: ["$$item.question", targetedOptionsArray] },
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
             // Check if contended is a string and matches the targetedOptionsArray
             { "recentData.contended": { $in: targetedOptionsArray } },
-            // Check if contended is an array of objects with question fields
-            { "recentData.contended.question": { $in: targetedOptionsArray } },
+            // Check if contended is an array of objects with at least one matching question field
+            {
+              $expr: {
+                $and: [
+                  { $isArray: "$recentData.contended" },
+                  {
+                    $allElementsTrue: [
+                      {
+                        $map: {
+                          input: "$recentData.contended",
+                          as: "item",
+                          in: { $in: ["$$item.question", targetedOptionsArray] },
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
           ],
         },
-      },
+      },      
       {
         $group: {
           _id: null,
@@ -306,29 +363,49 @@ const targetfx = async (
       // Step 5: Match to ensure recentData.selected or recentData.contended contain keys from result
       {
         $match: {
-          $or: [
+          $and: [
             {
-              "recentData.selected": {
-                $exists: true,
-                $in: Object.keys(data.result[0]?.selected || {}),
+              $expr: {
+                $setIsSubset: [
+                  { $map: { input: "$recentData.selected", as: "item", in: "$$item.question" } }, // Extract `question` values from `recentData.selected`
+                  Object.keys(data.result[0]?.selected || {}), // `question` keys from `data.result[0].selected`
+                ],
               },
             },
             {
-              "recentData.selected.question": {
-                $exists: true,
-                $in: Object.keys(data.result[0]?.selected || {}),
+              $expr: {
+                $setIsSubset: [
+                  { $map: { input: "$recentData.contended", as: "item", in: "$$item.question" } }, // Extract `question` values from `recentData.contended`
+                  Object.keys(data.result[0]?.contended || {}), // `question` keys from `data.result[0].contended`
+                ],
               },
             },
+            // Ensure all questions in `recentData.selected` are present in `data.result[0].selected`
             {
-              "recentData.contended": {
-                $exists: true,
-                $in: Object.keys(data.result[0]?.contended || {}),
+              $expr: {
+                $allElementsTrue: [
+                  {
+                    $map: {
+                      input: "$recentData.selected",
+                      as: "item",
+                      in: { $in: ["$$item.question", Object.keys(data.result[0]?.selected || {})] }, // Ensure each `question` is in the keys of `selected`
+                    },
+                  },
+                ],
               },
             },
+            // Ensure all questions in `recentData.contended` are present in `data.result[0].contended`
             {
-              "recentData.contended.question": {
-                $exists: true,
-                $in: Object.keys(data.result[0]?.contended || {}),
+              $expr: {
+                $allElementsTrue: [
+                  {
+                    $map: {
+                      input: "$recentData.contended",
+                      as: "item",
+                      in: { $in: ["$$item.question", Object.keys(data.result[0]?.contended || {})] }, // Ensure each `question` is in the keys of `contended`
+                    },
+                  },
+                ],
               },
             },
           ],
@@ -682,26 +759,49 @@ const activityfx = async (data, userUuid, questForeignKey, allParams) => {
       },
       {
         $match: {
-          // Check if any keys in `selected` or `contended` match the latest `selected` or `contended`
-          $or: [
+          $and: [
             {
-              "recentData.selected": {
-                $in: Object.keys(data.result[0]?.selected || {}), // Check if any selected key matches, safely
+              $expr: {
+                $setIsSubset: [
+                  { $map: { input: "$recentData.selected", as: "item", in: "$$item.question" } }, // Extract `question` values from `recentData.selected`
+                  Object.keys(data.result[0]?.selected || {}), // `question` keys from `data.result[0].selected`
+                ],
               },
             },
             {
-              "recentData.selected.question": {
-                $in: Object.keys(data.result[0]?.selected || {}), // Safely check if any selected key matches in `question`
+              $expr: {
+                $setIsSubset: [
+                  { $map: { input: "$recentData.contended", as: "item", in: "$$item.question" } }, // Extract `question` values from `recentData.contended`
+                  Object.keys(data.result[0]?.contended || {}), // `question` keys from `data.result[0].contended`
+                ],
               },
             },
+            // Ensure all questions in `recentData.selected` are present in `data.result[0].selected`
             {
-              "recentData.contended": {
-                $in: Object.keys(data.result[0]?.contended || {}), // Check if any contended key matches, safely
+              $expr: {
+                $allElementsTrue: [
+                  {
+                    $map: {
+                      input: "$recentData.selected",
+                      as: "item",
+                      in: { $in: ["$$item.question", Object.keys(data.result[0]?.selected || {})] }, // Ensure each `question` is in the keys of `selected`
+                    },
+                  },
+                ],
               },
             },
+            // Ensure all questions in `recentData.contended` are present in `data.result[0].contended`
             {
-              "recentData.contended.question": {
-                $in: Object.keys(data.result[0]?.contended || {}), // Safely check if any contended key matches in `question`
+              $expr: {
+                $allElementsTrue: [
+                  {
+                    $map: {
+                      input: "$recentData.contended",
+                      as: "item",
+                      in: { $in: ["$$item.question", Object.keys(data.result[0]?.contended || {})] }, // Ensure each `question` is in the keys of `contended`
+                    },
+                  },
+                ],
               },
             },
           ],
@@ -3747,12 +3847,12 @@ const advanceAnalytics = async (req, res) => {
         //   }
         // }
         // else {
-          // If an object with the same 'type' exists, update it with the new data from req.body
-          for (let key in req.body) {
-            existingAnalytics[key] = req.body[key];
-          }
-          // Mark the document as modified to ensure Mongoose tracks changes to the array
-          advanceAnalyticsDoc.markModified("advanceAnalytics");
+        // If an object with the same 'type' exists, update it with the new data from req.body
+        for (let key in req.body) {
+          existingAnalytics[key] = req.body[key];
+        }
+        // Mark the document as modified to ensure Mongoose tracks changes to the array
+        advanceAnalyticsDoc.markModified("advanceAnalytics");
         // }
       } else {
         if (
@@ -3760,22 +3860,22 @@ const advanceAnalytics = async (req, res) => {
           req.body.targetedOptionsArray &&
           req.body.targetedOptionsArray.length >= 1
         ) {
-          
-        // const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
-        //   userUuid: userUuid,
-        //   questForeignKey: questForeignKey,
-        // });
-        
-        // if (advanceAnalyticsDoc) {
-        //   // Filter out documents where `type: "target"` and `targetedQuestForeignKey` does not match
-        //   advanceAnalyticsDoc.advanceAnalytics = advanceAnalyticsDoc.advanceAnalytics.filter(
-        //     (doc) =>
-        //       !(doc.type === "target" && doc.targetedQuestForeignKey !== req.body.targetedQuestForeignKey)
-        //   );
-        
-        //   // Save the updated document
-        //   await advanceAnalyticsDoc.save();
-        // }
+
+          // const advanceAnalyticsDoc = await AdvanceAnalytics.findOne({
+          //   userUuid: userUuid,
+          //   questForeignKey: questForeignKey,
+          // });
+
+          // if (advanceAnalyticsDoc) {
+          //   // Filter out documents where `type: "target"` and `targetedQuestForeignKey` does not match
+          //   advanceAnalyticsDoc.advanceAnalytics = advanceAnalyticsDoc.advanceAnalytics.filter(
+          //     (doc) =>
+          //       !(doc.type === "target" && doc.targetedQuestForeignKey !== req.body.targetedQuestForeignKey)
+          //   );
+
+          //   // Save the updated document
+          //   await advanceAnalyticsDoc.save();
+          // }
 
           // Find the current maximum order value in the advanceAnalytics array
           const maxOrder = advanceAnalyticsDoc.advanceAnalytics.reduce(
